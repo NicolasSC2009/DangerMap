@@ -1,0 +1,25 @@
+services:
+  db:
+    image: postgres:15
+    container_name: dangermap_db
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: senha_dificil
+      POSTGRES_DB: dangermap_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./.docker/db_data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: dangermap_pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8080:80"
+    volumes:
+      - ./.docker/pgadmin:/var/lib/pgadmin/storage

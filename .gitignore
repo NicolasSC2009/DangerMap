@@ -1,0 +1,9 @@
+
+node_modules/
+dist/
+
+.docker/db_data/
+.docker/pgadmin/
+
+.env
+backend/.env
