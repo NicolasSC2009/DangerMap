@@ -7,182 +7,168 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// --- ENUMS ---
-
-enum TipoUsuario {
-  usuario
-  admin
-}
-
-enum TipoProblema {
-  alagamento
-  buraco
-  seguranca
-  transito
-  arvore_caida
-  roubo
-  batida_de_carro
-  carro_no_acostamento
-  incendio
-  placa_danificada
-  obras_na_pista
-  via_interditada
-  perigo_na_pista
-  outros
-}
-
-enum StatusOcorrencia {
-  pendente
-  confirmado
-  resolvido
-}
-
-enum Gravidade {
-  baixo
-  medio
-  alto
-}
-
-// --- TABELAS ---
-
 model Usuario {
-  id            Int           @id @default(autoincrement())
-  nome          String        @db.VarChar(100)
-  email         String        @unique @db.VarChar(100)
-  senha         String        @db.VarChar(255)
-  tipo_usuario  TipoUsuario   @default(usuario)
-  data_cadastro DateTime      @default(now())
-  verificado    Boolean       @default(false)
-
-  // Relações
-  ocorrencias       Ocorrencia[]
-  confirmacoes      Confirmacao[]
-  denuncias         Denuncia[]
-  notificacoes      Notificacao[]
-  interacoes        InteracaoSocial[]
-  logs_sos          LogSOS[]
-  denuncias_feitas  DenunciaUsuario[] @relation("AutorDenuncia")
-  denuncias_recebidas DenunciaUsuario[] @relation("UsuarioDenunciado")
-  logs_atividades   LogAtividade[]
+  id                  Int                @id @default(autoincrement())
+  nome                String             @db.VarChar(100)
+  email               String             @unique @db.VarChar(100)
+  senha               String             @db.VarChar(255)
+  tipo_usuario        tipo_usuario_enum? @default(usuario)
+  data_cadastro       DateTime?          @default(now()) @db.Timestamp(6)
+  verificado          Boolean?           @default(false)
+  confirmacoes        Confirmacao[]
+  denuncias           Denuncia[]
+  denuncias_feitas    DenunciaUsuario[]  @relation("AutorDenuncia")
+  denuncias_recebidas DenunciaUsuario[]  @relation("UsuarioDenunciado")
+  interacoes          InteracaoSocial[]
+  logs_atividades     LogAtividade[]
+  logs_sos            LogSOS[]
+  notificacoes        Notificacao[]
+  ocorrencias         Ocorrencia[]
 
   @@map("usuarios")
 }
 
 model Ocorrencia {
-  id                    Int              @id @default(autoincrement())
-  usuario_id            Int?
-  usuario               Usuario?         @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
-  tipo_problema         TipoProblema
-  gravidade             Gravidade        @default(medio)
-  descricao             String?          @db.Text
-  latitude              Decimal          @db.Decimal(10, 8)
-  longitude             Decimal          @db.Decimal(11, 8)
-  status                StatusOcorrencia @default(pendente)
-  data_registro         DateTime         @default(now())
-  qtd_confirmacoes      Int              @default(0)
-  imagem_url            String?          @db.VarChar(255)
-  categoria_sugerida_ia String?          @db.VarChar(100)
-  id_agrupamento        Int?
-
-  confirmacoes          Confirmacao[]
-  denuncias             Denuncia[]
-  interacoes            InteracaoSocial[]
+  id               Int                     @id @default(autoincrement())
+  usuario_id       Int?
+  categoria_id     Int?
+  gravidade        gravidade_enum?         @default(medio)
+  descricao        String?
+  latitude         Decimal                 @db.Decimal(10, 8)
+  longitude        Decimal                 @db.Decimal(11, 8)
+  status           status_ocorrencia_enum? @default(pendente)
+  data_registro    DateTime?               @default(now()) @db.Timestamp(6)
+  qtd_confirmacoes Int?                    @default(0)
+  imagem_url       String?                 @db.VarChar(255)
+  categoria_ia     String?                 @db.VarChar(100)
+  id_agrupamento   Int?
+  confirmacoes     Confirmacao[]
+  denuncias        Denuncia[]
+  interacoes       InteracaoSocial[]
+  categorias       categorias?             @relation(fields: [categoria_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  usuario          Usuario?                @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@map("ocorrencias")
 }
 
 model Confirmacao {
-  id               Int        @id @default(autoincrement())
-  usuario_id       Int
-  usuario          Usuario    @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
-  ocorrencia_id    Int
-  ocorrencia       Ocorrencia @relation(fields: [ocorrencia_id], references: [id], onDelete: Cascade)
-  data_confirmacao DateTime   @default(now())
+  id               Int         @id @default(autoincrement())
+  usuario_id       Int?
+  ocorrencia_id    Int?
+  data_confirmacao DateTime?   @default(now()) @db.Timestamp(6)
+  ocorrencia       Ocorrencia? @relation(fields: [ocorrencia_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuario          Usuario?    @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([usuario_id, ocorrencia_id])
   @@map("confirmacoes")
 }
 
 model Denuncia {
-  id            Int        @id @default(autoincrement())
-  usuario_id    Int
-  usuario       Usuario    @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
-  ocorrencia_id Int
-  ocorrencia    Ocorrencia @relation(fields: [ocorrencia_id], references: [id], onDelete: Cascade)
-  motivo        String     @db.Text
-  data_denuncia DateTime   @default(now())
+  id            Int         @id @default(autoincrement())
+  usuario_id    Int?
+  ocorrencia_id Int?
+  motivo        String
+  data_denuncia DateTime?   @default(now()) @db.Timestamp(6)
+  ocorrencia    Ocorrencia? @relation(fields: [ocorrencia_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuario       Usuario?    @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@map("denuncias")
 }
 
 model Notificacao {
-  id               Int      @id @default(autoincrement())
-  usuario_id       Int
-  usuario          Usuario  @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
-  titulo           String   @db.VarChar(150)
-  mensagem         String   @db.Text
-  tipo_notificacao String?  @db.VarChar(50)
-  lida             Boolean  @default(false)
-  data_envio       DateTime @default(now())
+  id               Int       @id @default(autoincrement())
+  usuario_id       Int?
+  titulo           String    @db.VarChar(150)
+  mensagem         String
+  tipo_notificacao String?   @db.VarChar(50)
+  lida             Boolean?  @default(false)
+  data_envio       DateTime? @default(now()) @db.Timestamp(6)
+  usuario          Usuario?  @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@map("notificacoes")
 }
 
 model InteracaoSocial {
-  id             Int        @id @default(autoincrement())
-  ocorrencia_id  Int
-  ocorrencia     Ocorrencia @relation(fields: [ocorrencia_id], references: [id], onDelete: Cascade)
-  usuario_id     Int
-  usuario        Usuario    @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
-  tipo_interacao String?    @db.VarChar(20)
-  data_interacao DateTime   @default(now())
+  id             Int         @id @default(autoincrement())
+  ocorrencia_id  Int?
+  usuario_id     Int?
+  tipo_interacao String?     @db.VarChar(20)
+  data_interacao DateTime?   @default(now()) @db.Timestamp(6)
+  ocorrencia     Ocorrencia? @relation(fields: [ocorrencia_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuario        Usuario?    @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@map("interacoes_sociais")
 }
 
 model LogSOS {
-  id               Int      @id @default(autoincrement())
+  id               Int       @id @default(autoincrement())
   usuario_id       Int?
-  usuario          Usuario? @relation(fields: [usuario_id], references: [id], onDelete: SetNull)
-  latitude         Decimal? @db.Decimal(10, 8)
-  longitude        Decimal? @db.Decimal(11, 8)
-  data_hora        DateTime @default(now())
-  orgao_contactado String?  @db.VarChar(50)
+  latitude         Decimal?  @db.Decimal(10, 8)
+  longitude        Decimal?  @db.Decimal(11, 8)
+  data_hora        DateTime? @default(now()) @db.Timestamp(6)
+  orgao_contactado String?   @db.VarChar(50)
+  usuario          Usuario?  @relation(fields: [usuario_id], references: [id], onUpdate: NoAction)
 
   @@map("logs_sos")
 }
 
 model DadoClimatico {
-  id              Int      @id @default(autoincrement())
-  regiao          String?  @db.VarChar(100)
-  temperatura     Decimal? @db.Decimal(4, 2)
-  condicao_tempo  String?  @db.VarChar(100)
-  data_leitura    DateTime @default(now())
+  id             Int       @id @default(autoincrement())
+  regiao         String?   @default("Desconhecida") @db.VarChar(100)
+  temperatura    Decimal?  @db.Decimal(4, 2)
+  condicao_tempo String?   @db.VarChar(100)
+  umidade        Int?
+  data_leitura   DateTime? @default(now()) @db.Timestamp(6)
 
   @@map("dados_climaticos")
 }
 
 model DenunciaUsuario {
-  id                     Int      @id @default(autoincrement())
-  usuario_denunciado_id  Int
-  usuario_denunciado     Usuario  @relation("UsuarioDenunciado", fields: [usuario_denunciado_id], references: [id], onDelete: Cascade)
-  autor_id               Int
-  autor                  Usuario  @relation("AutorDenuncia", fields: [autor_id], references: [id], onDelete: Cascade)
-  motivo                 String?  @db.Text
-  ip_origem              String?  @db.VarChar(45)
-  data_hora              DateTime @default(now())
+  id                    Int       @id @default(autoincrement())
+  usuario_denunciado_id Int?
+  autor_id              Int?
+  motivo                String?
+  ip_origem             String?   @db.VarChar(45)
+  data_hora             DateTime? @default(now()) @db.Timestamp(6)
+  autor                 Usuario?  @relation("AutorDenuncia", fields: [autor_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuario_denunciado    Usuario?  @relation("UsuarioDenunciado", fields: [usuario_denunciado_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@map("denuncias_usuarios")
 }
 
 model LogAtividade {
-  id         Int      @id @default(autoincrement())
+  id         Int       @id @default(autoincrement())
   usuario_id Int?
-  usuario    Usuario? @relation(fields: [usuario_id], references: [id], onDelete: SetNull)
-  acao       String   @db.VarChar(255)
-  ip_origem  String?  @db.VarChar(45)
-  user_agent String?  @db.Text
-  data_hora  DateTime @default(now())
+  acao       String    @db.VarChar(255)
+  ip_origem  String?   @default("0.0.0.0") @db.VarChar(45)
+  user_agent String?
+  data_hora  DateTime? @default(now()) @db.Timestamp(6)
+  usuario    Usuario?  @relation(fields: [usuario_id], references: [id], onUpdate: NoAction)
 
   @@map("logs_atividades")
+}
+
+model categorias {
+  id          Int          @id @default(autoincrement())
+  nome        String       @unique @db.VarChar(50)
+  descricao   String?      @db.VarChar(255)
+  icone_url   String?      @db.VarChar(255)
+  ocorrencias Ocorrencia[]
+}
+
+enum gravidade_enum {
+  baixo
+  medio
+  alto
+}
+
+enum status_ocorrencia_enum {
+  pendente
+  confirmado
+  resolvido
+}
+
+enum tipo_usuario_enum {
+  usuario
+  admin
 }
