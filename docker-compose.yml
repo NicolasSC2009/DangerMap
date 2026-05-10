@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:15
+    image: postgis/postgis:15-master
     container_name: dangermap_db
     restart: always
     environment:
