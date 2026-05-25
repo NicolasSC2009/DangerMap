@@ -4,7 +4,7 @@
   "description": "",
   "main": "src/server.ts",
   "type": "module",
-"scripts": {
+  "scripts": {
     "dev": "dotenv -e ../.env -- tsx watch src/server.ts",
     "db:migrate": "dotenv -e ../.env -- prisma migrate dev",
     "db:studio": "dotenv -e ../.env -- prisma studio",
@@ -15,12 +15,18 @@
   "license": "ISC",
   "dependencies": {
     "@prisma/client": "^6.19.3",
+    "bcryptjs": "^3.0.3",
     "dotenv-cli": "^11.0.0",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "nodemailer": "^8.0.8"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/bcryptjs": "^2.4.6",
     "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/nodemailer": "^8.0.0",
     "eslint": "^10.4.0",
     "globals": "^17.6.0",
     "prisma": "^6.19.3",
