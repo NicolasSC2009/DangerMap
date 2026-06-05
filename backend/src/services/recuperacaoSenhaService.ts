@@ -10,7 +10,7 @@ export class RecuperacaoSenhaService {
     const usuario = await usuarioRepository.buscarPorEmail(email);
     
     if (!usuario) {
-      throw new Error('Se o e-mail estiver cadastrado, um código de recuperação será enviado.');
+      throw new Error('Se o email estiver cadastrado, um código de recuperação será enviado');
     }
 
     const token = crypto.randomInt(100000, 999999).toString();
@@ -25,9 +25,9 @@ export class RecuperacaoSenhaService {
       subject: 'Recuperação de Senha - DangerMap',
       html: `
         <h1>Recuperação de Senha</h1>
-        <p>Olá, ${usuario.nome}. Você solicitou a recuperação de senha para sua conta no DangerMap.</p>
+        <p>Olá, ${usuario.nome}. Você solicitou a recuperação de senha para sua conta no DangerMap</p>
         <p>Seu código de verificação é: <strong>${token}</strong></p>
-        <p>Este código expira em 15 minutos.</p>
+        <p>Este código expira em 15 minutos</p>
         <br>
         <p>Se não foi você quem solicitou, apenas ignore este e-mail.</p>
       `
@@ -40,7 +40,7 @@ export class RecuperacaoSenhaService {
     const usuario = await usuarioRepository.buscarPorTokenReset(token);
     
     if (!usuario) {
-      throw new Error('Código de recuperação inválido ou expirado.');
+      throw new Error('Código de recuperação inválido ou expirado');
     }
 
     if (usuario.senha_reset_expira && new Date() > usuario.senha_reset_expira) {

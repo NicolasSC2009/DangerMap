@@ -10,12 +10,12 @@ export class LoginService {
   async executar(dados: any) {
     const usuario = await usuarioRepository.buscarPorEmail(dados.email);
     if (!usuario) {
-      throw new Error('E-mail ou senha inválidos.');
+      throw new Error('Email ou senha inválidos');
     }
 
     const senhaCorreta = await bcrypt.compare(dados.senha, usuario.senha);
     if (!senhaCorreta) {
-      throw new Error('E-mail ou senha inválidos.');
+      throw new Error('Email ou senha inválidos');
     }
 
     const token = jwt.sign(

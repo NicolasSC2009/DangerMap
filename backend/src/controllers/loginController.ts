@@ -9,14 +9,14 @@ export class LoginController {
       const { email, senha } = req.body;
 
       if (!email || !senha) {
-        return res.status(400).json({ error: 'E-mail e senha são obrigatórios.' });
+        return res.status(400).json({ error: 'Email e senha são obrigatórios' });
       }
 
       const resultado = await loginService.executar({ email, senha });
 
       return res.status(200).json(resultado);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro interno no servidor.';
+      const errorMessage = error instanceof Error ? error.message : 'Erro interno no servidor';
       return res.status(401).json({ error: errorMessage });
     }
   }

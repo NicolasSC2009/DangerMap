@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
-import authRoutes from './routes/authRoutes.js'; // Importa as rotas de autenticação
+import authRoutes from './routes/authRoutes.js';
+import categoriaRoutes from './routes/categoriaRoutes.js'; // Importa as rotas de categorias
 
 const app = express();
 const prisma = new PrismaClient();
@@ -8,8 +9,9 @@ const prisma = new PrismaClient();
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
+app.use('/api/categorias', categoriaRoutes);
 
-app.get('/api/status', async (req: Request, res: Response) => {
+app.get('/api/status', async function (req: Request, res: Response) {
   try {
     await prisma.$queryRaw`SELECT 1`;
     res.json({
@@ -21,7 +23,7 @@ app.get('/api/status', async (req: Request, res: Response) => {
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
     res.status(500).json({
       status: 'erro',
-      mensagem: 'O servidor rodou, mas não conseguiu falar com o banco.',
+      mensagem: 'O servidor rodou, mas não conseguiu falar com o banco',
       erro: errorMessage
     });
   }
@@ -29,6 +31,6 @@ app.get('/api/status', async (req: Request, res: Response) => {
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
+app.listen(PORT, function () {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });

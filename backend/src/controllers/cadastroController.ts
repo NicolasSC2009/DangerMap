@@ -9,14 +9,14 @@ export class CadastroController {
       const { nome, email, senha } = req.body;
 
       if (!nome || !email || !senha) {
-        return res.status(400).json({ error: 'Todos os campos (nome, email, senha) são obrigatórios.' });
+        return res.status(400).json({ error: 'Todos os campos (nome, email, senha) são obrigatórios' });
       }
 
       const novoUsuario = await cadastroService.executar({ nome, email, senha });
 
       return res.status(201).json(novoUsuario);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro interno no servidor.';
+      const errorMessage = error instanceof Error ? error.message : 'Erro interno no servidor';
       return res.status(400).json({ error: errorMessage });
     }
   }

@@ -12,4 +12,6 @@ export const mailTransporter = nodemailer.createTransport({
   }
 });
 
-mailTransporter.on('token', () => {});
+mailTransporter.on('token', function () {
+
+});

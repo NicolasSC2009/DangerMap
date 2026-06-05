@@ -19,7 +19,6 @@ export class UsuarioRepository {
     });
   }
 
-  // Salva o token de recuperação e a data de expiração no usuário
   async salvarTokenReset(email: string, token: string, expiracao: Date) {
     return prisma.usuario.update({
       where: { email },
@@ -41,8 +40,8 @@ export class UsuarioRepository {
       where: { id },
       data: {
         senha: novaSenhaCriptografada,
-        senha_reset_token: null, // Limpa o token por segurança
-        senha_reset_expira: null, // Limpa a expiração
+        senha_reset_token: null,
+        senha_reset_expira: null,
       },
     });
   }
