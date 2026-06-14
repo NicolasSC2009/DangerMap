@@ -173,6 +173,14 @@ model spatial_ref_sys {
   proj4text String? @db.VarChar(2048)
 }
 
+model blacklist_tokens {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique @db.VarChar(500)
+  expira_em DateTime @db.Timestamp(6)
+
+  @@index([token], map: "idx_blacklist_token")
+}
+
 enum gravidade_enum {
   baixo
   medio
