@@ -14,10 +14,10 @@ model Usuario {
   senha               String             @db.VarChar(255)
   tipo_usuario        tipo_usuario_enum? @default(usuario)
   data_cadastro       DateTime?          @default(now()) @db.Timestamp(6)
-  verificado          Boolean?           @default(false)
   google_id           String?            @unique @db.VarChar(255)
   senha_reset_token   String?            @db.VarChar(255)
   senha_reset_expira  DateTime?          @db.Timestamp(6)
+  ativo               Boolean?           @default(true)
   confirmacoes        Confirmacao[]
   denuncias           Denuncia[]
   denuncias_feitas    DenunciaUsuario[]  @relation("AutorDenuncia")

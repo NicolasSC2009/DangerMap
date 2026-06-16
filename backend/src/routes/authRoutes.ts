@@ -5,17 +5,21 @@ import { RecuperacaoSenhaController } from '../controllers/recuperacaoSenhaContr
 import { autenticarToken, RequisicaoAutenticada } from '../middlewares/authMiddleware.js';
 import { BlacklistRepository } from '../repositories/blacklistRepository.js';
 import jwt from 'jsonwebtoken';
+import { UsuarioController } from '../controllers/usuarioController.js';
 
+const usuarioController = new UsuarioController();
 const authRoutes = Router();
 const cadastroController = new CadastroController();
 const loginController = new LoginController();
 const recuperacaoSenhaController = new RecuperacaoSenhaController();
 const blacklistRepository = new BlacklistRepository();
 
+authRoutes.delete('/usuarios/excluir', autenticarToken, usuarioController.excluirMinhaConta);
 authRoutes.post('/cadastro', cadastroController.lidar);
 authRoutes.post('/login', loginController.lidar);
 authRoutes.post('/esqueci-senha', recuperacaoSenhaController.solicitar);
 authRoutes.post('/resetar-senha', recuperacaoSenhaController.resetar);
+authRoutes.patch('/admin/usuarios/reativar', autenticarToken, usuarioController.reativarContaPorAdmin);
 
 authRoutes.post('/logout', autenticarToken, async function (req: RequisicaoAutenticada, res: Response) {
   try {

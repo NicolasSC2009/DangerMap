@@ -45,4 +45,18 @@ export class UsuarioRepository {
       },
     });
   }
+
+  async desativarUsuario(id: number) {
+    return prisma.usuario.update({
+      where: { id },
+      data: { ativo: false },
+  });
+}
+
+async reativarUsuario(id: number) {
+  return prisma.usuario.update({
+    where: { id },
+    data: { ativo: true },
+  });
+}
 }
