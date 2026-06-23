@@ -1,4 +1,4 @@
-import { UsuarioRepository } from '../repositories/usuarioRepository.js';
+import { UsuarioRepository } from '../repositories/UsuarioRepository.js';
 import { mailTransporter } from '../config/mail.js';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';

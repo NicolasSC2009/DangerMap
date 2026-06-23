@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { RecuperacaoSenhaService } from '../services/recuperacaoSenhaService.js';
+import { RecuperacaoSenhaService } from '../services/RecuperacaoSenhaService.js';
 
 const recuperacaoSenhaService = new RecuperacaoSenhaService();
 

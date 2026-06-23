@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { BlacklistRepository } from '../repositories/blacklistRepository.js';
+import { BlacklistRepository } from '../repositories/BlacklistRepository.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'chave_secreta_e_super_segura_do_dangermap';
 const blacklistRepository = new BlacklistRepository();

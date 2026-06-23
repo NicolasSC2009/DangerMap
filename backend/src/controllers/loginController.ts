@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { LoginService } from '../services/loginService.js';
+import { LoginService } from '../services/LoginService.js';
 
 const loginService = new LoginService();
 

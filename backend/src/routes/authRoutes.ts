@@ -1,11 +1,11 @@
 import { Router, Response } from 'express';
-import { CadastroController } from '../controllers/cadastroController.js';
-import { LoginController } from '../controllers/loginController.js';
-import { RecuperacaoSenhaController } from '../controllers/recuperacaoSenhaController.js';
+import { CadastroController } from '../controllers/CadastroController.js';
+import { LoginController } from '../controllers/LoginController.js';
+import { RecuperacaoSenhaController } from '../controllers/RecuperacaoSenhaController.js';
 import { autenticarToken, RequisicaoAutenticada } from '../middlewares/authMiddleware.js';
-import { BlacklistRepository } from '../repositories/blacklistRepository.js';
+import { BlacklistRepository } from '../repositories/BlacklistRepository.js';
 import jwt from 'jsonwebtoken';
-import { UsuarioController } from '../controllers/usuarioController.js';
+import { UsuarioController } from '../controllers/UsuarioController.js';
 
 const usuarioController = new UsuarioController();
 const authRoutes = Router();

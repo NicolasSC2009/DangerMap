@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { CategoriaService } from '../services/categoriaService.js';
+import { CategoriaService } from '../services/CategoriaService.js';
 import { RequisicaoAutenticada } from '../middlewares/authMiddleware.js';
 
 const categoriaService = new CategoriaService();

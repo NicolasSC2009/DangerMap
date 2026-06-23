@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { UsuarioRepository } from '../repositories/usuarioRepository.js';
+import { UsuarioRepository } from '../repositories/UsuarioRepository.js';
 import { RequisicaoAutenticada } from '../middlewares/authMiddleware.js';
 
 const usuarioRepository = new UsuarioRepository();
