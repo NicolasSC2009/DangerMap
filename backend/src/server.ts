@@ -1,7 +1,8 @@
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import authRoutes from './routes/authRoutes.js';
-import categoriaRoutes from './routes/categoriaRoutes.js'; // Importa as rotas de categorias
+import categoriaRoutes from './routes/categoriaRoutes.js';
+import ocorrenciaRoutes from './routes/ocorrenciaRoutes.js';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -10,6 +11,7 @@ app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/categorias', categoriaRoutes);
+app.use('/api', ocorrenciaRoutes);
 
 app.get('/api/status', async function (req: Request, res: Response) {
   try {
