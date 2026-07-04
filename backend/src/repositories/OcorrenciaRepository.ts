@@ -32,4 +32,11 @@ export class OcorrenciaRepository {
       }
     });
   }
+
+  async buscarPorId(id: number) {
+    return prisma.ocorrencia.findUnique({
+      where: { id }
+    });
+  }
+  
 }
