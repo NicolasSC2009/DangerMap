@@ -59,4 +59,9 @@ async reativarUsuario(id: number) {
     data: { ativo: true },
   });
 }
+async buscarPorId(id: number) {
+  return prisma.usuario.findUnique({
+    where: { id }
+  });
+}
 }
