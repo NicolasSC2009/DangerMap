@@ -35,4 +35,13 @@ export class AdminService {
 
     return await adminRepository.inativarUsuario(usuarioId);
   }
+
+  async desbanirUsuario(usuarioId: number) {
+    const usuario = await usuarioRepository.buscarPorId(usuarioId);
+    if (!usuario) {
+      throw new Error('Usuário não encontrado.');
+    }
+
+    return await adminRepository.reativarUsuario(usuarioId);
+  }
 }

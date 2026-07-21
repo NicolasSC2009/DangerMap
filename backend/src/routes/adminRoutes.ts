@@ -6,6 +6,7 @@ import { autorizarAdmin } from '../middlewares/autorizarAdmin.js';
 const router = Router();
 const adminController = new AdminController();
 
+router.patch('/admin/usuarios/:usuarioId/desbanir', autenticarToken, autorizarAdmin, adminController.desbanirUsuario);
 router.patch('/admin/ocorrencias/:ocorrenciaId/moderar', autenticarToken, autorizarAdmin, adminController.moderarOcorrencia);
 router.patch('/admin/usuarios/:usuarioId/banir', autenticarToken, autorizarAdmin, adminController.banirUsuario);
 

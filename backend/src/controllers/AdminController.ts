@@ -51,4 +51,25 @@ export class AdminController {
       return res.status(400).json({ error: errorMessage });
     }
   }
+
+  async desbanirUsuario(req: RequisicaoAutenticada, res: Response) {
+    try {
+      const idParam = req.params.usuarioId;
+      const usuarioId = parseInt(Array.isArray(idParam) ? idParam[0] : idParam);
+
+      if (isNaN(usuarioId)) {
+        return res.status(400).json({ error: 'ID de usuário inválido.' });
+      }
+
+      const resultado = await adminService.desbanirUsuario(usuarioId);
+
+      return res.status(200).json({
+        mensagem: 'Usuário reativado/desbanido com sucesso!',
+        usuario: resultado
+      });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao desbanir usuário.';
+      return res.status(400).json({ error: errorMessage });
+    }
+  }
 }
