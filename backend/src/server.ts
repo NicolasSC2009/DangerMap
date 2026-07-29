@@ -6,6 +6,7 @@ import ocorrenciaRoutes from './routes/ocorrenciaRoutes.js';
 import confirmacaoRoutes from './routes/confirmacaoRoutes.js';
 import denunciaRoutes from './routes/denunciaRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import usuarioRoutes from './routes/usuarioRoutes.js';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -18,6 +19,7 @@ app.use('/api', ocorrenciaRoutes);
 app.use('/api', confirmacaoRoutes);
 app.use('/api', denunciaRoutes);
 app.use('/api', adminRoutes);
+app.use('/api', usuarioRoutes);
 
 app.get('/api/status', async function (req: Request, res: Response) {
   try {
