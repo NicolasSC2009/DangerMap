@@ -7,6 +7,8 @@ import confirmacaoRoutes from './routes/confirmacaoRoutes.js';
 import denunciaRoutes from './routes/denunciaRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import usuarioRoutes from './routes/usuarioRoutes.js';
+import notificacaoRoutes from './routes/notificacaoRoutes.js';
+import { iniciarJobLimpeza } from './utils/LimpezaOcorrencias.js';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -15,6 +17,7 @@ app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/categorias', categoriaRoutes);
+app.use('/api/notificacoes', notificacaoRoutes);
 app.use('/api', ocorrenciaRoutes);
 app.use('/api', confirmacaoRoutes);
 app.use('/api', denunciaRoutes);
@@ -38,6 +41,8 @@ app.get('/api/status', async function (req: Request, res: Response) {
     });
   }
 });
+
+iniciarJobLimpeza();
 
 const PORT = process.env.PORT || 3000;
 

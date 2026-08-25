@@ -48,6 +48,7 @@ model Ocorrencia {
   confirmacoes     Confirmacao[]
   denuncias        Denuncia[]
   interacoes       InteracaoSocial[]
+  notificacoes     Notificacao[]
   categorias       categorias?             @relation(fields: [categoria_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
   usuario          Usuario?                @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
@@ -83,15 +84,19 @@ model Denuncia {
 }
 
 model Notificacao {
-  id               Int       @id @default(autoincrement())
-  usuario_id       Int?
-  titulo           String    @db.VarChar(150)
+  id               Int                    @id @default(autoincrement())
+  usuario_id       Int
+  titulo           String                 @db.VarChar(150)
   mensagem         String
-  tipo_notificacao String?   @db.VarChar(50)
-  lida             Boolean?  @default(false)
-  data_envio       DateTime? @default(now()) @db.Timestamp(6)
-  usuario          Usuario?  @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tipo_notificacao tipo_notificacao_enum?
+  lida             Boolean?               @default(false)
+  data_envio       DateTime?              @default(now()) @db.Timestamp(6)
+  ocorrencia_id    Int?
+  ocorrencias      Ocorrencia?            @relation(fields: [ocorrencia_id], references: [id], onUpdate: NoAction)
+  usuario          Usuario                @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
+  @@index([lida], map: "idx_notificacoes_lida")
+  @@index([usuario_id], map: "idx_notificacoes_usuario")
   @@map("notificacoes")
 }
 
@@ -183,4 +188,13 @@ enum status_ocorrencia_enum {
 enum tipo_usuario_enum {
   usuario
   admin
+}
+
+enum tipo_notificacao_enum {
+  proximidade
+  validacao_campo
+  confirmacao
+  resolucao
+  sistema
+  moderacao
 }
