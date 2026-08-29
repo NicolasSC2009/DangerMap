@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { NotificacaoService } from '../services/notificacaoService.js';
+import { NotificacaoService } from '../services/NotificacaoService.js';
 
 export class NotificacaoController {
   static async listar(req: Request, res: Response) {

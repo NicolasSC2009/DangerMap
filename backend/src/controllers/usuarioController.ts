@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { RequisicaoAutenticada } from '../middlewares/authMiddleware.js';
 import { UsuarioService } from '../services/UsuarioService.js';
+import { NotificacaoService } from '../services/NotificacaoService.js';
 
 const usuarioService = new UsuarioService();
 
@@ -34,7 +35,17 @@ export class UsuarioController {
         return res.status(400).json({ error: 'O ID do usuário a ser reativado é obrigatório' });
       }
 
-      await usuarioService.reativarConta(Number(usuarioIdParaReativar));
+      const targetId = Number(usuarioIdParaReativar);
+      await usuarioService.reativarConta(targetId);
+
+      NotificacaoService.criarGatilhoNotificacao({
+        usuarioId: targetId,
+        titulo: 'Conta Reativada',
+        mensagem: 'Sua conta no DangerMap foi reativada com sucesso! Você já pode navegar e colaborar novamente.',
+        tipo: 'sistema'
+      }).catch(function(err) {
+        console.error('[ERRO NOTIFICAÇÃO REATIVAR CONTA]:', err);
+      });
 
       return res.status(200).json({ mensagem: 'A conta do usuário foi reativada com sucesso pelo administrador!' });
     } catch (error) {
@@ -118,6 +129,31 @@ export class UsuarioController {
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : 'Erro ao denunciar usuário.';
       return res.status(400).json({ error: msg });
+    }
+  }
+  async atualizarPosicaoGPS(req: RequisicaoAutenticada, res: Response): Promise<Response> {
+    try {
+      const usuarioId = req.usuarioId;
+      if (!usuarioId) {
+        return res.status(401).json({ error: 'Usuário não autenticado' });
+      }
+
+      const { latitude, longitude } = req.body;
+      if (latitude === undefined || longitude === undefined) {
+        return res.status(400).json({ error: 'Latitude e longitude são obrigatórias.' });
+      }
+
+      NotificacaoService.verificarValidadorPresencial(
+        usuarioId,
+        Number(latitude),
+        Number(longitude)
+      ).catch(function(err) {
+        console.error('[ERRO GPS GEOFENCING]:', err);
+      });
+
+      return res.status(200).json({ mensagem: 'Posição GPS processada com sucesso' });
+    } catch (error) {
+      return res.status(500).json({ error: 'Erro ao processar localização GPS.' });
     }
   }
 }

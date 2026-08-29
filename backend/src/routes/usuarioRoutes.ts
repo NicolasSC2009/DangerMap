@@ -10,5 +10,8 @@ router.get('/usuarios/me', autenticarToken, usuarioController.obterMeuPerfil);
 router.put('/usuarios/me', autenticarToken, usuarioController.atualizarPerfil);
 router.get('/usuarios/:id/perfil', autenticarToken, usuarioController.obterPerfilPublico);
 router.post('/usuarios/:id/denunciar', autenticarToken, usuarioController.denunciarUsuario);
+router.post('/posicao-gps', function(req, res) {
+  usuarioController.atualizarPosicaoGPS(req, res);
+});
 
 export default router;

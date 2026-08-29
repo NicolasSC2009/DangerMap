@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { RequisicaoAutenticada } from '../middlewares/authMiddleware.js';
 import { ConfirmacaoService } from '../services/ConfirmacaoService.js';
+import { NotificacaoService } from '../services/NotificacaoService.js';
 
 const confirmacaoService = new ConfirmacaoService();
 
@@ -20,6 +21,21 @@ export class ConfirmacaoController {
       }
 
       const resultado = await confirmacaoService.executarConfirmacao(usuarioId, ocorrenciaId);
+
+      if (resultado && (resultado as any).ocorrencia?.usuario_id) {
+        const autorId = (resultado as any).ocorrencia.usuario_id;
+        if (autorId !== usuarioId) {
+          NotificacaoService.criarGatilhoNotificacao({
+            usuarioId: autorId,
+            ocorrenciaId: ocorrenciaId,
+            titulo: 'Nova Confirmação',
+            mensagem: 'Sua ocorrência recebeu uma nova confirmação de um cidadão.',
+            tipo: 'confirmacao'
+          }).catch(function(err) {
+            console.error('[ERRO NOTIFICAÇÃO CONFIRMAÇÃO]:', err);
+          });
+        }
+      }
 
       return res.status(201).json({
         mensagem: 'Ocorrência confirmada com sucesso!',
