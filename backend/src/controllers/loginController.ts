@@ -12,7 +12,18 @@ export class LoginController {
         return res.status(400).json({ error: 'Email e senha são obrigatórios' });
       }
 
-      const resultado = await loginService.executar({ email, senha });
+      const resultado = await loginService.executar({ email, senha }) as any;
+
+      if (resultado && resultado.refreshToken) {
+        res.cookie('refreshToken', resultado.refreshToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        delete resultado.refreshToken;
+      }
 
       return res.status(200).json(resultado);
     } catch (error: unknown) {

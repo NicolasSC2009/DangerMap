@@ -15,7 +15,6 @@ model Usuario {
   tipo_usuario        tipo_usuario_enum? @default(usuario)
   data_cadastro       DateTime?          @default(now()) @db.Timestamp(6)
   ativo               Boolean?           @default(true)
-  google_id           String?            @unique @db.VarChar(255)
   senha_reset_token   String?            @db.VarChar(255)
   senha_reset_expira  DateTime?          @db.Timestamp(6)
   confirmacoes        Confirmacao[]
@@ -45,6 +44,7 @@ model Ocorrencia {
   imagem_url       String?                 @db.VarChar(255)
   categoria_ia     String?                 @db.VarChar(100)
   id_agrupamento   Int?
+  anonimo          Boolean?                @default(false)
   confirmacoes     Confirmacao[]
   denuncias        Denuncia[]
   interacoes       InteracaoSocial[]
@@ -183,6 +183,7 @@ enum status_ocorrencia_enum {
   pendente
   confirmado
   resolvido
+  arquivado
 }
 
 enum tipo_usuario_enum {

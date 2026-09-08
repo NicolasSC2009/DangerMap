@@ -9,5 +9,6 @@ export const criarOcorrenciaSchema = z.object({
     .max(90, 'Latitude inválida (máximo 90)'),
   longitude: z.number()
     .min(-180, 'Longitude inválida (mínimo -180)')
-    .max(180, 'Longitude inválida (máximo 180)')
+    .max(180, 'Longitude inválida (máximo 180)'),
+  anonimo: z.boolean().optional().default(false)
 });

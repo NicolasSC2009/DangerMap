@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import cookieParser from 'cookie-parser';
 import { PrismaClient } from '@prisma/client';
 import authRoutes from './routes/authRoutes.js';
 import categoriaRoutes from './routes/categoriaRoutes.js';
@@ -14,6 +15,7 @@ const app = express();
 const prisma = new PrismaClient();
 
 app.use(express.json());
+app.use(cookieParser());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/categorias', categoriaRoutes);

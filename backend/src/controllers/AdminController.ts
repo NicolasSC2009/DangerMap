@@ -1,12 +1,14 @@
 import { Response } from 'express';
+import { PrismaClient } from '@prisma/client';
 import { RequisicaoAutenticada } from '../middlewares/authMiddleware.js';
 import { AdminService } from '../services/AdminService.js';
 import { NotificacaoService } from '../services/NotificacaoService.js';
 
 const adminService = new AdminService();
+const prisma = new PrismaClient();
 
 export class AdminController {
-async moderarOcorrencia(req: RequisicaoAutenticada, res: Response) {
+  async moderarOcorrencia(req: RequisicaoAutenticada, res: Response) {
     try {
       const idParam = req.params.ocorrenciaId;
       const ocorrenciaId = parseInt(Array.isArray(idParam) ? idParam[0] : idParam);
@@ -109,7 +111,6 @@ async moderarOcorrencia(req: RequisicaoAutenticada, res: Response) {
 
       const resultado = await adminService.desbanirUsuario(usuarioId);
 
-      // Alerta de reativação de conta
       NotificacaoService.criarGatilhoNotificacao({
         usuarioId: usuarioId,
         titulo: 'Conta Reativada',
@@ -126,6 +127,49 @@ async moderarOcorrencia(req: RequisicaoAutenticada, res: Response) {
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro ao desbanir usuário.';
       return res.status(400).json({ error: errorMessage });
+    }
+  }
+
+  async relatorioAreaGeografica(req: RequisicaoAutenticada, res: Response) {
+    try {
+      const latitude = Number(req.query.lat);
+      const longitude = Number(req.query.lng);
+      const raioMetros = Number(req.query.raio) || 5000;
+
+      if (isNaN(latitude) || isNaN(longitude)) {
+        return res.status(400).json({ error: 'Latitude e longitude válidas são obrigatórias.' });
+      }
+
+      const ocorrencias = await prisma.$queryRaw`
+        SELECT 
+          o.id,
+          o.titulo,
+          o.descricao,
+          o.latitude,
+          o.longitude,
+          o.gravidade,
+          o.status,
+          o.data_criacao,
+          ROUND(
+            ST_Distance(
+              ST_SetSRID(ST_MakePoint(o.longitude, o.latitude), 4326)::geography,
+              ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography
+            )::numeric, 2
+          ) AS distancia_metros
+        FROM "Ocorrencia" o
+        WHERE ST_DWithin(
+          ST_SetSRID(ST_MakePoint(o.longitude, o.latitude), 4326)::geography,
+          ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography,
+          ${raioMetros}
+        )
+        ORDER BY distancia_metros ASC;
+      `;
+
+      return res.status(200).json(ocorrencias);
+    } catch (error: unknown) {
+      console.error('[ERRO POSTGIS RELATORIO]:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao gerar relatório geográfico.';
+      return res.status(500).json({ error: errorMessage });
     }
   }
 }

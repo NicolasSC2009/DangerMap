@@ -16,6 +16,18 @@ export class OcorrenciaService {
   }
 
   async obterTodas() {
-    return await ocorrenciaRepository.listarTodas();
+    const ocorrencias = await ocorrenciaRepository.listarTodas();
+
+    return ocorrencias.map(function(ocorrencia: any) {
+      if (ocorrencia.anonimo) {
+        return {
+          ...ocorrencia,
+          usuario_id: null,
+          usuarioId: null,
+          usuario: null
+        };
+      }
+      return ocorrencia;
+    });
   }
 }
