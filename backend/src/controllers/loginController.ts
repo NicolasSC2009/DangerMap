@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { LoginService } from '../services/LoginService.js';
+import { REFRESH_TOKEN_COOKIE_MAX_AGE_MS } from '../config/auth.js';
 
 const loginService = new LoginService();
 
@@ -19,7 +20,7 @@ export class LoginController {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'strict',
-          maxAge: 7 * 24 * 60 * 60 * 1000
+          maxAge: REFRESH_TOKEN_COOKIE_MAX_AGE_MS
         });
 
         delete resultado.refreshToken;

@@ -7,10 +7,6 @@ const categoriaService = new CategoriaService();
 export class CategoriaController {
   async criar(req: RequisicaoAutenticada, res: Response): Promise<Response> {
     try {
-      if (req.usuarioTipo !== 'admin') {
-        return res.status(403).json({ error: 'Acesso negado, apenas administradores podem gerenciar categorias' });
-      }
-
       const { nome, descricao, icone_url } = req.body;
       const novaCategoria = await categoriaService.criar({ nome, descricao, icone_url });
 

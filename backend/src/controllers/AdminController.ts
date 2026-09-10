@@ -141,22 +141,21 @@ export class AdminController {
       }
 
       const ocorrencias = await prisma.$queryRaw`
-        SELECT 
+        SELECT
           o.id,
-          o.titulo,
           o.descricao,
           o.latitude,
           o.longitude,
           o.gravidade,
           o.status,
-          o.data_criacao,
+          o.data_registro,
           ROUND(
             ST_Distance(
               ST_SetSRID(ST_MakePoint(o.longitude, o.latitude), 4326)::geography,
               ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography
             )::numeric, 2
           ) AS distancia_metros
-        FROM "Ocorrencia" o
+        FROM ocorrencias o
         WHERE ST_DWithin(
           ST_SetSRID(ST_MakePoint(o.longitude, o.latitude), 4326)::geography,
           ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography,

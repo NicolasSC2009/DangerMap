@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { BlacklistRepository } from '../repositories/BlacklistRepository.js';
+import { JWT_SECRET } from '../config/auth.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'chave_secreta_e_super_segura_do_dangermap';
 const blacklistRepository = new BlacklistRepository();
 
 export interface RequisicaoAutenticada extends Request {

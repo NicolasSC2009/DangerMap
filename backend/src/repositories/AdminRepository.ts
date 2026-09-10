@@ -4,12 +4,15 @@ const prisma = new PrismaClient();
 
 export class AdminRepository {
   async alterarStatusOcorrencia(
-    ocorrenciaId: number, 
+    ocorrenciaId: number,
     novoStatus: status_ocorrencia_enum
   ) {
     return prisma.ocorrencia.update({
       where: { id: ocorrenciaId },
-      data: { status: novoStatus }
+      data: {
+        status: novoStatus,
+        data_resolucao: novoStatus === status_ocorrencia_enum.resolvido ? new Date() : null
+      }
     });
   }
 

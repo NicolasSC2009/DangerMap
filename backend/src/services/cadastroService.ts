@@ -18,7 +18,7 @@ export class CadastroService {
       senha: senhaCriptografada,
     });
 
-    const { senha, senha_reset_token, senha_reset_expira, google_id, ...usuarioSeguro } = novoUsuario;
+    const { senha, senha_reset_token, senha_reset_expira, ...usuarioSeguro } = novoUsuario;
 
     return usuarioSeguro;
   }

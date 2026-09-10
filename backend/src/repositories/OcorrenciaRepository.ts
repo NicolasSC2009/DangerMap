@@ -12,7 +12,8 @@ export class OcorrenciaRepository {
         descricao: dados.descricao || null,    
         latitude: dados.latitude,
         longitude: dados.longitude,
-        status: 'pendente'                     
+        anonimo: dados.anonimo,
+        status: 'pendente'
       }
     });
   }

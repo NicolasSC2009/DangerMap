@@ -53,20 +53,13 @@ export class UsuarioRepository {
     });
   }
 
-  async reativarUsuario(id: number) {
-    return prisma.usuario.update({
-      where: { id },
-      data: { ativo: true },
-    });
-  }
-
   async buscarPorId(id: number) {
     return prisma.usuario.findUnique({
       where: { id },
     });
   }
 
-  async buscarPerfilPublico(usuarioId: number) {
+  async buscarPerfilPublico(usuarioId: number, incluirAnonimas: boolean = false) {
     return prisma.usuario.findUnique({
       where: { id: usuarioId },
       select: {
@@ -81,7 +74,9 @@ export class UsuarioRepository {
           },
         },
         ocorrencias: {
-          where: { status: { not: 'resolvido' } },
+          where: incluirAnonimas
+            ? { status: { not: 'resolvido' } }
+            : { status: { not: 'resolvido' }, anonimo: false },
           select: {
             id: true,
             descricao: true,
@@ -115,16 +110,7 @@ export class UsuarioRepository {
   }
 
 async registrarDenunciaUsuario(autorId: number, denunciadoId: number, motivo: string) {
-    const tabelaDenuncia = (prisma as any).denuncias_usuarios 
-      || (prisma as any).denuncia_usuario 
-      || (prisma as any).denunciaUsuario 
-      || (prisma as any).denunciasUsuarios;
-
-    if (!tabelaDenuncia) {
-      throw new Error('Modelo de denúncia de usuário não encontrado no Prisma Client.');
-    }
-
-    return tabelaDenuncia.create({
+    return prisma.denunciaUsuario.create({
       data: {
         autor_id: autorId,
         usuario_denunciado_id: denunciadoId,

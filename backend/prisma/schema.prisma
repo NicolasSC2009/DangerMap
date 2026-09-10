@@ -45,6 +45,7 @@ model Ocorrencia {
   categoria_ia     String?                 @db.VarChar(100)
   id_agrupamento   Int?
   anonimo          Boolean?                @default(false)
+  data_resolucao   DateTime?               @db.Timestamp(6)
   confirmacoes     Confirmacao[]
   denuncias        Denuncia[]
   interacoes       InteracaoSocial[]
@@ -56,6 +57,7 @@ model Ocorrencia {
   @@index([data_registro], map: "idx_ocorrencias_data_registro")
   @@index([status], map: "idx_ocorrencias_status")
   @@index([usuario_id], map: "idx_ocorrencias_usuario")
+  @@index([status, data_resolucao], map: "idx_ocorrencias_status_resolucao")
   @@map("ocorrencias")
 }
 

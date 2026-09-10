@@ -14,8 +14,9 @@ export class UsuarioService {
     return dadosSeguros;
   }
 
-  async obterPerfilPublico(usuarioId: number) {
-    const perfil = await usuarioRepository.buscarPerfilPublico(usuarioId);
+  async obterPerfilPublico(usuarioId: number, visualizadorId?: number) {
+    const ehProprioDono = visualizadorId === usuarioId;
+    const perfil = await usuarioRepository.buscarPerfilPublico(usuarioId, ehProprioDono);
     if (!perfil || !perfil.ativo) {
       throw new Error('Perfil não encontrado ou inativo');
     }
@@ -58,15 +59,6 @@ export class UsuarioService {
     }
 
     return await usuarioRepository.desativarUsuario(usuarioId);
-  }
-
-  async reativarConta(usuarioId: number) {
-    const usuario = await usuarioRepository.buscarPorId(usuarioId);
-    if (!usuario) {
-      throw new Error('Usuário não encontrado.');
-    }
-
-    return await usuarioRepository.reativarUsuario(usuarioId);
   }
 
   async denunciarUsuario(autorId: number, denunciadoId: number, motivo: string) {

@@ -65,7 +65,7 @@ export class NotificacaoService {
         ocorrencia_id: data.ocorrenciaId,
         titulo: data.titulo,
         mensagem: data.mensagem,
-        tipo: data.tipo,
+        tipo_notificacao: data.tipo,
       },
     });
   }

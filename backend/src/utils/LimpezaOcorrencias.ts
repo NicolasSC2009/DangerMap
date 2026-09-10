@@ -12,9 +12,10 @@ async function executarLimpeza() {
     const arquivadas = await prisma.ocorrencia.updateMany({
       where: {
         status: 'resolvido',
-        data_registro: {
-          lte: vinteEQuatroHorasAtras,
-        },
+        OR: [
+          { data_resolucao: { lte: vinteEQuatroHorasAtras } },
+          { data_resolucao: null, data_registro: { lte: vinteEQuatroHorasAtras } },
+        ],
       },
       data: {
         status: 'arquivado' as any,

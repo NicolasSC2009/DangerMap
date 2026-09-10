@@ -8,7 +8,7 @@ const ocorrenciaRepository = new OcorrenciaRepository();
 const usuarioRepository = new UsuarioRepository();
 
 export class AdminService {
-  async moderarOcorrencia(ocorrenciaId: number, acao: 'rejeitar' | 'manter') {
+  async moderarOcorrencia(ocorrenciaId: number, acao: 'rejeitar' | 'manter' | 'resolver') {
     const ocorrencia = await ocorrenciaRepository.buscarPorId(ocorrenciaId);
     if (!ocorrencia) {
       throw new Error('Ocorrência não encontrada.');
@@ -16,13 +16,20 @@ export class AdminService {
 
     if (acao === 'rejeitar') {
       return await adminRepository.alterarStatusOcorrencia(
-        ocorrenciaId, 
+        ocorrenciaId,
+        status_ocorrencia_enum.arquivado
+      );
+    }
+
+    if (acao === 'resolver') {
+      return await adminRepository.alterarStatusOcorrencia(
+        ocorrenciaId,
         status_ocorrencia_enum.resolvido
       );
     }
 
     return await adminRepository.alterarStatusOcorrencia(
-      ocorrenciaId, 
+      ocorrenciaId,
       status_ocorrencia_enum.confirmado
     );
   }

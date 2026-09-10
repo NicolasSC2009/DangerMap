@@ -23,36 +23,6 @@ export class UsuarioController {
     }
   }
 
-  async reativarContaPorAdmin(req: RequisicaoAutenticada, res: Response): Promise<Response> {
-    try {
-      if (req.usuarioTipo !== 'admin') {
-        return res.status(403).json({ error: 'Acesso negado. Apenas administradores podem reativar contas' });
-      }
-
-      const { usuarioIdParaReativar } = req.body;
-
-      if (!usuarioIdParaReativar) {
-        return res.status(400).json({ error: 'O ID do usuário a ser reativado é obrigatório' });
-      }
-
-      const targetId = Number(usuarioIdParaReativar);
-      await usuarioService.reativarConta(targetId);
-
-      NotificacaoService.criarGatilhoNotificacao({
-        usuarioId: targetId,
-        titulo: 'Conta Reativada',
-        mensagem: 'Sua conta no DangerMap foi reativada com sucesso! Você já pode navegar e colaborar novamente.',
-        tipo: 'sistema'
-      }).catch(function(err) {
-        console.error('[ERRO NOTIFICAÇÃO REATIVAR CONTA]:', err);
-      });
-
-      return res.status(200).json({ mensagem: 'A conta do usuário foi reativada com sucesso pelo administrador!' });
-    } catch (error) {
-      return res.status(500).json({ error: 'Erro ao tentar reativar a conta.' });
-    }
-  }
-
   async obterMeuPerfil(req: RequisicaoAutenticada, res: Response): Promise<Response> {
     try {
       const usuarioId = req.usuarioId;
@@ -77,7 +47,7 @@ export class UsuarioController {
         return res.status(400).json({ error: 'ID de usuário inválido' });
       }
 
-      const perfil = await usuarioService.obterPerfilPublico(usuarioId);
+      const perfil = await usuarioService.obterPerfilPublico(usuarioId, req.usuarioId);
       return res.status(200).json(perfil);
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : 'Erro ao obter perfil público';

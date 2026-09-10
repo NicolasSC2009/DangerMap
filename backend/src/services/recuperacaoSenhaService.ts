@@ -1,5 +1,5 @@
 import { UsuarioRepository } from '../repositories/UsuarioRepository.js';
-import { mailTransporter } from '../config/mail.js';
+import { mailTransporter, MAIL_FROM } from '../config/mail.js';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 
@@ -20,7 +20,7 @@ export class RecuperacaoSenhaService {
     await usuarioRepository.salvarTokenReset(email, token, expiracao);
 
     await mailTransporter.sendMail({
-      from: '"DangerMap Suporte" <suporte@dangermap.com>',
+      from: MAIL_FROM,
       to: email,
       subject: 'Recuperação de Senha - DangerMap',
       html: `

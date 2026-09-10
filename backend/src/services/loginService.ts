@@ -1,9 +1,9 @@
 import { UsuarioRepository } from '../repositories/UsuarioRepository.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { JWT_SECRET, REFRESH_SECRET, ACCESS_TOKEN_EXPIRES_IN, REFRESH_TOKEN_EXPIRES_IN } from '../config/auth.js';
 
 const usuarioRepository = new UsuarioRepository();
-const JWT_SECRET = process.env.JWT_SECRET || 'chave_secreta_e_super_segura_do_dangermap';
 
 export class LoginService {
   async executar(dados: any) {
@@ -25,7 +25,13 @@ export class LoginService {
     const token = jwt.sign(
       { id: usuario.id, tipo_usuario: usuario.tipo_usuario },
       JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: ACCESS_TOKEN_EXPIRES_IN }
+    );
+
+    const refreshToken = jwt.sign(
+      { id: usuario.id, tipo_usuario: usuario.tipo_usuario },
+      REFRESH_SECRET,
+      { expiresIn: REFRESH_TOKEN_EXPIRES_IN }
     );
 
     return {
@@ -35,7 +41,8 @@ export class LoginService {
         email: usuario.email,
         tipo_usuario: usuario.tipo_usuario,
       },
-      token
+      token,
+      refreshToken
     };
   }
 }
