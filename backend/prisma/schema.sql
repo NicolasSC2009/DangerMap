@@ -17,16 +17,21 @@ CREATE TYPE tipo_notificacao_enum AS ENUM ('proximidade', 'validacao_campo', 'co
 -- ============================================================================
 -- 2. TABELA DE CATEGORIAS
 -- ============================================================================
+-- "ativo" (RF19) permite desativar uma categoria sem apagar o histórico de
+-- ocorrências que já a usam (a FK em ocorrencias é ON DELETE RESTRICT).
 CREATE TABLE categorias (
     id SERIAL PRIMARY KEY,
     nome VARCHAR(50) NOT NULL UNIQUE,
     descricao VARCHAR(255),
-    icone_url VARCHAR(255)
+    icone_url VARCHAR(255),
+    ativo BOOLEAN DEFAULT TRUE
 );
 
 -- ============================================================================
 -- 3. TABELA DE USUÁRIOS
 -- ============================================================================
+-- "qtd_denuncias_recebidas" (RN14/RF16.2) alimenta a fila de perfis
+-- denunciados no painel admin - incrementado a cada denúncia de usuário.
 CREATE TABLE usuarios (
     id SERIAL PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
@@ -36,8 +41,11 @@ CREATE TABLE usuarios (
     data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     ativo BOOLEAN DEFAULT TRUE,
     senha_reset_token VARCHAR(255),
-    senha_reset_expira TIMESTAMP
+    senha_reset_expira TIMESTAMP,
+    qtd_denuncias_recebidas INT DEFAULT 0 CHECK (qtd_denuncias_recebidas >= 0)
 );
+
+CREATE INDEX idx_usuarios_qtd_denuncias_recebidas ON usuarios(qtd_denuncias_recebidas);
 
 -- ============================================================================
 -- 4. TABELA DE OCORRÊNCIAS
@@ -48,6 +56,10 @@ CREATE TABLE usuarios (
 -- "data_resolucao" foi incorporada aqui (antes era um ALTER separado) e é
 -- preenchida pelo backend quando uma ocorrência é marcada como "resolvido",
 -- usada pelo job de arquivamento automático (24h após a resolução).
+-- "qtd_denuncias" (RN13/RF17.1) segue o mesmo padrão de qtd_confirmacoes:
+-- incrementado a cada denúncia e usado para ocultar a ocorrência do mapa
+-- público automaticamente (shadowban) quando atinge o limite configurado
+-- em parametros_sistema.
 CREATE TABLE ocorrencias (
     id SERIAL PRIMARY KEY,
     usuario_id INT REFERENCES usuarios(id) ON DELETE CASCADE,
@@ -61,6 +73,7 @@ CREATE TABLE ocorrencias (
     data_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     data_resolucao TIMESTAMP NULL,
     qtd_confirmacoes INT DEFAULT 0 CHECK (qtd_confirmacoes >= 0),
+    qtd_denuncias INT DEFAULT 0 CHECK (qtd_denuncias >= 0),
     imagem_url VARCHAR(255),
     categoria_ia VARCHAR(100),
     id_agrupamento INT
@@ -72,6 +85,7 @@ CREATE INDEX idx_ocorrencias_data_registro ON ocorrencias(data_registro);
 CREATE INDEX idx_ocorrencias_categoria ON ocorrencias(categoria_id);
 CREATE INDEX idx_ocorrencias_usuario ON ocorrencias(usuario_id);
 CREATE INDEX idx_ocorrencias_status_resolucao ON ocorrencias(status, data_resolucao);
+CREATE INDEX idx_ocorrencias_qtd_denuncias ON ocorrencias(qtd_denuncias);
 CREATE INDEX idx_ocorrencias_localizacao ON ocorrencias USING GIST (
     (ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography)
 );
@@ -174,3 +188,22 @@ CREATE TABLE blacklist_tokens (
 );
 
 CREATE INDEX idx_blacklist_token ON blacklist_tokens(token);
+
+-- ============================================================================
+-- 13. TABELA DE PARÂMETROS GLOBAIS DO SISTEMA (RF19)
+-- ============================================================================
+-- Configurações que o admin pode ajustar em runtime sem precisar de deploy:
+-- limites de denúncia (RN13/RN14), janela de arquivamento (RN21) e raios de
+-- geofencing (RF12). O backend cacheia esses valores por 60s em memória.
+CREATE TABLE parametros_sistema (
+    chave VARCHAR(100) PRIMARY KEY,
+    valor VARCHAR(255) NOT NULL,
+    descricao VARCHAR(255)
+);
+
+INSERT INTO parametros_sistema (chave, valor, descricao) VALUES
+    ('limite_denuncias_ocorrencia', '5', 'Numero de denuncias para uma ocorrencia ser ocultada automaticamente do mapa publico'),
+    ('limite_denuncias_usuario', '5', 'Numero de denuncias para um perfil entrar na fila de moderacao'),
+    ('horas_arquivamento_resolvido', '24', 'Horas apos a resolucao para a ocorrencia ser arquivada automaticamente'),
+    ('raio_validacao_presencial_metros', '200', 'Raio em metros para validacao presencial de ocorrencias pendentes'),
+    ('raio_notificacao_proximidade_metros', '600', 'Raio em metros para notificar usuarios proximos de uma nova ocorrencia');

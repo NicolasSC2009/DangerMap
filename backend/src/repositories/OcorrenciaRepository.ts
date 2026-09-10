@@ -18,10 +18,11 @@ export class OcorrenciaRepository {
     });
   }
 
-  async listarTodas() {
+  async listarTodas(limiteDenuncias: number) {
     return prisma.ocorrencia.findMany({
       where: {
-        status: { in: ['pendente', 'confirmado'] }
+        status: { in: ['pendente', 'confirmado'] },
+        qtd_denuncias: { lt: limiteDenuncias }
       },
       include: {
         categorias: {
@@ -39,5 +40,22 @@ export class OcorrenciaRepository {
       where: { id }
     });
   }
-  
+
+  async atualizarImagem(id: number, imagemUrl: string | null) {
+    return prisma.ocorrencia.update({
+      where: { id },
+      data: { imagem_url: imagemUrl }
+    });
+  }
+
+  async listarComDenunciasAcimaDoLimite(limiteDenuncias: number) {
+    return prisma.ocorrencia.findMany({
+      where: { qtd_denuncias: { gte: limiteDenuncias } },
+      include: {
+        categorias: { select: { nome: true } },
+        usuario: { select: { id: true, nome: true } }
+      },
+      orderBy: { qtd_denuncias: 'desc' }
+    });
+  }
 }

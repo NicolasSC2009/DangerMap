@@ -13,12 +13,21 @@ export class DenunciaRepository {
   }
 
   async criar(usuarioId: number, ocorrenciaId: number, motivo: string) {
-    return prisma.denuncia.create({
-      data: {
-        usuario_id: usuarioId,
-        ocorrencia_id: ocorrenciaId,
-        motivo: motivo
-      }
+    return prisma.$transaction(async function (tx) {
+      const novaDenuncia = await tx.denuncia.create({
+        data: {
+          usuario_id: usuarioId,
+          ocorrencia_id: ocorrenciaId,
+          motivo: motivo
+        }
+      });
+
+      await tx.ocorrencia.update({
+        where: { id: ocorrenciaId },
+        data: { qtd_denuncias: { increment: 1 } }
+      });
+
+      return novaDenuncia;
     });
   }
 

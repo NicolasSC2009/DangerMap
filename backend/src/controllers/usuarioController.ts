@@ -2,6 +2,8 @@ import { Response } from 'express';
 import { RequisicaoAutenticada } from '../middlewares/authMiddleware.js';
 import { UsuarioService } from '../services/UsuarioService.js';
 import { NotificacaoService } from '../services/NotificacaoService.js';
+import { LogAtividadeService } from '../services/LogAtividadeService.js';
+import { ParametroService } from '../services/ParametroService.js';
 
 const usuarioService = new UsuarioService();
 
@@ -16,6 +18,8 @@ export class UsuarioController {
       }
 
       await usuarioService.desativarMinhaConta(usuarioId);
+
+      LogAtividadeService.registrar({ usuarioId, acao: 'EXCLUIR_CONTA', req });
 
       return res.status(200).json({ mensagem: 'Sua conta foi excluída e desativada com sucesso' });
     } catch (error) {
@@ -113,11 +117,14 @@ export class UsuarioController {
         return res.status(400).json({ error: 'Latitude e longitude são obrigatórias.' });
       }
 
-      NotificacaoService.verificarValidadorPresencial(
-        usuarioId,
-        Number(latitude),
-        Number(longitude)
-      ).catch(function(err) {
+      ParametroService.obterNumero('raio_validacao_presencial_metros').then(function (raio) {
+        return NotificacaoService.verificarValidadorPresencial(
+          usuarioId,
+          Number(latitude),
+          Number(longitude),
+          raio
+        );
+      }).catch(function(err) {
         console.error('[ERRO GPS GEOFENCING]:', err);
       });
 

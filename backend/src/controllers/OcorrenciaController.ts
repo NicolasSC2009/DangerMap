@@ -1,30 +1,33 @@
 import { Response, Request } from 'express';
 import { OcorrenciaService } from '../services/OcorrenciaService.js';
 import { NotificacaoService } from '../services/NotificacaoService.js';
+import { LogAtividadeService } from '../services/LogAtividadeService.js';
+import { ParametroService } from '../services/ParametroService.js';
+import { SugestaoCategoriaService } from '../services/SugestaoCategoriaService.js';
+import { RequisicaoAutenticada } from '../middlewares/authMiddleware.js';
 import { ZodError } from 'zod';
-import { PrismaClient } from '@prisma/client';
 
 const ocorrenciaService = new OcorrenciaService();
-const prisma = new PrismaClient();
 
 export class OcorrenciaController {
-  async cadastrar(req: Request, res: Response): Promise<Response> {
+  async cadastrar(req: RequisicaoAutenticada, res: Response): Promise<Response> {
     try {
-      // @ts-ignore
-      const usuarioId = req.usuarioId; 
-      
+      const usuarioId = req.usuarioId as number;
+
       const novaOcorrencia = await ocorrenciaService.registrar(req.body, usuarioId);
 
       if (novaOcorrencia && novaOcorrencia.latitude && novaOcorrencia.longitude) {
         const categoriaNome = (novaOcorrencia as any).categoria?.nome || 'Perigo';
-        NotificacaoService.notificarUsuariosProximos(
-          novaOcorrencia.id,
-          Number(novaOcorrencia.latitude),
-          Number(novaOcorrencia.longitude),
-          categoriaNome,
-          usuarioId,
-          600
-        ).catch(function(err) {
+        ParametroService.obterNumero('raio_notificacao_proximidade_metros').then(function (raio) {
+          return NotificacaoService.notificarUsuariosProximos(
+            novaOcorrencia.id,
+            Number(novaOcorrencia.latitude),
+            Number(novaOcorrencia.longitude),
+            categoriaNome,
+            usuarioId,
+            raio
+          );
+        }).catch(function(err) {
           console.error('[ERRO NOTIFICAÇÃO PROXIMIDADE]:', err);
         });
       }
@@ -51,21 +54,69 @@ export class OcorrenciaController {
     }
   }
 
-  async removerFoto(req: Request, res: Response): Promise<Response> {
+  async uploadFoto(req: RequisicaoAutenticada, res: Response): Promise<Response> {
     try {
       const idOcorrencia = Number(req.params.id);
+      if (isNaN(idOcorrencia)) {
+        return res.status(400).json({ error: 'ID da ocorrência inválido.' });
+      }
 
-      const ocorrenciaAtualizada = await prisma.ocorrencia.update({
-        where: { id: idOcorrencia },
-        data: { imagem_url: null }
+      if (!req.file) {
+        return res.status(400).json({ error: 'Nenhuma imagem enviada. Use o campo "imagem".' });
+      }
+
+      const caminhoPublico = `/uploads/ocorrencias/${req.file.filename}`;
+      const ocorrenciaAtualizada = await ocorrenciaService.definirFoto(
+        idOcorrencia,
+        req.usuarioId as number,
+        req.usuarioTipo,
+        caminhoPublico
+      );
+
+      LogAtividadeService.registrar({ usuarioId: req.usuarioId, acao: `UPLOAD_FOTO_OCORRENCIA:${idOcorrencia}`, req });
+
+      return res.status(200).json({
+        mensagem: 'Foto enviada com sucesso!',
+        ocorrencia: ocorrenciaAtualizada
       });
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Erro ao enviar foto da ocorrência.';
+      return res.status(400).json({ error: msg });
+    }
+  }
+
+  async removerFoto(req: RequisicaoAutenticada, res: Response): Promise<Response> {
+    try {
+      const idOcorrencia = Number(req.params.id);
+      if (isNaN(idOcorrencia)) {
+        return res.status(400).json({ error: 'ID da ocorrência inválido.' });
+      }
+
+      const ocorrenciaAtualizada = await ocorrenciaService.removerFoto(idOcorrencia);
+
+      LogAtividadeService.registrar({ usuarioId: req.usuarioId, acao: `REMOVER_FOTO_OCORRENCIA:${idOcorrencia}`, req });
 
       return res.status(200).json({
         mensagem: 'Foto removida com sucesso mantendo a ocorrência intacta.',
         ocorrencia: ocorrenciaAtualizada
       });
-    } catch (error) {
-      return res.status(500).json({ error: 'Erro ao remover foto da ocorrência.' });
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Erro ao remover foto da ocorrência.';
+      return res.status(400).json({ error: msg });
+    }
+  }
+
+  async sugerirCategoria(req: Request, res: Response): Promise<Response> {
+    try {
+      const { descricao } = req.body;
+      if (!descricao || typeof descricao !== 'string') {
+        return res.status(400).json({ error: 'Informe uma descrição para sugerir a categoria.' });
+      }
+
+      const sugestao = await SugestaoCategoriaService.sugerirPorTexto(descricao);
+      return res.status(200).json(sugestao);
+    } catch (error: unknown) {
+      return res.status(500).json({ error: 'Erro ao sugerir categoria.' });
     }
   }
 }

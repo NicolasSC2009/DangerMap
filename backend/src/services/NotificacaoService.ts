@@ -107,7 +107,8 @@ export class NotificacaoService {
   static async verificarValidadorPresencial(
     usuarioId: number,
     latitude: number,
-    longitude: number
+    longitude: number,
+    raioEmMetros: number = 200
   ) {
     try {
       const ocorrenciasProximas: Array<{ id: number; categoria_nome: string }> = await prisma.$queryRaw`
@@ -119,7 +120,7 @@ export class NotificacaoService {
           AND ST_DWithin(
             ST_SetSRID(ST_MakePoint(o.longitude, o.latitude), 4326)::geography,
             ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography,
-            200
+            ${raioEmMetros}
           )
       `;
 

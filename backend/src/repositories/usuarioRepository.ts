@@ -110,12 +110,35 @@ export class UsuarioRepository {
   }
 
 async registrarDenunciaUsuario(autorId: number, denunciadoId: number, motivo: string) {
-    return prisma.denunciaUsuario.create({
-      data: {
-        autor_id: autorId,
-        usuario_denunciado_id: denunciadoId,
-        motivo,
+    return prisma.$transaction(async function (tx) {
+      const novaDenuncia = await tx.denunciaUsuario.create({
+        data: {
+          autor_id: autorId,
+          usuario_denunciado_id: denunciadoId,
+          motivo,
+        },
+      });
+
+      await tx.usuario.update({
+        where: { id: denunciadoId },
+        data: { qtd_denuncias_recebidas: { increment: 1 } },
+      });
+
+      return novaDenuncia;
+    });
+  }
+
+  async listarComDenunciasAcimaDoLimite(limiteDenuncias: number) {
+    return prisma.usuario.findMany({
+      where: { qtd_denuncias_recebidas: { gte: limiteDenuncias } },
+      select: {
+        id: true,
+        nome: true,
+        email: true,
+        ativo: true,
+        qtd_denuncias_recebidas: true,
       },
+      orderBy: { qtd_denuncias_recebidas: 'desc' },
     });
   }
 }

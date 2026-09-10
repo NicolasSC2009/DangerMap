@@ -11,4 +11,13 @@ router.patch('/admin/ocorrencias/:ocorrenciaId/moderar', autenticarToken, autori
 router.patch('/admin/usuarios/:usuarioId/banir', autenticarToken, autorizarAdmin, adminController.banirUsuario);
 router.get('/admin/relatorio-regiao', autenticarToken, autorizarAdmin, adminController.relatorioAreaGeografica);
 
+router.get('/admin/dashboard/estatisticas', autenticarToken, autorizarAdmin, adminController.obterEstatisticas);
+router.get('/admin/dashboard/relatorio.pdf', autenticarToken, autorizarAdmin, adminController.exportarRelatorioPdf);
+
+router.get('/admin/ocorrencias/fila-moderacao', autenticarToken, autorizarAdmin, adminController.filaModeracaoOcorrencias);
+router.get('/admin/usuarios/fila-denunciados', autenticarToken, autorizarAdmin, adminController.filaUsuariosDenunciados);
+
+router.get('/admin/parametros', autenticarToken, autorizarAdmin, adminController.listarParametros);
+router.patch('/admin/parametros/:chave', autenticarToken, autorizarAdmin, adminController.atualizarParametro);
+
 export default router;

@@ -9,13 +9,16 @@ import denunciaRoutes from './routes/denunciaRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import usuarioRoutes from './routes/usuarioRoutes.js';
 import notificacaoRoutes from './routes/notificacaoRoutes.js';
+import climaRoutes from './routes/climaRoutes.js';
 import { iniciarJobLimpeza } from './utils/LimpezaOcorrencias.js';
+import { DIRETORIO_UPLOADS } from './utils/arquivoUpload.js';
 
 const app = express();
 const prisma = new PrismaClient();
 
 app.use(express.json());
 app.use(cookieParser());
+app.use('/uploads', express.static(DIRETORIO_UPLOADS));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/categorias', categoriaRoutes);
@@ -25,6 +28,7 @@ app.use('/api', confirmacaoRoutes);
 app.use('/api', denunciaRoutes);
 app.use('/api', adminRoutes);
 app.use('/api', usuarioRoutes);
+app.use('/api', climaRoutes);
 
 app.get('/api/status', async function (req: Request, res: Response) {
   try {

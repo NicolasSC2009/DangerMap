@@ -8,24 +8,26 @@ datasource db {
 }
 
 model Usuario {
-  id                  Int                @id @default(autoincrement())
-  nome                String             @db.VarChar(100)
-  email               String             @unique @db.VarChar(100)
-  senha               String             @db.VarChar(255)
-  tipo_usuario        tipo_usuario_enum? @default(usuario)
-  data_cadastro       DateTime?          @default(now()) @db.Timestamp(6)
-  ativo               Boolean?           @default(true)
-  senha_reset_token   String?            @db.VarChar(255)
-  senha_reset_expira  DateTime?          @db.Timestamp(6)
-  confirmacoes        Confirmacao[]
-  denuncias           Denuncia[]
-  denuncias_feitas    DenunciaUsuario[]  @relation("AutorDenuncia")
-  denuncias_recebidas DenunciaUsuario[]  @relation("UsuarioDenunciado")
-  interacoes          InteracaoSocial[]
-  logs_atividades     LogAtividade[]
-  notificacoes        Notificacao[]
-  ocorrencias         Ocorrencia[]
+  id                      Int                @id @default(autoincrement())
+  nome                    String             @db.VarChar(100)
+  email                   String             @unique @db.VarChar(100)
+  senha                   String             @db.VarChar(255)
+  tipo_usuario            tipo_usuario_enum? @default(usuario)
+  data_cadastro           DateTime?          @default(now()) @db.Timestamp(6)
+  ativo                   Boolean?           @default(true)
+  senha_reset_token       String?            @db.VarChar(255)
+  senha_reset_expira      DateTime?          @db.Timestamp(6)
+  qtd_denuncias_recebidas Int?               @default(0)
+  confirmacoes            Confirmacao[]
+  denuncias               Denuncia[]
+  denuncias_feitas        DenunciaUsuario[]  @relation("AutorDenuncia")
+  denuncias_recebidas     DenunciaUsuario[]  @relation("UsuarioDenunciado")
+  interacoes              InteracaoSocial[]
+  logs_atividades         LogAtividade[]
+  notificacoes            Notificacao[]
+  ocorrencias             Ocorrencia[]
 
+  @@index([qtd_denuncias_recebidas], map: "idx_usuarios_qtd_denuncias_recebidas")
   @@map("usuarios")
 }
 
@@ -46,6 +48,7 @@ model Ocorrencia {
   id_agrupamento   Int?
   anonimo          Boolean?                @default(false)
   data_resolucao   DateTime?               @db.Timestamp(6)
+  qtd_denuncias    Int?                    @default(0)
   confirmacoes     Confirmacao[]
   denuncias        Denuncia[]
   interacoes       InteracaoSocial[]
@@ -58,6 +61,7 @@ model Ocorrencia {
   @@index([status], map: "idx_ocorrencias_status")
   @@index([usuario_id], map: "idx_ocorrencias_usuario")
   @@index([status, data_resolucao], map: "idx_ocorrencias_status_resolucao")
+  @@index([qtd_denuncias], map: "idx_ocorrencias_qtd_denuncias")
   @@map("ocorrencias")
 }
 
@@ -155,6 +159,7 @@ model categorias {
   nome        String       @unique @db.VarChar(50)
   descricao   String?      @db.VarChar(255)
   icone_url   String?      @db.VarChar(255)
+  ativo       Boolean?     @default(true)
   ocorrencias Ocorrencia[]
 }
 
@@ -173,6 +178,12 @@ model blacklist_tokens {
   expira_em DateTime @db.Timestamp(6)
 
   @@index([token], map: "idx_blacklist_token")
+}
+
+model parametros_sistema {
+  chave     String  @id @db.VarChar(100)
+  valor     String  @db.VarChar(255)
+  descricao String? @db.VarChar(255)
 }
 
 enum gravidade_enum {
