@@ -74,9 +74,13 @@ export class UsuarioRepository {
           },
         },
         ocorrencias: {
+          // "arquivado" é o único status que deve sumir do histórico - uma
+          // ocorrência "resolvida" continua sendo uma contribuição válida do
+          // usuário (e ainda está visível no mapa público por 24h, RN21),
+          // então escondê-la do próprio perfil do autor seria inconsistente.
           where: incluirAnonimas
-            ? { status: { not: 'resolvido' } }
-            : { status: { not: 'resolvido' }, anonimo: false },
+            ? { status: { not: 'arquivado' } }
+            : { status: { not: 'arquivado' }, anonimo: false },
           select: {
             id: true,
             descricao: true,

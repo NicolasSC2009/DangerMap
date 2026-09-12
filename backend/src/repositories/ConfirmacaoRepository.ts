@@ -20,6 +20,9 @@ export class ConfirmacaoRepository {
         data: {
           usuario_id: usuarioId,
           ocorrencia_id: ocorrenciaId
+        },
+        include: {
+          ocorrencia: { select: { usuario_id: true } }
         }
       });
 

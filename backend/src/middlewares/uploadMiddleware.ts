@@ -46,3 +46,32 @@ export function processarUploadFotoOcorrencia(req: Request, res: Response, next:
     return res.status(400).json({ error: mensagem });
   });
 }
+
+// Usado só para analisar a imagem (sugestão de categoria por IA) - não persiste
+// em disco, fica só em memória pelo tempo da requisição.
+const uploadImagemAnaliseRaw = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: TAMANHO_MAXIMO_BYTES },
+  fileFilter: function (req, file, callback) {
+    if (!TIPOS_PERMITIDOS.has(file.mimetype)) {
+      callback(new Error('Formato de imagem não suportado. Envie um arquivo JPEG, PNG ou WebP.'));
+      return;
+    }
+    callback(null, true);
+  },
+});
+
+export function processarUploadImagemAnalise(req: Request, res: Response, next: NextFunction) {
+  uploadImagemAnaliseRaw.single('imagem')(req, res, function (erro: unknown) {
+    if (!erro) {
+      return next();
+    }
+
+    if (erro instanceof MulterError && erro.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: 'Imagem muito grande. O tamanho máximo é 5MB.' });
+    }
+
+    const mensagem = erro instanceof Error ? erro.message : 'Erro ao processar a imagem.';
+    return res.status(400).json({ error: mensagem });
+  });
+}

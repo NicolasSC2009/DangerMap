@@ -4,7 +4,9 @@ import { NotificacaoService } from '../services/NotificacaoService.js';
 import { LogAtividadeService } from '../services/LogAtividadeService.js';
 import { ParametroService } from '../services/ParametroService.js';
 import { SugestaoCategoriaService } from '../services/SugestaoCategoriaService.js';
+import { SugestaoCategoriaIAService } from '../services/SugestaoCategoriaIAService.js';
 import { RequisicaoAutenticada } from '../middlewares/authMiddleware.js';
+import { listarOcorrenciasQuerySchema } from '../schemas/OcorrenciaSchema.js';
 import { ZodError } from 'zod';
 
 const ocorrenciaService = new OcorrenciaService();
@@ -17,7 +19,7 @@ export class OcorrenciaController {
       const novaOcorrencia = await ocorrenciaService.registrar(req.body, usuarioId);
 
       if (novaOcorrencia && novaOcorrencia.latitude && novaOcorrencia.longitude) {
-        const categoriaNome = (novaOcorrencia as any).categoria?.nome || 'Perigo';
+        const categoriaNome = (novaOcorrencia as any).categorias?.nome || 'Perigo';
         ParametroService.obterNumero('raio_notificacao_proximidade_metros').then(function (raio) {
           return NotificacaoService.notificarUsuariosProximos(
             novaOcorrencia.id,
@@ -47,10 +49,49 @@ export class OcorrenciaController {
 
   async listar(req: Request, res: Response): Promise<Response> {
     try {
-      const ocorrencias = await ocorrenciaService.obterTodas();
+      const filtros = listarOcorrenciasQuerySchema.parse(req.query);
+      const ocorrencias = await ocorrenciaService.obterTodas(filtros);
       return res.status(200).json(ocorrencias);
     } catch (error) {
+      if (error instanceof ZodError) {
+        const errosFormatados = error.issues.map(function(issue) { return issue.message; });
+        return res.status(400).json({ erros: errosFormatados });
+      }
       return res.status(500).json({ error: 'Erro ao buscar ocorrências para o mapa.' });
+    }
+  }
+
+  async listarClusters(req: Request, res: Response): Promise<Response> {
+    try {
+      const { raio, ...queryFiltros } = req.query;
+      const filtros = listarOcorrenciasQuerySchema.parse(queryFiltros);
+
+      const raioParam = Number(raio);
+      const raioMetros = Number.isFinite(raioParam) && raioParam > 0 ? raioParam : undefined;
+
+      const clusters = await ocorrenciaService.obterClusters(raioMetros, filtros);
+      return res.status(200).json(clusters);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const errosFormatados = error.issues.map(function(issue) { return issue.message; });
+        return res.status(400).json({ erros: errosFormatados });
+      }
+      return res.status(500).json({ error: 'Erro ao agrupar ocorrências para o mapa.' });
+    }
+  }
+
+  async detalhar(req: Request, res: Response): Promise<Response> {
+    try {
+      const id = Number(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: 'ID da ocorrência inválido.' });
+      }
+
+      const ocorrencia = await ocorrenciaService.obterPorId(id);
+      return res.status(200).json(ocorrencia);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Erro ao buscar ocorrência.';
+      return res.status(404).json({ error: msg });
     }
   }
 
@@ -117,6 +158,20 @@ export class OcorrenciaController {
       return res.status(200).json(sugestao);
     } catch (error: unknown) {
       return res.status(500).json({ error: 'Erro ao sugerir categoria.' });
+    }
+  }
+
+  async sugerirCategoriaPorImagem(req: Request, res: Response): Promise<Response> {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'Nenhuma imagem enviada. Use o campo "imagem".' });
+      }
+
+      const sugestao = await SugestaoCategoriaIAService.sugerirPorImagem(req.file.buffer, req.file.mimetype);
+      return res.status(200).json({ ...sugestao, origem: 'imagem-ia' });
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Erro ao sugerir categoria pela imagem.';
+      return res.status(503).json({ error: msg });
     }
   }
 }

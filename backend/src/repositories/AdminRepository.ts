@@ -12,6 +12,9 @@ export class AdminRepository {
       data: {
         status: novoStatus,
         data_resolucao: novoStatus === status_ocorrencia_enum.resolvido ? new Date() : null
+      },
+      include: {
+        categorias: { select: { nome: true } }
       }
     });
   }

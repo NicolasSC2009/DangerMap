@@ -34,7 +34,7 @@ export class AdminController {
 
       if (resultado && (resultado as any).usuario_id) {
         const autorId = (resultado as any).usuario_id;
-        const categoriaNome = (resultado as any).categoria?.nome;
+        const categoriaNome = (resultado as any).categorias?.nome;
 
         if (acao === 'resolver' || (resultado as any).status === 'resolvido') {
           NotificacaoService.notificarResolucaoOcorrencia(

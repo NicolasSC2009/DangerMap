@@ -7,10 +7,15 @@ const usuarioRepository = new UsuarioRepository();
 
 export class RecuperacaoSenhaService {
   async enviarToken(email: string) {
+    const mensagemGenerica = { mensagem: 'Se o e-mail estiver cadastrado, um código de recuperação foi enviado.' };
+
     const usuario = await usuarioRepository.buscarPorEmail(email);
-    
+
+    // Retorna a mesma resposta (200, mesmo formato) exista ou não a conta -
+    // sem isso, o status/formato diferente já revelaria quais e-mails estão
+    // cadastrados (enumeração de usuários), mesmo com a mensagem "genérica".
     if (!usuario) {
-      throw new Error('Se o email estiver cadastrado, um código de recuperação será enviado');
+      return mensagemGenerica;
     }
 
     const token = crypto.randomInt(100000, 999999).toString();
@@ -33,7 +38,7 @@ export class RecuperacaoSenhaService {
       `
     });
 
-    return { mensagem: 'Código de recuperação enviado com sucesso!' };
+    return mensagemGenerica;
   }
 
   async resetarSenha(token: string, novaSenha: any) {
