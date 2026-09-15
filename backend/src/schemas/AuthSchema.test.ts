@@ -49,4 +49,14 @@ describe('cadastroSchema', function () {
       cadastroSchema.parse({ ...dadosValidos, senha: 'Sf@1' });
     }).toThrow();
   });
+
+  it('aceita caracteres especiais além de @$!%*?& (ex: # e _)', function () {
+    expect(function () {
+      cadastroSchema.parse({ ...dadosValidos, senha: 'SenhaForte#123' });
+    }).not.toThrow();
+
+    expect(function () {
+      cadastroSchema.parse({ ...dadosValidos, senha: 'Senha_Forte123' });
+    }).not.toThrow();
+  });
 });

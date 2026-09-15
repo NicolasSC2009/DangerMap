@@ -1,26 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { FiMapPin, FiFolder, FiSettings, FiInfo, FiHelpCircle, FiShield, FiSmartphone, FiLogOut } from 'react-icons/fi';
 import './navbar.css';
 import { CORES } from '../../theme/cores';
 import { SininhoNotificacoes } from '../notificacoes/SininhoNotificacoes';
-import { useAuth } from '../../hooks/useAuth';
-
-interface ItemMenu {
-  icone: string;
-  rotulo: string;
-}
-
-const ITENS_MENU: ItemMenu[] = [
-  { icone: '📍', rotulo: 'Minhas ocorrências' },
-  { icone: '🗂️', rotulo: 'Categorias de perigo' },
-  { icone: '⚙️', rotulo: 'Configurações' },
-  { icone: 'ℹ️', rotulo: 'Sobre o DangerMap' },
-  { icone: '❓', rotulo: 'Ajuda' },
-];
+import { ModalInfo } from '../comum/ModalInfo';
+import { useAuth } from '../../contexts/AuthContext';
+import { useCategorias } from '../../hooks/useCategorias';
+import { obterIconeCategoria } from '../../theme/iconesCategorias';
 
 interface NavbarProps {
   aoSelecionarOcorrencia?: (ocorrenciaId: number) => void;
-  aoClicarEntrar?: () => void;
-  aoClicarItemMenu?: (rotulo: string) => void;
 }
 
 function IconeGradeNovePontos() {
@@ -43,8 +33,13 @@ function IconeGradeNovePontos() {
 }
 
 export function Navbar(props: NavbarProps) {
-  const { usuario, autenticado, sair } = useAuth();
+  const { usuario, autenticado, ehAdmin, sair } = useAuth();
+  const { categorias } = useCategorias(autenticado);
+  const navegar = useNavigate();
   const [menuAberto, setMenuAberto] = useState(false);
+  const [modalCategoriasAberto, setModalCategoriasAberto] = useState(false);
+  const [modalSobreAberto, setModalSobreAberto] = useState(false);
+  const [modalAjudaAberto, setModalAjudaAberto] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(function () {
@@ -74,9 +69,19 @@ export function Navbar(props: NavbarProps) {
         .toUpperCase()
     : '?';
 
-  function clicarItemMenu(rotulo: string) {
+  const itensMenu = [
+    { Icone: FiMapPin, rotulo: 'Minhas ocorrências', aoClicar: () => navegar('/perfil') },
+    { Icone: FiFolder, rotulo: 'Categorias de perigo', aoClicar: () => setModalCategoriasAberto(true) },
+    { Icone: FiSettings, rotulo: 'Configurações', aoClicar: () => navegar('/perfil') },
+    { Icone: FiInfo, rotulo: 'Sobre o DangerMap', aoClicar: () => setModalSobreAberto(true) },
+    { Icone: FiHelpCircle, rotulo: 'Ajuda', aoClicar: () => setModalAjudaAberto(true) },
+    ...(ehAdmin ? [{ Icone: FiShield, rotulo: 'Painel administrativo', aoClicar: () => navegar('/admin') }] : []),
+    { Icone: FiSmartphone, rotulo: 'Baixar o app', aoClicar: () => navegar('/baixar-app') },
+  ];
+
+  function clicarItemMenu(aoClicar: () => void) {
     setMenuAberto(false);
-    if (props.aoClicarItemMenu) props.aoClicarItemMenu(rotulo);
+    aoClicar();
   }
 
   return (
@@ -93,9 +98,8 @@ export function Navbar(props: NavbarProps) {
         fontFamily: "'Inter', system-ui, sans-serif",
       }}
     >
-      <SininhoNotificacoes aoSelecionarOcorrencia={props.aoSelecionarOcorrencia} />
+      <SininhoNotificacoes autenticado={autenticado} aoSelecionarOcorrencia={props.aoSelecionarOcorrencia} />
 
-      {/* Grade de 9 pontos — abre o menu com o resto das opções */}
       <div style={{ position: 'relative' }}>
         <button
           className="dm-navbar-botao"
@@ -149,12 +153,12 @@ export function Navbar(props: NavbarProps) {
             </div>
 
             <div style={{ padding: '6px 0' }}>
-              {ITENS_MENU.map((item) => (
+              {itensMenu.map((item) => (
                 <button
                   key={item.rotulo}
                   role="menuitem"
                   className="dm-navbar-item"
-                  onClick={() => clicarItemMenu(item.rotulo)}
+                  onClick={() => clicarItemMenu(item.aoClicar)}
                   style={{
                     width: '100%',
                     textAlign: 'left',
@@ -168,10 +172,10 @@ export function Navbar(props: NavbarProps) {
                     fontSize: 13,
                     color: CORES.verdeGarrafaProfundo,
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${CORES.verdeSalada}26`)}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = CORES.eggshellMuted)}
                   onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                 >
-                  <span aria-hidden="true">{item.icone}</span>
+                  <item.Icone size={15} aria-hidden="true" />
                   <span>{item.rotulo}</span>
                 </button>
               ))}
@@ -183,6 +187,7 @@ export function Navbar(props: NavbarProps) {
                 onClick={() => {
                   setMenuAberto(false);
                   sair();
+                  navegar('/');
                 }}
                 style={{
                   width: '100%',
@@ -200,7 +205,7 @@ export function Navbar(props: NavbarProps) {
                   color: '#c0392b',
                 }}
               >
-                <span aria-hidden="true">🚪</span>
+                <FiLogOut size={15} aria-hidden="true" />
                 <span>Sair</span>
               </button>
             )}
@@ -208,12 +213,12 @@ export function Navbar(props: NavbarProps) {
         )}
       </div>
 
-      {/* Perfil — mostra a foto se estiver logado, senão o botão Entrar */}
       {autenticado ? (
         <button
           className="dm-navbar-botao"
           title={usuario?.nome}
           aria-label={`Perfil de ${usuario?.nome}`}
+          onClick={() => navegar('/perfil')}
           style={{
             width: 44,
             height: 44,
@@ -226,34 +231,73 @@ export function Navbar(props: NavbarProps) {
             boxShadow: '0 4px 14px rgba(0,0,0,0.35)',
           }}
         >
-          {usuario?.fotoUrl ? (
-            <img
-              src={usuario.fotoUrl}
-              alt=""
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
-          ) : (
-            <span style={{ color: CORES.eggshell, fontWeight: 700, fontSize: 15 }}>{iniciais}</span>
-          )}
+          <span style={{ color: CORES.eggshell, fontWeight: 700, fontSize: 15 }}>{iniciais}</span>
         </button>
       ) : (
         <button
-          className="dm-entrar-botao dm-navbar-botao"
-          onClick={props.aoClicarEntrar}
+          className="dm-entrar-botao dm-navbar-botao dm-botao-primario dm-botao-seta"
+          onClick={() => navegar('/entrar')}
           style={{
             padding: '11px 20px',
             borderRadius: 22,
-            border: 'none',
             backgroundColor: CORES.laranja,
             color: CORES.eggshell,
             fontWeight: 700,
             fontSize: 13,
-            cursor: 'pointer',
             boxShadow: '0 4px 14px rgba(0,0,0,0.35)',
           }}
         >
-          Entrar
+          <span>Entrar</span>
         </button>
+      )}
+
+      {modalCategoriasAberto && (
+        <ModalInfo titulo="Categorias de perigo" aoFechar={() => setModalCategoriasAberto(false)}>
+          {!autenticado ? (
+            <p>Entre na sua conta para ver as categorias disponíveis.</p>
+          ) : categorias.length === 0 ? (
+            <p>Nenhuma categoria cadastrada ainda.</p>
+          ) : (
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {categorias.map((c) => (
+                <li key={c.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                  <img src={obterIconeCategoria(c.nome)} alt="" style={{ width: 28, height: 28, objectFit: 'contain', flexShrink: 0 }} />
+                  <div>
+                    <strong style={{ fontSize: 14 }}>{c.nome}</strong>
+                    {c.descricao && <div style={{ fontSize: 12.5, opacity: 0.75, marginTop: 2 }}>{c.descricao}</div>}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </ModalInfo>
+      )}
+
+      {modalSobreAberto && (
+        <ModalInfo titulo="Sobre o DangerMap" aoFechar={() => setModalSobreAberto(false)}>
+          <p>
+            O DangerMap é uma plataforma cidadã de mapeamento colaborativo de perigos urbanos: buracos,
+            alagamentos, iluminação, sinalização danificada e focos de incêndio. Qualquer pessoa pode
+            reportar um problema, confirmar ocorrências de terceiros e acompanhar a resolução pelo mapa.
+          </p>
+        </ModalInfo>
+      )}
+
+      {modalAjudaAberto && (
+        <ModalInfo titulo="Ajuda" aoFechar={() => setModalAjudaAberto(false)}>
+          <p style={{ marginBottom: 10 }}>
+            <strong>Como reportar:</strong> clique em qualquer ponto do mapa e preencha a categoria, a
+            gravidade e (se quiser) uma foto e descrição.
+          </p>
+          <p style={{ marginBottom: 10 }}>
+            <strong>Como confirmar:</strong> clique num marcador existente e use o botão de confirmação
+            para validar que o problema ainda está lá.
+          </p>
+          <p>
+            <strong>Encontrou algo errado?</strong> Use o botão de denúncia dentro de cada ocorrência ou
+            perfil para avisar a moderação.
+          </p>
+        </ModalInfo>
       )}
     </div>
   );

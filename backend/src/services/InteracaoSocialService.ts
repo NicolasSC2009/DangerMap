@@ -14,6 +14,10 @@ export class InteracaoSocialService {
       throw new Error('Ocorrência não encontrada.');
     }
 
+    if (ocorrencia.usuario_id === usuarioId) {
+      throw new Error('Você não pode curtir uma ocorrência registrada por você mesmo.');
+    }
+
     const jaCurtiu = await interacaoRepository.buscarPorUsuarioOcorrenciaETipo(usuarioId, ocorrenciaId, TIPO_CURTIDA);
     if (jaCurtiu) {
       throw new Error('Você já curtiu esta ocorrência.');

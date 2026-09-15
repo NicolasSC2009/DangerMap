@@ -1,8 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
+import React, { useEffect, useRef, useState } from 'react';
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { FiMapPin, FiThermometer, FiDroplet } from 'react-icons/fi';
 import { CORES } from '../../theme/cores';
+import { obterIconeCategoria } from '../../theme/iconesCategorias';
+import type { ClusterOcorrencia, Gravidade } from '@shared/types';
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -11,8 +14,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-// Ícone customizado (bolinha pulsante verde-salada) para a posição do usuário,
-// bem diferente dos marcadores de ocorrência para não gerar confusão.
 const iconePosicaoUsuario = L.divIcon({
   className: 'dm-marcador-usuario',
   html: `
@@ -31,24 +32,48 @@ const iconePosicaoUsuario = L.divIcon({
   iconAnchor: [10, 10],
 });
 
-export interface OcorrenciaMapa {
-  id: number;
-  latitude: number;
-  longitude: number;
-  titulo?: string;
-  categoriaNome?: string;
+const CORES_POR_GRAVIDADE: Record<Gravidade, string> = {
+  alto: CORES.vermelhoAlerta,
+  medio: CORES.laranja,
+  baixo: CORES.verdeSalada,
+};
+
+function iconeOcorrencia(gravidade?: Gravidade | null, nomeCategoria?: string | null) {
+  const cor = (gravidade && CORES_POR_GRAVIDADE[gravidade]) || CORES.laranja;
+  const icone = obterIconeCategoria(nomeCategoria);
+  return L.divIcon({
+    className: 'dm-marcador-ocorrencia',
+    html: `
+      <div style="position:relative;width:38px;height:39px;">
+        <img src="${icone}" alt="" style="width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.45));" />
+        <span style="position:absolute;top:-1px;right:1px;width:11px;height:11px;border-radius:50%;background:${cor};border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.5);"></span>
+      </div>`,
+    iconSize: [38, 39],
+    iconAnchor: [19, 37],
+  });
+}
+
+function iconeCluster(quantidade: number, gravidade?: Gravidade | null) {
+  const cor = (gravidade && CORES_POR_GRAVIDADE[gravidade]) || CORES.verdeGarrafa;
+  const tamanho = quantidade >= 10 ? 44 : 36;
+  return L.divIcon({
+    className: 'dm-marcador-cluster',
+    html: `<div style="width:${tamanho}px;height:${tamanho}px;border-radius:50%;background:${cor};border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Inter',sans-serif;font-weight:800;font-size:${quantidade >= 10 ? 14 : 13}px;">${quantidade}</div>`,
+    iconSize: [tamanho, tamanho],
+    iconAnchor: [tamanho / 2, tamanho / 2],
+  });
 }
 
 interface MapaProps {
-  ocorrencias?: OcorrenciaMapa[];
+  clusters?: ClusterOcorrencia[];
   aoClicarNoMapa?: (lat: number, lng: number) => void;
+  aoClicarOcorrencia?: (ocorrenciaId: number) => void;
   posicaoInicial?: [number, number];
 }
 
-// Margem ampliada cobrindo toda a América do Sul e oceanos
 const LIMITES_SUPER_EXPANDIDOS: L.LatLngBoundsExpression = [
-  [-55.0, -110.0], // Sudoeste bem amplo (Oceano Pacífico / Sul do continente)
-  [20.0, -10.0]    // Nordeste bem amplo (Caribe / Oceano Atlântico)
+  [-55.0, -110.0],
+  [20.0, -10.0]
 ];
 
 interface ClimaAtual {
@@ -59,8 +84,17 @@ interface ClimaAtual {
 type StatusPermissaoLocalizacao = 'perguntando' | 'solicitando' | 'concedida' | 'negada';
 
 function CartaoPermissaoLocalizacao(props: { aoPermitir: () => void; aoRecusar: () => void; solicitando: boolean }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(function () {
+    if (ref.current) {
+      L.DomEvent.disableClickPropagation(ref.current);
+      L.DomEvent.disableScrollPropagation(ref.current);
+    }
+  }, []);
+
   return (
     <div
+      ref={ref}
       style={{
         position: 'fixed',
         top: 20,
@@ -81,7 +115,7 @@ function CartaoPermissaoLocalizacao(props: { aoPermitir: () => void; aoRecusar: 
         border: `1px solid ${CORES.verdeSalada}33`,
       }}
     >
-      <span style={{ fontSize: 22, lineHeight: '28px' }} aria-hidden="true">📍</span>
+      <FiMapPin size={22} aria-hidden="true" style={{ flexShrink: 0, marginTop: 3 }} />
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Usar sua localização atual?</div>
         <p style={{ fontSize: 12.5, opacity: 0.8, margin: 0, marginBottom: 12, lineHeight: 1.4 }}>
@@ -128,8 +162,17 @@ function CartaoPermissaoLocalizacao(props: { aoPermitir: () => void; aoRecusar: 
 }
 
 function CapsulaCoordenadaClima(props: { lat: number; lng: number; clima: ClimaAtual | null; carregando: boolean }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(function () {
+    if (ref.current) {
+      L.DomEvent.disableClickPropagation(ref.current);
+      L.DomEvent.disableScrollPropagation(ref.current);
+    }
+  }, []);
+
   return (
     <div
+      ref={ref}
       style={{
         position: 'fixed',
         top: 20,
@@ -149,7 +192,7 @@ function CapsulaCoordenadaClima(props: { lat: number; lng: number; clima: ClimaA
       }}
     >
       <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-        <span aria-hidden="true">📍</span>
+        <FiMapPin size={13} aria-hidden="true" />
         {props.lat.toFixed(4)}, {props.lng.toFixed(4)}
       </span>
 
@@ -160,11 +203,11 @@ function CapsulaCoordenadaClima(props: { lat: number; lng: number; clima: ClimaA
       ) : props.clima ? (
         <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span aria-hidden="true">🌡️</span>
+            <FiThermometer size={13} aria-hidden="true" />
             {props.clima.temperatura}°C
           </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: CORES.verdeSalada }}>
-            <span aria-hidden="true">💧</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <FiDroplet size={13} aria-hidden="true" />
             {props.clima.umidade}%
           </span>
         </span>
@@ -190,18 +233,13 @@ function LocalizadorUsuario() {
 
   function buscarClima(lat: number, lng: number) {
     setCarregandoClima(true);
-    fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m`
-    )
+    fetch(`/api/clima?lat=${lat}&lng=${lng}`)
       .then(function (res) {
         return res.json();
       })
       .then(function (dados) {
-        if (dados && dados.current) {
-          setClima({
-            temperatura: Math.round(dados.current.temperature_2m),
-            umidade: Math.round(dados.current.relative_humidity_2m),
-          });
+        if (dados && typeof dados.temperatura === 'number') {
+          setClima({ temperatura: Math.round(dados.temperatura), umidade: dados.umidade ?? 0 });
         }
       })
       .catch(function (erro) {
@@ -296,16 +334,29 @@ export function Mapa(props: MapaProps) {
 
         <EscutadorDeCliques aoClicar={props.aoClicarNoMapa} />
 
-        {props.ocorrencias && props.ocorrencias.map(function(item) {
+        {props.clusters && props.clusters.map(function (cluster, indice) {
+          if (cluster.quantidade === 1 && cluster.ocorrencia) {
+            const ocorrencia = cluster.ocorrencia;
+            return (
+              <Marker
+                key={`oc-${ocorrencia.id}`}
+                position={[cluster.latitude, cluster.longitude]}
+                icon={iconeOcorrencia(ocorrencia.gravidade, ocorrencia.categorias?.nome)}
+                eventHandlers={{
+                  click: function () {
+                    if (props.aoClicarOcorrencia) props.aoClicarOcorrencia(ocorrencia.id);
+                  },
+                }}
+              />
+            );
+          }
+
           return (
-            <Marker key={item.id} position={[item.latitude, item.longitude]}>
-              <Popup>
-                <div>
-                  <strong>{item.categoriaNome || 'Ocorrência'}</strong>
-                  <p>{item.titulo || 'Perigo reportado'}</p>
-                </div>
-              </Popup>
-            </Marker>
+            <Marker
+              key={`cluster-${indice}-${cluster.latitude}-${cluster.longitude}`}
+              position={[cluster.latitude, cluster.longitude]}
+              icon={iconeCluster(cluster.quantidade, cluster.gravidadeMaisAlta)}
+            />
           );
         })}
       </MapContainer>

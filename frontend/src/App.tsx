@@ -1,61 +1,39 @@
-import React, { useEffect, useState } from 'react';
-import { Mapa, OcorrenciaMapa } from './components/mapa/Mapa';
-import { Navbar } from './components/navbar/Navbar';
-import { LogoCanto } from './components/comum/LogoCanto';
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { PaginaMapa } from './pages/Mapa/PaginaMapa';
+import { PaginaAuth } from './pages/Auth/PaginaAuth';
+import { PaginaEsqueciSenha } from './pages/Auth/PaginaEsqueciSenha';
+import { PaginaPerfilProprio } from './pages/Perfil/PaginaPerfilProprio';
+import { PaginaPerfilPublico } from './pages/Perfil/PaginaPerfilPublico';
+import { PaginaAdmin } from './pages/Admin/PaginaAdmin';
+import { PaginaBaixarApp } from './pages/BaixarApp/PaginaBaixarApp';
+import { RotaProtegida, RotaAdmin } from './components/comum/RotasProtegidas';
 
 export function App() {
-  const [ocorrencias, setOcorrencias] = useState<OcorrenciaMapa[]>([]);
-
-  function buscarOcorrenciasDoBanco() {
-    fetch('/api/ocorrencias')
-      .then(function(res) {
-        return res.json();
-      })
-      .then(function(data) {
-        if (Array.isArray(data)) {
-          setOcorrencias(data);
-        }
-      })
-      .catch(function(err) {
-        console.error('[ERRO AO BUSCAR OCORRÊNCIAS]:', err);
-      });
-  }
-
-  useEffect(function() {
-    buscarOcorrenciasDoBanco();
-  }, []);
-
-  function tratarCliqueNoMapa(lat: number, lng: number) {
-    console.log('Coordenadas clicadas no mapa:', lat, lng);
-  }
-
-  function focarOcorrencia(ocorrenciaId: number) {
-    console.log('Focar ocorrência ID:', ocorrenciaId);
-  }
-
-  function irParaLogin() {
-    // TODO: trocar por navegação real (react-router) ou abrir um modal de login
-    // quando a tela/rota de autenticação existir.
-    window.location.href = '/login';
-  }
-
-  function clicarItemMenu(rotulo: string) {
-    console.log('Item do menu clicado:', rotulo);
-  }
-
   return (
-    <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
-      <Navbar
-        aoSelecionarOcorrencia={focarOcorrencia}
-        aoClicarEntrar={irParaLogin}
-        aoClicarItemMenu={clicarItemMenu}
+    <Routes>
+      <Route path="/" element={<PaginaMapa />} />
+      <Route path="/entrar" element={<PaginaAuth />} />
+      <Route path="/esqueci-senha" element={<PaginaEsqueciSenha />} />
+      <Route
+        path="/perfil"
+        element={
+          <RotaProtegida>
+            <PaginaPerfilProprio />
+          </RotaProtegida>
+        }
       />
-      <LogoCanto />
-      <Mapa
-        ocorrencias={ocorrencias}
-        aoClicarNoMapa={tratarCliqueNoMapa}
+      <Route path="/usuarios/:id" element={<PaginaPerfilPublico />} />
+      <Route
+        path="/admin"
+        element={
+          <RotaAdmin>
+            <PaginaAdmin />
+          </RotaAdmin>
+        }
       />
-    </div>
+      <Route path="/baixar-app" element={<PaginaBaixarApp />} />
+    </Routes>
   );
 }
 

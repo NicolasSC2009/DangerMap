@@ -1,10 +1,15 @@
 import React from 'react';
-import { CORES } from '../../theme/cores';
-import logo from '../../assets/logo.png';
+import { useNavigate } from 'react-router-dom';
+import logo from '../../assets/logo-preto.png';
 
 export function LogoCanto() {
+  const navegar = useNavigate();
+
   return (
-    <div
+    <button
+      onClick={() => navegar('/')}
+      title="Voltar para o mapa"
+      aria-label="Voltar para o mapa"
       style={{
         position: 'fixed',
         bottom: 16,
@@ -12,31 +17,21 @@ export function LogoCanto() {
         zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
-        gap: 8,
-        padding: '6px 12px 6px 6px',
-        borderRadius: 999,
-        backgroundColor: `${CORES.verdeGarrafaProfundo}cc`,
-        backdropFilter: 'blur(8px)',
-        boxShadow: '0 4px 14px rgba(0,0,0,0.35)',
+        justifyContent: 'center',
+        padding: '10px 16px',
+        borderRadius: 12,
+        border: '1px solid rgba(0,0,0,0.07)',
+        backgroundColor: '#fff',
+        boxShadow: '0 4px 14px rgba(0,0,0,0.16)',
         userSelect: 'none',
+        cursor: 'pointer',
       }}
     >
       <img
         src={logo}
         alt="DangerMap"
-        style={{ height: 26, width: 'auto', display: 'block' }}
+        style={{ height: 18, width: 'auto', display: 'block' }}
       />
-      <span
-        style={{
-          fontFamily: "'Inter', system-ui, sans-serif",
-          fontSize: 11,
-          fontWeight: 600,
-          color: CORES.eggshell,
-          letterSpacing: 0.2,
-        }}
-      >
-        DangerMap
-      </span>
-    </div>
+    </button>
   );
 }

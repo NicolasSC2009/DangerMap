@@ -1,6 +1,9 @@
 import { z } from 'zod';
 
-const regexSenhaForte = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+const CARACTERES_ESPECIAIS = String.raw`!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?~` + '`';
+const regexSenhaForte = new RegExp(
+  `^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[${CARACTERES_ESPECIAIS}])[A-Za-z\\d${CARACTERES_ESPECIAIS}]{8,}$`
+);
 
 export const cadastroSchema = z.object({
   nome: z.string().min(3, { message: 'O nome deve ter pelo menos 3 caracteres.' }),
@@ -8,6 +11,6 @@ export const cadastroSchema = z.object({
   senha: z.string().refine(function (valor) {
     return regexSenhaForte.test(valor);
   }, {
-    message: 'A senha deve ter no mínimo 8 caracteres, incluindo pelo menos uma letra maiúscula, uma letra minúscula, um número e um caractere especial (@$!%*?&).'
+    message: 'A senha deve ter no mínimo 8 caracteres, incluindo letra maiúscula, minúscula, número e um caractere especial (ex: ! @ # $ % & *).'
   })
 });

@@ -11,6 +11,10 @@ export class ConfirmacaoService {
       throw new Error('Ocorrência não encontrada.');
     }
 
+    if (ocorrencia.usuario_id === usuarioId) {
+      throw new Error('Você não pode confirmar uma ocorrência registrada por você mesmo.');
+    }
+
     const jaConfirmou = await confirmacaoRepository.buscarPorUsuarioEOcorrencia(usuarioId, ocorrenciaId);
     if (jaConfirmou) {
       throw new Error('Você já confirmou esta ocorrência.');
