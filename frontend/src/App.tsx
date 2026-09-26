@@ -5,6 +5,7 @@ import { PaginaAuth } from './pages/Auth/PaginaAuth';
 import { PaginaEsqueciSenha } from './pages/Auth/PaginaEsqueciSenha';
 import { PaginaPerfilProprio } from './pages/Perfil/PaginaPerfilProprio';
 import { PaginaPerfilPublico } from './pages/Perfil/PaginaPerfilPublico';
+import { PaginaConfiguracoes } from './pages/Configuracoes/PaginaConfiguracoes';
 import { PaginaAdmin } from './pages/Admin/PaginaAdmin';
 import { PaginaBaixarApp } from './pages/BaixarApp/PaginaBaixarApp';
 import { RotaProtegida, RotaAdmin } from './components/comum/RotasProtegidas';
@@ -24,6 +25,14 @@ export function App() {
         }
       />
       <Route path="/usuarios/:id" element={<PaginaPerfilPublico />} />
+      <Route
+        path="/configuracoes"
+        element={
+          <RotaProtegida>
+            <PaginaConfiguracoes />
+          </RotaProtegida>
+        }
+      />
       <Route
         path="/admin"
         element={

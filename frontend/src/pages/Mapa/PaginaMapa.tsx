@@ -12,15 +12,29 @@ import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'react-toastify';
 import type { ClusterOcorrencia } from '@shared/types';
 
+const LIMITES_BRASIL = { latMin: -34, latMax: 6, lngMin: -74, lngMax: -28 };
+
+function dentroDoBrasil(lat: number, lng: number): boolean {
+  return lat >= LIMITES_BRASIL.latMin && lat <= LIMITES_BRASIL.latMax && lng >= LIMITES_BRASIL.lngMin && lng <= LIMITES_BRASIL.lngMax;
+}
+
+const LATITUDE_REFERENCIA_BRASIL = -15;
+const PIXELS_ALVO_AGRUPAMENTO = 45;
+
+function raioAgrupamentoPorZoom(zoom: number): number {
+  const metrosPorPixel = (156543.03392 * Math.cos((LATITUDE_REFERENCIA_BRASIL * Math.PI) / 180)) / Math.pow(2, zoom);
+  return Math.round(metrosPorPixel * PIXELS_ALVO_AGRUPAMENTO);
+}
+
 export function PaginaMapa() {
   const { autenticado } = useAuth();
   const navegar = useNavigate();
   const [parametrosBusca, setParametrosBusca] = useSearchParams();
   const [clusters, setClusters] = useState<ClusterOcorrencia[]>([]);
+  const [zoomAtual, setZoomAtual] = useState(5);
   const [ocorrenciaSelecionadaId, setOcorrenciaSelecionadaId] = useState<number | null>(null);
   const [pontoNovaOcorrencia, setPontoNovaOcorrencia] = useState<{ lat: number; lng: number } | null>(null);
 
-  // Rota de mapa é fullscreen/fixa; as outras rolam normalmente (ver index.html).
   useEffect(function () {
     document.body.classList.add('dm-tela-mapa');
     return function () {
@@ -28,9 +42,9 @@ export function PaginaMapa() {
     };
   }, []);
 
-  const buscarClusters = useCallback(function () {
+  const buscarClusters = useCallback(function (zoom: number) {
     api
-      .get<ClusterOcorrencia[]>('/ocorrencias/clusters')
+      .get<ClusterOcorrencia[]>('/ocorrencias/clusters', { params: { raio: raioAgrupamentoPorZoom(zoom) } })
       .then(function (resposta) {
         setClusters(resposta.data);
       })
@@ -41,13 +55,15 @@ export function PaginaMapa() {
 
   useEffect(
     function () {
-      buscarClusters();
+      buscarClusters(zoomAtual);
     },
-    [buscarClusters]
+    [buscarClusters, zoomAtual]
   );
 
-  // Link de compartilhamento (ModalOcorrencia gera /?ocorrencia=ID) abre o
-  // modal direto ao carregar a página.
+  function aoMudarZoom(zoom: number) {
+    setZoomAtual(zoom);
+  }
+
   useEffect(function () {
     const idParam = parametrosBusca.get('ocorrencia');
     if (idParam) {
@@ -60,6 +76,10 @@ export function PaginaMapa() {
     if (!autenticado) {
       toast.info('Entre na sua conta para registrar uma ocorrência.');
       navegar('/entrar');
+      return;
+    }
+    if (!dentroDoBrasil(lat, lng)) {
+      toast.warn('O DangerMap só aceita ocorrências dentro do território brasileiro.');
       return;
     }
     setPontoNovaOcorrencia({ lat, lng });
@@ -81,9 +101,9 @@ export function PaginaMapa() {
         clusters={clusters}
         aoClicarNoMapa={tratarCliqueNoMapa}
         aoClicarOcorrencia={setOcorrenciaSelecionadaId}
+        aoMudarZoom={aoMudarZoom}
       />
 
-      {/* Botão flutuante de criar ocorrência (alternativa ao clique no mapa) */}
       <button
         onClick={() => {
           if (!autenticado) {
@@ -92,7 +112,15 @@ export function PaginaMapa() {
             return;
           }
           navigator.geolocation?.getCurrentPosition(
-            (posicao) => setPontoNovaOcorrencia({ lat: posicao.coords.latitude, lng: posicao.coords.longitude }),
+            (posicao) => {
+              const lat = posicao.coords.latitude;
+              const lng = posicao.coords.longitude;
+              if (!dentroDoBrasil(lat, lng)) {
+                toast.warn('O DangerMap só aceita ocorrências dentro do território brasileiro.');
+                return;
+              }
+              setPontoNovaOcorrencia({ lat, lng });
+            },
             () => toast.info('Clique em um ponto do mapa para registrar a ocorrência lá.')
           );
         }}
@@ -124,7 +152,7 @@ export function PaginaMapa() {
         <ModalOcorrencia
           ocorrenciaId={ocorrenciaSelecionadaId}
           aoFechar={fecharModalOcorrencia}
-          aoMudar={buscarClusters}
+          aoMudar={() => buscarClusters(zoomAtual)}
         />
       )}
 
@@ -135,7 +163,7 @@ export function PaginaMapa() {
           aoFechar={() => setPontoNovaOcorrencia(null)}
           aoCriada={(ocorrencia) => {
             setPontoNovaOcorrencia(null);
-            buscarClusters();
+            buscarClusters(zoomAtual);
             setOcorrenciaSelecionadaId(ocorrencia.id);
           }}
         />

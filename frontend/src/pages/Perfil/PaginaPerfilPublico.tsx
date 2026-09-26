@@ -80,8 +80,8 @@ export function PaginaPerfilPublico() {
 
   return (
     <LayoutPadrao>
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 40px 60px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 20, marginBottom: 36 }}>
+      <div className="dm-container-pagina">
+        <div className="dm-grid-perfil">
           <div
             style={{
               backgroundColor: CORES.verdeGarrafa,

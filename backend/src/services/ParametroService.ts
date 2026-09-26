@@ -49,18 +49,4 @@ export class ParametroService {
   static async listarParaAdmin() {
     return parametroRepository.listarTodos();
   }
-
-  static async atualizar(chave: string, valor: string) {
-    if (!(chave in VALORES_PADRAO)) {
-      throw new Error('Parâmetro desconhecido.');
-    }
-
-    if (!valor || valor.trim() === '') {
-      throw new Error('O valor do parâmetro não pode ser vazio.');
-    }
-
-    const atualizado = await parametroRepository.atualizar(chave, valor);
-    cache = null;
-    return atualizado;
-  }
 }

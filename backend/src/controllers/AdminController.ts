@@ -281,24 +281,4 @@ export class AdminController {
     }
   }
 
-  async atualizarParametro(req: RequisicaoAutenticada, res: Response) {
-    try {
-      const chaveParam = req.params.chave;
-      const chave = Array.isArray(chaveParam) ? chaveParam[0] : chaveParam;
-      const { valor } = req.body;
-
-      if (!valor || typeof valor !== 'string') {
-        return res.status(400).json({ error: 'O valor do parâmetro é obrigatório.' });
-      }
-
-      const atualizado = await ParametroService.atualizar(chave, valor);
-
-      LogAtividadeService.registrar({ usuarioId: req.usuarioId, acao: `ALTERAR_PARAMETRO:${chave}=${valor}`, req });
-
-      return res.status(200).json({ mensagem: 'Parâmetro atualizado com sucesso!', parametro: atualizado });
-    } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : 'Erro ao atualizar parâmetro.';
-      return res.status(400).json({ error: msg });
-    }
-  }
 }

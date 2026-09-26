@@ -46,9 +46,19 @@ describe('criarOcorrenciaSchema', function () {
     }).toThrow();
   });
 
-  it('aceita os limites exatos de latitude/longitude', function () {
+  it('rejeita coordenadas fora do território brasileiro', function () {
+    expect(function () {
+      criarOcorrenciaSchema.parse({ ...dadosValidos, latitude: 51.5, longitude: -0.12 });
+    }).toThrow();
+
     expect(function () {
       criarOcorrenciaSchema.parse({ ...dadosValidos, latitude: 90, longitude: 180 });
+    }).toThrow();
+  });
+
+  it('aceita coordenadas dentro do território brasileiro', function () {
+    expect(function () {
+      criarOcorrenciaSchema.parse({ ...dadosValidos, latitude: -3.119, longitude: -60.0217 });
     }).not.toThrow();
   });
 

@@ -234,7 +234,7 @@ export function FormularioOcorrencia(props: FormularioOcorrenciaProps) {
             {sugerindo && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}><FiZap size={11} aria-hidden="true" /> sugerindo…</span>}
           </label>
           <input type="hidden" {...register('categoriaId', { required: 'Escolha uma categoria.' })} />
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(70px, 1fr))', gap: 8 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(84px, 1fr))', gap: 8 }}>
             {categorias.map((c) => {
               const selecionada = String(watch('categoriaId')) === String(c.id);
               return (
@@ -253,7 +253,7 @@ export function FormularioOcorrencia(props: FormularioOcorrenciaProps) {
                     backgroundColor: selecionada ? `${CORES.laranja}14` : '#fff',
                   }}
                 >
-                  <img src={obterIconeCategoria(c.nome)} alt="" style={{ width: 26, height: 26, objectFit: 'contain' }} />
+                  <img src={obterIconeCategoria(c.nome)} alt="" style={{ width: 40, height: 40, objectFit: 'contain' }} />
                   <span style={{ fontSize: 10, textAlign: 'center', lineHeight: 1.2, color: selecionada ? CORES.laranjaEscuro : CORES.tintaSuave, fontWeight: selecionada ? 700 : 500 }}>
                     {c.nome}
                   </span>

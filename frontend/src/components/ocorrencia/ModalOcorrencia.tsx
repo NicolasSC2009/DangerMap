@@ -225,7 +225,7 @@ export function ModalOcorrencia(props: ModalOcorrenciaProps) {
                   <img
                     src={obterIconeCategoria(ocorrencia.categorias?.nome)}
                     alt=""
-                    style={{ width: 34, height: 34, objectFit: 'contain', flexShrink: 0 }}
+                    style={{ width: 48, height: 48, objectFit: 'contain', flexShrink: 0 }}
                   />
                   <div>
                     <span

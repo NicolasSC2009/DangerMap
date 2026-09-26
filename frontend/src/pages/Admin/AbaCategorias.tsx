@@ -92,7 +92,7 @@ export function AbaCategorias() {
             {categorias.map((cat) => (
               <tr key={cat.id}>
                 <td style={s.td}>
-                  <img src={obterIconeCategoria(cat.nome)} alt="" style={{ width: 26, height: 26, objectFit: 'contain' }} />
+                  <img src={obterIconeCategoria(cat.nome)} alt="" style={{ width: 38, height: 38, objectFit: 'contain' }} />
                 </td>
                 <td style={s.td}>{cat.nome}</td>
                 <td style={{ ...s.td, maxWidth: 320, color: CORES.tintaSuave }}>{cat.descricao || 'Sem descrição'}</td>

@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { FiBell } from 'react-icons/fi';
 import { CORES } from '../../theme/cores';
 import { api } from '../../services/api';
+import { dispararNotificacaoNavegador } from '../../services/notificacoesBrowser';
 import type { Notificacao, RespostaNotificacoes } from '@shared/types';
 
 interface SininhoProps {
@@ -12,6 +13,7 @@ interface SininhoProps {
 export function SininhoNotificacoes(props: SininhoProps) {
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>([]);
   const [aberto, setAberto] = useState<boolean>(false);
+  const idsConhecidos = useRef<Set<number> | null>(null);
 
   function carregarNotificacoes() {
     if (!props.autenticado) return;
@@ -19,7 +21,18 @@ export function SininhoNotificacoes(props: SininhoProps) {
     api
       .get<RespostaNotificacoes>('/notificacoes')
       .then(function (resposta) {
-        setNotificacoes(resposta.data.notificacoes || []);
+        const lista = resposta.data.notificacoes || [];
+
+        if (idsConhecidos.current) {
+          for (const item of lista) {
+            if (!item.lida && !idsConhecidos.current.has(item.id)) {
+              dispararNotificacaoNavegador(item.titulo, item.mensagem);
+            }
+          }
+        }
+        idsConhecidos.current = new Set(lista.map((item) => item.id));
+
+        setNotificacoes(lista);
       })
       .catch(function (err) {
         console.error('[ERRO BUSCA NOTIFICACOES]:', err);
@@ -34,7 +47,6 @@ export function SininhoNotificacoes(props: SininhoProps) {
       }
 
       carregarNotificacoes();
-      // Consulta atualizações a cada 15 segundos (polling)
       const intervalo = setInterval(carregarNotificacoes, 15000);
       return function () {
         clearInterval(intervalo);
@@ -81,12 +93,11 @@ export function SininhoNotificacoes(props: SininhoProps) {
           width: 44,
           height: 44,
           borderRadius: '50%',
-          border: 'none',
-          backgroundColor: `${CORES.verdeGarrafaProfundo}e6`,
-          backdropFilter: 'blur(8px)',
-          color: CORES.eggshell,
+          border: `1px solid ${CORES.linha}`,
+          backgroundColor: '#fff',
+          color: CORES.tinta,
           cursor: 'pointer',
-          boxShadow: '0 4px 14px rgba(0,0,0,0.35)',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.16)',
           fontSize: 18,
           display: 'flex',
           alignItems: 'center',

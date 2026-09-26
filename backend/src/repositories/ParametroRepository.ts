@@ -14,11 +14,4 @@ export class ParametroRepository {
       where: { chave },
     });
   }
-
-  async atualizar(chave: string, valor: string) {
-    return prisma.parametros_sistema.update({
-      where: { chave },
-      data: { valor },
-    });
-  }
 }

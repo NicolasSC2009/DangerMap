@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
-import { FiPlus, FiMapPin } from 'react-icons/fi';
+import { FiPlus, FiMapPin, FiArrowLeft } from 'react-icons/fi';
 import './auth.css';
 import { api } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -111,6 +111,30 @@ export function PaginaAuth() {
         <Mapa />
       </div>
       <div className="dm-auth-fundo-escurecido" style={{ position: 'fixed', inset: 0, pointerEvents: 'none' }} />
+
+      <button
+        onClick={() => navegar('/')}
+        style={{
+          position: 'fixed',
+          top: 20,
+          left: 20,
+          zIndex: 10,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 7,
+          padding: '9px 16px',
+          borderRadius: 999,
+          border: '1px solid rgba(255,255,255,0.18)',
+          backgroundColor: 'rgba(0,0,0,0.35)',
+          backdropFilter: 'blur(8px)',
+          color: '#fff',
+          fontSize: 13,
+          fontWeight: 600,
+          cursor: 'pointer',
+        }}
+      >
+        <FiArrowLeft size={14} aria-hidden="true" /> Voltar para o mapa
+      </button>
 
       <div className="dm-auth-container" style={{ position: 'relative' }}>
         <div className={`dm-auth-carousel ${telaAtiva === 'cadastro' ? 'dm-auth-cadastro' : ''}`}>

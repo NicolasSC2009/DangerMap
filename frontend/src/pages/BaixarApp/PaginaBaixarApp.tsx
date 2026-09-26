@@ -11,7 +11,7 @@ const PLATAFORMAS = [
 export function PaginaBaixarApp() {
   return (
     <LayoutPadrao>
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '20px 40px 60px', fontFamily: FONTES.corpo }}>
+      <div style={{ maxWidth: 900, margin: '0 auto', padding: '20px 20px 60px', fontFamily: FONTES.corpo }}>
         <span style={{ fontFamily: FONTES.mono, fontSize: 11, letterSpacing: 1.6, textTransform: 'uppercase', color: CORES.laranjaEscuro }}>
           Multiplataforma
         </span>

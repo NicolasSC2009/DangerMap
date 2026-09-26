@@ -1,5 +1,21 @@
 import { z } from 'zod';
 
+const LIMITES_BRASIL = {
+  latMin: -34,
+  latMax: 6,
+  lngMin: -74,
+  lngMax: -28,
+};
+
+function dentroDoBrasil(latitude: number, longitude: number): boolean {
+  return (
+    latitude >= LIMITES_BRASIL.latMin &&
+    latitude <= LIMITES_BRASIL.latMax &&
+    longitude >= LIMITES_BRASIL.lngMin &&
+    longitude <= LIMITES_BRASIL.lngMax
+  );
+}
+
 export const criarOcorrenciaSchema = z.object({
   categoriaId: z.number(),
   gravidade: z.enum(['baixo', 'medio', 'alto']).optional(),
@@ -11,11 +27,13 @@ export const criarOcorrenciaSchema = z.object({
     .min(-180, 'Longitude inválida (mínimo -180)')
     .max(180, 'Longitude inválida (máximo 180)'),
   anonimo: z.boolean().optional().default(false)
+}).refine(function (dados) {
+  return dentroDoBrasil(dados.latitude, dados.longitude);
+}, {
+  message: 'O DangerMap só aceita ocorrências dentro do território brasileiro.',
+  path: ['latitude'],
 });
 
-// RF13 - filtros de listagem (categoria, gravidade, status e período).
-// "arquivado" não é uma opção válida de filtro: ocorrências arquivadas nunca
-// devem voltar a aparecer no mapa público, mesmo que o filtro seja pedido.
 export const listarOcorrenciasQuerySchema = z.object({
   categoriaId: z.coerce.number().int().positive().optional(),
   gravidade: z.enum(['baixo', 'medio', 'alto']).optional(),

@@ -1,7 +1,7 @@
 ﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { IconType } from 'react-icons';
-import { FiBarChart2, FiFlag, FiUsers, FiFolder, FiSliders, FiMap, FiArrowLeft, FiLogOut } from 'react-icons/fi';
+import { FiBarChart2, FiFlag, FiUsers, FiFolder, FiMap, FiArrowLeft, FiLogOut } from 'react-icons/fi';
 import { CORES, FONTES } from '../../theme/cores';
 import { useAuth } from '../../contexts/AuthContext';
 import logo from '../../assets/logo.png';
@@ -9,17 +9,15 @@ import { AbaVisaoGeral } from './AbaVisaoGeral';
 import { AbaModeracao } from './AbaModeracao';
 import { AbaUsuarios } from './AbaUsuarios';
 import { AbaCategorias } from './AbaCategorias';
-import { AbaParametros } from './AbaParametros';
 import { AbaRelatorioRegiao } from './AbaRelatorioRegiao';
 
-type Aba = 'visao-geral' | 'moderacao' | 'usuarios' | 'categorias' | 'parametros' | 'relatorio';
+type Aba = 'visao-geral' | 'moderacao' | 'usuarios' | 'categorias' | 'relatorio';
 
 const ITENS_NAV: Array<{ chave: Aba; rotulo: string; Icone: IconType }> = [
   { chave: 'visao-geral', rotulo: 'Visão geral', Icone: FiBarChart2 },
   { chave: 'moderacao', rotulo: 'Moderação de ocorrências', Icone: FiFlag },
   { chave: 'usuarios', rotulo: 'Perfis denunciados', Icone: FiUsers },
   { chave: 'categorias', rotulo: 'Categorias', Icone: FiFolder },
-  { chave: 'parametros', rotulo: 'Parâmetros globais', Icone: FiSliders },
   { chave: 'relatorio', rotulo: 'Relatório regional', Icone: FiMap },
 ];
 
@@ -106,7 +104,6 @@ export function PaginaAdmin() {
         {abaAtiva === 'moderacao' && <AbaModeracao />}
         {abaAtiva === 'usuarios' && <AbaUsuarios />}
         {abaAtiva === 'categorias' && <AbaCategorias />}
-        {abaAtiva === 'parametros' && <AbaParametros />}
         {abaAtiva === 'relatorio' && <AbaRelatorioRegiao />}
       </main>
     </div>

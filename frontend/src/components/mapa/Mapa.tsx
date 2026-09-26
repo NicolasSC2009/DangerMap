@@ -38,27 +38,37 @@ const CORES_POR_GRAVIDADE: Record<Gravidade, string> = {
   baixo: CORES.verdeSalada,
 };
 
-function iconeOcorrencia(gravidade?: Gravidade | null, nomeCategoria?: string | null) {
+function fatorPorZoom(zoom: number): number {
+  return Math.min(1.15, Math.max(0.42, (zoom - 3) / 11));
+}
+
+function iconeOcorrencia(gravidade: Gravidade | null | undefined, nomeCategoria: string | null | undefined, zoom: number) {
   const cor = (gravidade && CORES_POR_GRAVIDADE[gravidade]) || CORES.laranja;
   const icone = obterIconeCategoria(nomeCategoria);
+  const fator = fatorPorZoom(zoom);
+  const largura = Math.round(56 * fator);
+  const altura = Math.round(58 * fator);
+  const badge = Math.max(9, Math.round(15 * fator));
   return L.divIcon({
     className: 'dm-marcador-ocorrencia',
     html: `
-      <div style="position:relative;width:38px;height:39px;">
+      <div style="position:relative;width:${largura}px;height:${altura}px;">
         <img src="${icone}" alt="" style="width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.45));" />
-        <span style="position:absolute;top:-1px;right:1px;width:11px;height:11px;border-radius:50%;background:${cor};border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.5);"></span>
+        <span style="position:absolute;top:-1px;right:1px;width:${badge}px;height:${badge}px;border-radius:50%;background:${cor};border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.5);"></span>
       </div>`,
-    iconSize: [38, 39],
-    iconAnchor: [19, 37],
+    iconSize: [largura, altura],
+    iconAnchor: [largura / 2, Math.round(altura * 0.95)],
   });
 }
 
-function iconeCluster(quantidade: number, gravidade?: Gravidade | null) {
+function iconeCluster(quantidade: number, gravidade: Gravidade | null | undefined, zoom: number) {
   const cor = (gravidade && CORES_POR_GRAVIDADE[gravidade]) || CORES.verdeGarrafa;
-  const tamanho = quantidade >= 10 ? 44 : 36;
+  const fator = fatorPorZoom(zoom);
+  const tamanho = Math.round((quantidade >= 10 ? 44 : 36) * fator);
+  const fonte = Math.max(10, Math.round((quantidade >= 10 ? 14 : 13) * fator));
   return L.divIcon({
     className: 'dm-marcador-cluster',
-    html: `<div style="width:${tamanho}px;height:${tamanho}px;border-radius:50%;background:${cor};border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Inter',sans-serif;font-weight:800;font-size:${quantidade >= 10 ? 14 : 13}px;">${quantidade}</div>`,
+    html: `<div style="width:${tamanho}px;height:${tamanho}px;border-radius:50%;background:${cor};border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Inter',sans-serif;font-weight:800;font-size:${fonte}px;cursor:pointer;">${quantidade}</div>`,
     iconSize: [tamanho, tamanho],
     iconAnchor: [tamanho / 2, tamanho / 2],
   });
@@ -68,6 +78,7 @@ interface MapaProps {
   clusters?: ClusterOcorrencia[];
   aoClicarNoMapa?: (lat: number, lng: number) => void;
   aoClicarOcorrencia?: (ocorrenciaId: number) => void;
+  aoMudarZoom?: (zoom: number) => void;
   posicaoInicial?: [number, number];
 }
 
@@ -79,6 +90,7 @@ const LIMITES_SUPER_EXPANDIDOS: L.LatLngBoundsExpression = [
 interface ClimaAtual {
   temperatura: number;
   umidade: number;
+  condicao: string | null;
 }
 
 type StatusPermissaoLocalizacao = 'perguntando' | 'solicitando' | 'concedida' | 'negada';
@@ -176,7 +188,7 @@ function CapsulaCoordenadaClima(props: { lat: number; lng: number; clima: ClimaA
       style={{
         position: 'fixed',
         top: 20,
-        left: 20,
+        left: 72,
         zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
@@ -210,6 +222,9 @@ function CapsulaCoordenadaClima(props: { lat: number; lng: number; clima: ClimaA
             <FiDroplet size={13} aria-hidden="true" />
             {props.clima.umidade}%
           </span>
+          {props.clima.condicao && (
+            <span style={{ opacity: 0.75 }}>{props.clima.condicao}</span>
+          )}
         </span>
       ) : (
         <span style={{ opacity: 0.6 }}>Clima indisponível</span>
@@ -217,6 +232,8 @@ function CapsulaCoordenadaClima(props: { lat: number; lng: number; clima: ClimaA
     </div>
   );
 }
+
+const CHAVE_ESCOLHA_LOCALIZACAO = '@DangerMap:escolhaLocalizacao';
 
 function LocalizadorUsuario() {
   const mapa = useMap();
@@ -228,7 +245,16 @@ function LocalizadorUsuario() {
   useEffect(function () {
     if (!('geolocation' in navigator)) {
       setStatus('negada');
+      return;
     }
+
+    const escolhaSalva = localStorage.getItem(CHAVE_ESCOLHA_LOCALIZACAO);
+    if (escolhaSalva === 'concedida') {
+      solicitarLocalizacao();
+    } else if (escolhaSalva === 'negada') {
+      setStatus('negada');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function buscarClima(lat: number, lng: number) {
@@ -239,7 +265,7 @@ function LocalizadorUsuario() {
       })
       .then(function (dados) {
         if (dados && typeof dados.temperatura === 'number') {
-          setClima({ temperatura: Math.round(dados.temperatura), umidade: dados.umidade ?? 0 });
+          setClima({ temperatura: Math.round(dados.temperatura), umidade: dados.umidade ?? 0, condicao: dados.condicao_tempo ?? null });
         }
       })
       .catch(function (erro) {
@@ -256,6 +282,7 @@ function LocalizadorUsuario() {
       function (posicao) {
         const lat = posicao.coords.latitude;
         const lng = posicao.coords.longitude;
+        localStorage.setItem(CHAVE_ESCOLHA_LOCALIZACAO, 'concedida');
         setStatus('concedida');
         setPosicaoAtual([lat, lng]);
         mapa.flyTo([lat, lng], 14, { animate: true });
@@ -263,12 +290,15 @@ function LocalizadorUsuario() {
       },
       function (erro) {
         console.warn('[GEOLOCALIZAÇÃO]: Permissão negada ou indisponível.', erro);
+        localStorage.setItem(CHAVE_ESCOLHA_LOCALIZACAO, 'negada');
         setStatus('negada');
-      }
+      },
+      { timeout: 10000 }
     );
   }
 
   function recusarLocalizacao() {
+    localStorage.setItem(CHAVE_ESCOLHA_LOCALIZACAO, 'negada');
     setStatus('negada');
   }
 
@@ -311,11 +341,63 @@ function EscutadorDeCliques(props: { aoClicar?: (lat: number, lng: number) => vo
   return null;
 }
 
+function CamadaOcorrencias(props: {
+  clusters?: ClusterOcorrencia[];
+  aoClicarOcorrencia?: (ocorrenciaId: number) => void;
+  aoMudarZoom?: (zoom: number) => void;
+}) {
+  const mapa = useMap();
+  const [zoom, setZoom] = useState(mapa.getZoom());
+
+  useMapEvents({
+    zoomend: function () {
+      const novoZoom = mapa.getZoom();
+      setZoom(novoZoom);
+      if (props.aoMudarZoom) props.aoMudarZoom(novoZoom);
+    },
+  });
+
+  return (
+    <>
+      {props.clusters && props.clusters.map(function (cluster, indice) {
+        if (cluster.quantidade === 1 && cluster.ocorrencia) {
+          const ocorrencia = cluster.ocorrencia;
+          return (
+            <Marker
+              key={`oc-${ocorrencia.id}`}
+              position={[cluster.latitude, cluster.longitude]}
+              icon={iconeOcorrencia(ocorrencia.gravidade, ocorrencia.categorias?.nome, zoom)}
+              eventHandlers={{
+                click: function () {
+                  if (props.aoClicarOcorrencia) props.aoClicarOcorrencia(ocorrencia.id);
+                },
+              }}
+            />
+          );
+        }
+
+        return (
+          <Marker
+            key={`cluster-${indice}-${cluster.latitude}-${cluster.longitude}`}
+            position={[cluster.latitude, cluster.longitude]}
+            icon={iconeCluster(cluster.quantidade, cluster.gravidadeMaisAlta, zoom)}
+            eventHandlers={{
+              click: function () {
+                mapa.flyTo([cluster.latitude, cluster.longitude], Math.min(18, zoom + 3), { animate: true });
+              },
+            }}
+          />
+        );
+      })}
+    </>
+  );
+}
+
 export function Mapa(props: MapaProps) {
   const centroPadrao: [number, number] = props.posicaoInicial || [-28.6775, -49.3703];
 
   return (
-    <div style={{ width: '100%', height: '100%', backgroundColor: '#0f172a' }}>
+    <div className="dm-mapa-estilizado" style={{ width: '100%', height: '100%', backgroundColor: '#0f172a' }}>
       <MapContainer
         center={centroPadrao}
         zoom={5}
@@ -334,31 +416,7 @@ export function Mapa(props: MapaProps) {
 
         <EscutadorDeCliques aoClicar={props.aoClicarNoMapa} />
 
-        {props.clusters && props.clusters.map(function (cluster, indice) {
-          if (cluster.quantidade === 1 && cluster.ocorrencia) {
-            const ocorrencia = cluster.ocorrencia;
-            return (
-              <Marker
-                key={`oc-${ocorrencia.id}`}
-                position={[cluster.latitude, cluster.longitude]}
-                icon={iconeOcorrencia(ocorrencia.gravidade, ocorrencia.categorias?.nome)}
-                eventHandlers={{
-                  click: function () {
-                    if (props.aoClicarOcorrencia) props.aoClicarOcorrencia(ocorrencia.id);
-                  },
-                }}
-              />
-            );
-          }
-
-          return (
-            <Marker
-              key={`cluster-${indice}-${cluster.latitude}-${cluster.longitude}`}
-              position={[cluster.latitude, cluster.longitude]}
-              icon={iconeCluster(cluster.quantidade, cluster.gravidadeMaisAlta)}
-            />
-          );
-        })}
+        <CamadaOcorrencias clusters={props.clusters} aoClicarOcorrencia={props.aoClicarOcorrencia} aoMudarZoom={props.aoMudarZoom} />
       </MapContainer>
     </div>
   );

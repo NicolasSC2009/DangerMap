@@ -24,7 +24,7 @@ export function LayoutPadrao(props: LayoutPadraoProps) {
       <Navbar />
       <LogoCanto />
 
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 40px' }}>
+      <div className="dm-container-pagina" style={{ paddingBottom: 0 }}>
         <button
           onClick={() => navegar('/')}
           style={{

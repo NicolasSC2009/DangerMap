@@ -7,7 +7,7 @@ import { validarRecaptcha } from '../middlewares/recaptchaMiddleware.js';
 import { BlacklistRepository } from '../repositories/BlacklistRepository.js';
 import jwt from 'jsonwebtoken';
 import { UsuarioController } from '../controllers/UsuarioController.js';
-import { JWT_SECRET, REFRESH_SECRET, ACCESS_TOKEN_EXPIRES_IN } from '../config/auth.js';
+import { JWT_SECRET, REFRESH_SECRET, ACCESS_TOKEN_EXPIRES_IN, REFRESH_TOKEN_COOKIE_MAX_AGE_MS } from '../config/auth.js';
 
 const usuarioController = new UsuarioController();
 const authRoutes = Router();
@@ -22,11 +22,16 @@ authRoutes.post('/login', loginController.lidar);
 authRoutes.post('/esqueci-senha', recuperacaoSenhaController.solicitar);
 authRoutes.post('/resetar-senha', recuperacaoSenhaController.resetar);
 
-authRoutes.post('/refresh', function (req: Request, res: Response) {
+authRoutes.post('/refresh', async function (req: Request, res: Response) {
   const refreshToken = req.cookies?.refreshToken;
 
   if (!refreshToken) {
     return res.status(401).json({ error: 'Refresh token não fornecido.' });
+  }
+
+  const refreshRevogado = await blacklistRepository.buscarTokenRevogado(refreshToken);
+  if (refreshRevogado) {
+    return res.status(401).json({ error: 'Sessão encerrada. Faça login novamente.' });
   }
 
   jwt.verify(refreshToken, REFRESH_SECRET, function (err: any, usuarioDecodificado: any) {
@@ -56,6 +61,15 @@ authRoutes.post('/logout', autenticarToken, async function (req: RequisicaoAuten
     const dataExpiracao = new Date(dadosDecodificados.exp * 1000);
 
     await blacklistRepository.revogarToken(token, dataExpiracao);
+
+    const refreshToken = req.cookies?.refreshToken;
+    if (refreshToken) {
+      const refreshDecodificado = jwt.decode(refreshToken) as { exp?: number } | null;
+      const refreshExpiraEm = refreshDecodificado?.exp
+        ? new Date(refreshDecodificado.exp * 1000)
+        : new Date(Date.now() + REFRESH_TOKEN_COOKIE_MAX_AGE_MS);
+      await blacklistRepository.revogarToken(refreshToken, refreshExpiraEm);
+    }
 
     res.clearCookie('refreshToken', {
       httpOnly: true,

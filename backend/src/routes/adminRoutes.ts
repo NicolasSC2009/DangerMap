@@ -18,6 +18,5 @@ router.get('/admin/ocorrencias/fila-moderacao', autenticarToken, autorizarAdmin,
 router.get('/admin/usuarios/fila-denunciados', autenticarToken, autorizarAdmin, adminController.filaUsuariosDenunciados);
 
 router.get('/admin/parametros', autenticarToken, autorizarAdmin, adminController.listarParametros);
-router.patch('/admin/parametros/:chave', autenticarToken, autorizarAdmin, adminController.atualizarParametro);
 
 export default router;

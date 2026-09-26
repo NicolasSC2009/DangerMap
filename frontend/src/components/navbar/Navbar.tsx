@@ -13,7 +13,7 @@ interface NavbarProps {
   aoSelecionarOcorrencia?: (ocorrenciaId: number) => void;
 }
 
-function IconeGradeNovePontos() {
+function IconeGradeNovePontos(props: { cor: string }) {
   const posicoes = [0, 1, 2];
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -24,7 +24,7 @@ function IconeGradeNovePontos() {
             cx={4 + coluna * 8}
             cy={4 + linha * 8}
             r={2.1}
-            fill={CORES.eggshell}
+            fill={props.cor}
           />
         ))
       )}
@@ -72,7 +72,7 @@ export function Navbar(props: NavbarProps) {
   const itensMenu = [
     { Icone: FiMapPin, rotulo: 'Minhas ocorrências', aoClicar: () => navegar('/perfil') },
     { Icone: FiFolder, rotulo: 'Categorias de perigo', aoClicar: () => setModalCategoriasAberto(true) },
-    { Icone: FiSettings, rotulo: 'Configurações', aoClicar: () => navegar('/perfil') },
+    { Icone: FiSettings, rotulo: 'Configurações', aoClicar: () => navegar('/configuracoes') },
     { Icone: FiInfo, rotulo: 'Sobre o DangerMap', aoClicar: () => setModalSobreAberto(true) },
     { Icone: FiHelpCircle, rotulo: 'Ajuda', aoClicar: () => setModalAjudaAberto(true) },
     ...(ehAdmin ? [{ Icone: FiShield, rotulo: 'Painel administrativo', aoClicar: () => navegar('/admin') }] : []),
@@ -111,17 +111,16 @@ export function Navbar(props: NavbarProps) {
             width: 44,
             height: 44,
             borderRadius: '50%',
-            border: 'none',
-            backgroundColor: menuAberto ? CORES.laranja : `${CORES.verdeGarrafaProfundo}e6`,
-            backdropFilter: 'blur(8px)',
+            border: menuAberto ? 'none' : `1px solid ${CORES.linha}`,
+            backgroundColor: menuAberto ? CORES.laranja : '#fff',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            boxShadow: '0 4px 14px rgba(0,0,0,0.35)',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.16)',
           }}
         >
-          <IconeGradeNovePontos />
+          <IconeGradeNovePontos cor={menuAberto ? '#fff' : CORES.tinta} />
         </button>
 
         {menuAberto && (
@@ -261,7 +260,7 @@ export function Navbar(props: NavbarProps) {
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
               {categorias.map((c) => (
                 <li key={c.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                  <img src={obterIconeCategoria(c.nome)} alt="" style={{ width: 28, height: 28, objectFit: 'contain', flexShrink: 0 }} />
+                  <img src={obterIconeCategoria(c.nome)} alt="" style={{ width: 42, height: 42, objectFit: 'contain', flexShrink: 0 }} />
                   <div>
                     <strong style={{ fontSize: 14 }}>{c.nome}</strong>
                     {c.descricao && <div style={{ fontSize: 12.5, opacity: 0.75, marginTop: 2 }}>{c.descricao}</div>}
