@@ -26,8 +26,24 @@ function raioAgrupamentoPorZoom(zoom: number): number {
   return Math.round(metrosPorPixel * PIXELS_ALVO_AGRUPAMENTO);
 }
 
+const RAIO_MAXIMO_CIDADAO_METROS = 1000;
+const RAIO_TERRA_METROS = 6371000;
+
+function distanciaMetros(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return RAIO_TERRA_METROS * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function tratarErroGeolocalizacao() {
+  toast.info('Não foi possível obter sua localização. Verifique a permissão de localização do navegador para este site e tente novamente.');
+}
+
 export function PaginaMapa() {
-  const { autenticado } = useAuth();
+  const { autenticado, ehAdmin } = useAuth();
   const navegar = useNavigate();
   const [parametrosBusca, setParametrosBusca] = useSearchParams();
   const { preferencias } = usePreferencias();
@@ -85,7 +101,22 @@ export function PaginaMapa() {
       toast.warn('O DangerMap só aceita ocorrências dentro do território brasileiro.');
       return;
     }
-    setPontoNovaOcorrencia({ lat, lng });
+    if (ehAdmin) {
+      setPontoNovaOcorrencia({ lat, lng });
+      return;
+    }
+    if (!navigator.geolocation) {
+      toast.info('Seu navegador não permite localização. Não é possível registrar ocorrências.');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(function (posicao) {
+      const distancia = distanciaMetros(posicao.coords.latitude, posicao.coords.longitude, lat, lng);
+      if (distancia > RAIO_MAXIMO_CIDADAO_METROS) {
+        toast.warn(`Você só pode registrar ocorrências a até ${RAIO_MAXIMO_CIDADAO_METROS / 1000} km da sua localização atual.`);
+        return;
+      }
+      setPontoNovaOcorrencia({ lat, lng });
+    }, tratarErroGeolocalizacao);
   }
 
   function fecharModalOcorrencia() {
@@ -103,7 +134,11 @@ export function PaginaMapa() {
       return;
     }
     if (!navigator.geolocation) {
-      toast.info('Clique em um ponto do mapa para registrar a ocorrência lá.');
+      toast.info(
+        ehAdmin
+          ? 'Clique em um ponto do mapa para registrar a ocorrência lá.'
+          : 'Seu navegador não permite localização. Não é possível registrar ocorrências.'
+      );
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -116,7 +151,7 @@ export function PaginaMapa() {
         }
         setPontoNovaOcorrencia({ lat, lng });
       },
-      () => toast.info('Clique em um ponto do mapa para registrar a ocorrência lá.')
+      tratarErroGeolocalizacao
     );
   }
 
