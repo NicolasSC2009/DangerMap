@@ -86,24 +86,15 @@ export function aplicarPreferenciasNoDocumento(p: Preferencias): void {
 }
 
 const ATRIBUICAO_OSM = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
-const ATRIBUICAO_CARTO = `${ATRIBUICAO_OSM} &copy; <a href="https://carto.com/attributions">CARTO</a>`;
+
+const TILE_OSM = { url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attribution: ATRIBUICAO_OSM };
 
 export const TILES: Record<EstiloMapaResolvido, { url: string; attribution: string }> = {
-  padrao: {
-    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    attribution: ATRIBUICAO_OSM,
-  },
-  claro: {
-    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-    attribution: ATRIBUICAO_CARTO,
-  },
-  escuro: {
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    attribution: ATRIBUICAO_CARTO,
-  },
+  padrao: TILE_OSM,
+  claro: TILE_OSM,
+  escuro: TILE_OSM,
 };
 
-// 'auto' segue o tema efetivo: escuro → Carto Dark; claro → OSM padrão.
 export function resolverEstiloMapa(p: Preferencias): EstiloMapaResolvido {
   if (p.estiloMapa !== 'auto') return p.estiloMapa;
   return resolverTema(p) === 'escuro' ? 'escuro' : 'padrao';
