@@ -118,19 +118,15 @@ export interface RespostaLogin {
 }
 
 export interface FilaModeracaoOcorrencias {
-  limite: number;
+  /** Opcional: pode deixar de vir do backend — renderize texto alternativo quando ausente. */
+  limite?: number;
   ocorrencias: Ocorrencia[];
 }
 
 export interface FilaUsuariosDenunciados {
-  limite: number;
+  /** Opcional: pode deixar de vir do backend — renderize texto alternativo quando ausente. */
+  limite?: number;
   usuarios: Array<{ id: number; nome: string; email: string; ativo: boolean; qtd_denuncias_recebidas: number }>;
-}
-
-export interface ParametroSistema {
-  chave: string;
-  valor: string;
-  descricao: string | null;
 }
 
 export interface EstatisticasDashboard {
@@ -146,6 +142,18 @@ export interface EstatisticasDashboard {
   ocorrenciasPorCategoria: Array<{ categoriaId: number | null; categoriaNome: string; total: number }>;
   serieTemporal: Array<{ dia: string; total: number }>;
   geradoEm: string;
+}
+
+// Item de GET /admin/relatorio-regiao (ocorrências dentro do raio).
+export interface ResultadoRelatorioRegiao {
+  id: number;
+  descricao: string | null;
+  latitude: string;
+  longitude: string;
+  gravidade: Gravidade;
+  status: StatusOcorrencia;
+  data_registro: string;
+  distancia_metros: string;
 }
 
 export interface RespostaErro {

@@ -1,12 +1,13 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { TelaCarregando } from './TelaCarregando';
 
 // Exige login; sem token válido, manda para a tela de entrada.
 export function RotaProtegida(props: { children: React.ReactElement }) {
   const { autenticado, carregando } = useAuth();
 
-  if (carregando) return null;
+  if (carregando) return <TelaCarregando />;
   if (!autenticado) return <Navigate to="/entrar" replace />;
   return props.children;
 }
@@ -15,7 +16,7 @@ export function RotaProtegida(props: { children: React.ReactElement }) {
 export function RotaAdmin(props: { children: React.ReactElement }) {
   const { autenticado, ehAdmin, carregando } = useAuth();
 
-  if (carregando) return null;
+  if (carregando) return <TelaCarregando />;
   if (!autenticado) return <Navigate to="/entrar" replace />;
   if (!ehAdmin) return <Navigate to="/" replace />;
   return props.children;

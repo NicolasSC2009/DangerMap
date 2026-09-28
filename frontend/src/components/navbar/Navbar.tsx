@@ -11,6 +11,8 @@ import { obterIconeCategoria } from '../../theme/iconesCategorias';
 
 interface NavbarProps {
   aoSelecionarOcorrencia?: (ocorrenciaId: number) => void;
+  /** 'flutuante' (default): fixa no canto do mapa. 'embutida': em fluxo normal dentro da topbar do LayoutPadrao. */
+  variante?: 'flutuante' | 'embutida';
 }
 
 function IconeGradeNovePontos(props: { cor: string }) {
@@ -87,11 +89,11 @@ export function Navbar(props: NavbarProps) {
   return (
     <div
       ref={containerRef}
+      className={`dm-navbar dm-navbar--${props.variante || 'flutuante'}`}
       style={{
-        position: 'fixed',
-        top: 20,
-        right: 20,
-        zIndex: 1100,
+        ...(props.variante === 'embutida'
+          ? { position: 'relative' as const, zIndex: 1100 }
+          : { position: 'fixed' as const, top: 20, right: 20, zIndex: 1100 }),
         display: 'flex',
         alignItems: 'center',
         gap: 10,

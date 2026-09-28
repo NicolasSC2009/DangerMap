@@ -1,51 +1,46 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { FiArrowLeft } from 'react-icons/fi';
 import { Navbar } from '../navbar/Navbar';
-import { LogoCanto } from './LogoCanto';
-import { CORES, FONTES } from '../../theme/cores';
+import logo from '../../assets/logo-dangermap.png';
 
 interface LayoutPadraoProps {
   children: React.ReactNode;
+  /** 'clara' (canvas — config, ajuda, baixar app) ou 'escura' (fundo verde-escuro — perfil). */
+  variante?: 'clara' | 'escura';
+  /** Largura máxima do conteúdo em px (default 1180, via .dm-container). */
+  larguraMax?: number;
+  /** Mostra o link "Voltar para o mapa" sob a topbar (default true). */
+  mostrarVoltar?: boolean;
+  className?: string;
 }
 
+// Casca das páginas internas: topbar (logo → mapa, Navbar embutida à direita)
+// + conteúdo centralizado em .dm-container.
 export function LayoutPadrao(props: LayoutPadraoProps) {
-  const navegar = useNavigate();
+  const variante = props.variante || 'clara';
+  const estiloLargura = props.larguraMax ? { maxWidth: props.larguraMax } : undefined;
 
   return (
     <div
-      style={{
-        minHeight: '100vh',
-        backgroundColor: CORES.canvas,
-        fontFamily: FONTES.corpo,
-        paddingTop: 84,
-      }}
+      className={`dm-layout ${variante === 'escura' ? 'dm-pagina-escura' : 'dm-pagina-clara'} ${props.className || ''}`}
+      data-variante={variante}
     >
-      <Navbar />
-      <LogoCanto />
+      <header className="dm-container dm-layout-topbar" style={estiloLargura}>
+        <Link to="/" className="dm-layout-marca" aria-label="DangerMap — voltar para o mapa">
+          <img src={logo} alt="DangerMap" />
+        </Link>
+        <Navbar variante="embutida" />
+      </header>
 
-      <div className="dm-container-pagina" style={{ paddingBottom: 0 }}>
-        <button
-          onClick={() => navegar('/')}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 7,
-            marginBottom: 18,
-            padding: '8px 4px',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: CORES.tintaSuave,
-            fontSize: 13,
-            fontWeight: 600,
-          }}
-        >
-          <FiArrowLeft size={14} aria-hidden="true" /> Voltar para o mapa
-        </button>
-      </div>
-
-      {props.children}
+      <main className="dm-container dm-layout-main" style={estiloLargura}>
+        {props.mostrarVoltar !== false && (
+          <Link to="/" className="dm-layout-voltar">
+            <FiArrowLeft size={14} aria-hidden="true" /> Voltar para o mapa
+          </Link>
+        )}
+        {props.children}
+      </main>
     </div>
   );
 }

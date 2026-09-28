@@ -8,6 +8,8 @@ import { PaginaPerfilPublico } from './pages/Perfil/PaginaPerfilPublico';
 import { PaginaConfiguracoes } from './pages/Configuracoes/PaginaConfiguracoes';
 import { PaginaAdmin } from './pages/Admin/PaginaAdmin';
 import { PaginaBaixarApp } from './pages/BaixarApp/PaginaBaixarApp';
+import { PaginaAjuda } from './pages/Ajuda/PaginaAjuda';
+import { PaginaNaoEncontrada } from './pages/NaoEncontrada/PaginaNaoEncontrada';
 import { RotaProtegida, RotaAdmin } from './components/comum/RotasProtegidas';
 
 export function App() {
@@ -33,8 +35,10 @@ export function App() {
           </RotaProtegida>
         }
       />
+      <Route path="/ajuda" element={<PaginaAjuda />} />
+      {/* /admin e /admin/:aba (visao-geral · moderacao · usuarios · categorias · relatorio) */}
       <Route
-        path="/admin"
+        path="/admin/:aba?"
         element={
           <RotaAdmin>
             <PaginaAdmin />
@@ -42,6 +46,7 @@ export function App() {
         }
       />
       <Route path="/baixar-app" element={<PaginaBaixarApp />} />
+      <Route path="*" element={<PaginaNaoEncontrada />} />
     </Routes>
   );
 }

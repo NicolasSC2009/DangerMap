@@ -1,0 +1,107 @@
+/* Tokens de design do DangerMap (fonte de verdade das cores/tipografia/layout).
+   Tema escuro: <html data-tema="escuro">. Texto grande: <html data-fonte="grande">.
+   Animações reduzidas: <html data-animacoes="reduzidas">. Quem aplica esses
+   atributos é o PreferenciasProvider (contexts/PreferenciasContext.tsx). */
+:root {
+  /* paleta */
+  --dm-verde-salada: #8CC850;
+  --dm-verde-garrafa: #003223;
+  --dm-verde-garrafa-fundo: #001b12;
+  --dm-sidebar: #00251a;
+  --dm-laranja: #FF6400;
+  --dm-laranja-escuro: #b13f0f;
+  --dm-vermelho: #a02617;
+  --dm-vermelho-hover: #c22f1c;
+  --dm-vermelho-fundo: rgba(160, 38, 23, 0.08);
+  --dm-eggshell: #d8cfc6;
+  --dm-canvas: #F6F2EA;
+  --dm-card: #ffffff;
+  --dm-tinta: #1b2420;
+  --dm-tinta-suave: #5c6a63;
+  --dm-tinta-fraca: #9aa79e;
+  --dm-linha: rgba(0, 50, 35, 0.12);
+  --dm-linha-forte: rgba(0, 50, 35, 0.28);
+  --dm-fundo-escuro: #14140f;
+  --dm-texto-sobre-escuro: rgba(245, 235, 225, 0.75);
+  --dm-grad-acento: linear-gradient(150deg, var(--dm-verde-garrafa-fundo) 0%, var(--dm-verde-garrafa) 45%, var(--dm-verde-salada) 130%);
+  --dm-fundo-pagina:
+    radial-gradient(circle at 15% 20%, rgba(140, 200, 80, 0.10) 0%, transparent 35%),
+    radial-gradient(circle at 85% 80%, rgba(255, 100, 0, 0.07) 0%, transparent 35%),
+    var(--dm-fundo-escuro);
+
+  /* semânticos (páginas claras: admin, config, ajuda) */
+  --dm-bg: var(--dm-canvas);
+  --dm-fg: var(--dm-tinta);
+  --dm-superficie: var(--dm-card);
+  --dm-titulo: var(--dm-verde-garrafa);      /* cor de títulos/valores sobre fundo claro */
+  --dm-campo-fundo: #ffffff;                 /* fundo de inputs */
+
+  /* tipografia */
+  --dm-fonte-corpo: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --dm-fonte-titulo: 'Playfair Display', Georgia, serif;
+  --dm-fonte-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --dm-escala: 1;
+  --dm-t-xs: calc(clamp(10.5px, 0.68rem, 11.5px) * var(--dm-escala));
+  --dm-t-sm: calc(clamp(12.5px, 0.8rem, 13.5px) * var(--dm-escala));
+  --dm-t-md: calc(clamp(14px, 0.9rem, 15px) * var(--dm-escala));
+  --dm-t-h3: calc(clamp(16px, 1.05rem, 18px) * var(--dm-escala));
+  --dm-t-h2: calc(clamp(20px, 1.2rem + 0.6vw, 26px) * var(--dm-escala));
+  --dm-t-h1: calc(clamp(26px, 1.4rem + 1.4vw, 40px) * var(--dm-escala));
+  --dm-t-stat: calc(clamp(24px, 1.4rem + 1vw, 34px) * var(--dm-escala));
+
+  /* layout */
+  --dm-raio-sm: 10px;
+  --dm-raio-md: 14px;
+  --dm-raio-lg: 20px;
+  --dm-raio-xl: 28px;
+  --dm-gutter: clamp(16px, 4vw, 40px);
+  --dm-safe-b: env(safe-area-inset-bottom, 0px);
+  --dm-safe-t: env(safe-area-inset-top, 0px);
+  --dm-sombra-card: 0 40px 100px rgba(0, 0, 0, 0.55), 0 1px 0 rgba(255, 255, 255, 0.06) inset;
+  --dm-sombra-hover-laranja: 0 16px 30px rgba(177, 63, 15, 0.34);
+  --dm-transicao: 0.2s ease;
+
+  /* camadas */
+  --dm-z-mapa-ui: 1000;
+  --dm-z-navbar: 1100;
+  --dm-z-dropdown: 1150;
+  --dm-z-modal: 1300;
+  --dm-z-modal-alto: 1400;
+  --dm-z-toast: 1500;
+
+  color-scheme: light;
+}
+
+:root[data-fonte="grande"] {
+  --dm-escala: 1.125;
+}
+
+:root[data-tema="escuro"] {
+  --dm-bg: #0f1512;
+  --dm-fg: #ece6dc;
+  --dm-superficie: #17201b;
+  --dm-canvas: #0f1512;
+  --dm-card: #17201b;
+  --dm-tinta: #ece6dc;
+  --dm-tinta-suave: #a9b3ad;
+  --dm-tinta-fraca: #6f7c74;
+  --dm-linha: rgba(245, 235, 225, 0.12);
+  --dm-linha-forte: rgba(245, 235, 225, 0.28);
+  --dm-eggshell: #1e2823;
+  --dm-titulo: #dcebcf;
+  --dm-campo-fundo: #111a15;
+  color-scheme: dark;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dm-transicao: 0s;
+  }
+}
+
+:root[data-animacoes="reduzidas"] *,
+:root[data-animacoes="reduzidas"] *::before,
+:root[data-animacoes="reduzidas"] *::after {
+  animation: none !important;
+  transition: none !important;
+}
