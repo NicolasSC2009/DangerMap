@@ -1,0 +1,15 @@
+/* Modais de conta (ModalEditarDados, ModalExcluirConta). Primitivas vêm do global.css. */
+
+.dm-conta-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dm-conta-form .dm-modal-acoes {
+  margin-top: 10px;
+}
+
+.dm-conta-perigo {
+  margin-bottom: 22px;
+}

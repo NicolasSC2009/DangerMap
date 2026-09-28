@@ -2,8 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { FiX, FiCamera, FiZap } from 'react-icons/fi';
-import { CORES, FONTES } from '../../theme/cores';
+import './ocorrencia.css';
+import { Modal } from '../comum/Modal';
 import { api } from '../../services/api';
+import { ORDEM_GRAVIDADE, ROTULO_GRAVIDADE } from '../../theme/rotulos';
 import { useCategorias } from '../../hooks/useCategorias';
 import { obterIconeCategoria } from '../../theme/iconesCategorias';
 import type { Gravidade, Ocorrencia } from '@shared/types';
@@ -44,10 +46,27 @@ export function FormularioOcorrencia(props: FormularioOcorrenciaProps) {
 
   function selecionarFoto(evento: React.ChangeEvent<HTMLInputElement>) {
     const arquivo = evento.target.files?.[0];
+    evento.target.value = ''; // permite escolher o mesmo arquivo de novo depois de remover
     if (!arquivo) return;
     setFoto(arquivo);
     setPreviaFoto(URL.createObjectURL(arquivo));
   }
+
+  function removerFoto() {
+    setFoto(null);
+    setPreviaFoto(null);
+  }
+
+  // Libera a URL de prévia anterior (evita vazamento de memória).
+  useEffect(
+    function () {
+      if (!previaFoto) return;
+      return function () {
+        URL.revokeObjectURL(previaFoto);
+      };
+    },
+    [previaFoto]
+  );
 
   function aplicarSugestao(dados: { categoriaId: number | null; categoriaNome: string | null; confianca: number }) {
     if (dados.categoriaId) {
@@ -137,194 +156,147 @@ export function FormularioOcorrencia(props: FormularioOcorrenciaProps) {
     }
   }
 
+  const categoriaSelecionada = watch('categoriaId');
+  const gravidadeSelecionada = watch('gravidade');
+
   return (
-    <div
-      onClick={props.aoFechar}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(0, 27, 18, 0.55)',
-        backdropFilter: 'blur(2px)',
-        zIndex: 1400,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-      }}
+    <Modal
+      aoFechar={props.aoFechar}
+      largura={480}
+      eyebrow="Novo reporte"
+      titulo="O que está acontecendo aqui?"
+      bloquearFechamento={enviando}
+      className="dm-ocorrencia-modal"
     >
-      <form
-        className="dm-cantos-decorativos"
-        onClick={(e) => e.stopPropagation()}
-        onSubmit={handleSubmit(enviar)}
-        style={{
-          width: '100%',
-          maxWidth: 440,
-          maxHeight: '88vh',
-          overflowY: 'auto',
-          backgroundColor: CORES.canvas,
-          borderRadius: 20,
-          boxShadow: '0 40px 90px rgba(0,0,0,0.45)',
-          fontFamily: FONTES.corpo,
-          padding: '24px 24px 22px',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
-          <div>
-            <span style={{ fontFamily: FONTES.mono, fontSize: 10.5, letterSpacing: 1.2, textTransform: 'uppercase', color: CORES.laranjaEscuro }}>
-              Novo reporte
-            </span>
-            <h2 style={{ fontFamily: FONTES.titulo, fontSize: 22, color: CORES.verdeGarrafa, margin: '4px 0 0' }}>
-              O que está acontecendo aqui?
-            </h2>
-          </div>
-          <button
-            type="button"
-            onClick={props.aoFechar}
-            style={{ width: 30, height: 30, borderRadius: '50%', border: `1.5px solid ${CORES.linha}`, backgroundColor: '#fff', color: CORES.tintaSuave, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          >
-            <FiX size={15} aria-hidden="true" />
-          </button>
-        </div>
+      <p className="dm-form-ocorrencia__coord dm-mono">
+        {props.latitude.toFixed(5)}, {props.longitude.toFixed(5)}
+      </p>
 
-        <p style={{ fontSize: 12, color: CORES.tintaSuave, fontFamily: FONTES.mono, margin: '4px 0 18px' }}>
-          {props.latitude.toFixed(5)}, {props.longitude.toFixed(5)}
-        </p>
-
-        <div style={{ marginBottom: 14 }}>
-          <label style={rotuloEstilo}>Foto (opcional)</label>
+      <form className="dm-form-ocorrencia" onSubmit={handleSubmit(enviar)} noValidate>
+        <div className="dm-campo-grupo">
+          <span className="dm-rotulo">Foto (opcional)</span>
           {previaFoto ? (
-            <div style={{ position: 'relative' }}>
-              <img src={previaFoto} alt="" style={{ width: '100%', height: 140, objectFit: 'cover', borderRadius: 10 }} />
+            <div className="dm-form-ocorrencia__previa">
+              <img src={previaFoto} alt="Prévia da foto anexada" />
               <button
                 type="button"
-                onClick={() => { setFoto(null); setPreviaFoto(null); }}
-                style={{ position: 'absolute', top: 8, right: 8, width: 26, height: 26, borderRadius: '50%', border: 'none', backgroundColor: 'rgba(0,0,0,0.6)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                className="dm-form-ocorrencia__remover-foto"
+                onClick={removerFoto}
+                aria-label="Remover foto"
+                title="Remover foto"
               >
-                <FiX size={13} aria-hidden="true" />
+                <FiX size={15} aria-hidden="true" />
               </button>
             </div>
           ) : (
-            <label
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: 90, borderRadius: 10,
-                border: `1.5px solid ${CORES.linha}`, cursor: 'pointer', color: CORES.tintaSuave, fontSize: 12.5,
-              }}
-            >
-              <FiCamera size={16} aria-hidden="true" />
-              Anexar uma foto do local
-              <input type="file" accept="image/jpeg,image/png,image/webp" onChange={selecionarFoto} style={{ display: 'none' }} />
+            <label className="dm-form-ocorrencia__foto">
+              <FiCamera size={20} aria-hidden="true" />
+              <span>Anexar uma foto do local</span>
+              <small>JPG, PNG ou WEBP · sugere a categoria automaticamente</small>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={selecionarFoto}
+                className="dm-visually-hidden"
+              />
             </label>
           )}
         </div>
 
-        <div style={{ marginBottom: 14 }}>
-          <label style={rotuloEstilo}>Descrição (opcional)</label>
+        <div className="dm-campo-grupo">
+          <span className="dm-rotulo-linha">
+            <label className="dm-rotulo" htmlFor="dm-form-ocorrencia-descricao">
+              Descrição (opcional)
+            </label>
+            <span>{(descricaoAtual || '').length}/1000</span>
+          </span>
           <textarea
+            id="dm-form-ocorrencia-descricao"
+            className="dm-campo"
             {...register('descricao', { maxLength: { value: 1000, message: 'Máximo de 1000 caracteres.' } })}
             rows={3}
             placeholder="Descreva o que você está vendo…"
-            style={campoEstilo as React.CSSProperties}
+            aria-invalid={errors.descricao ? true : undefined}
           />
-          {errors.descricao && <span style={erroEstilo}>{errors.descricao.message}</span>}
+          {errors.descricao && <span className="dm-erro">{errors.descricao.message}</span>}
         </div>
 
-        <div style={{ marginBottom: 6 }}>
-          <label style={{ ...rotuloEstilo, display: 'flex', alignItems: 'center', gap: 6 }}>
-            Categoria
-            {sugerindo && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}><FiZap size={11} aria-hidden="true" /> sugerindo…</span>}
-          </label>
+        <div className="dm-campo-grupo">
+          <span className="dm-rotulo-linha">
+            <span className="dm-rotulo" id="dm-form-ocorrencia-categoria">
+              Categoria
+            </span>
+            {sugerindo && (
+              <span className="dm-form-ocorrencia__sugerindo">
+                <FiZap size={11} aria-hidden="true" /> sugerindo…
+              </span>
+            )}
+          </span>
           <input type="hidden" {...register('categoriaId', { required: 'Escolha uma categoria.' })} />
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(84px, 1fr))', gap: 8 }}>
+          <div className="dm-form-ocorrencia__categorias" role="group" aria-labelledby="dm-form-ocorrencia-categoria">
             {categorias.map((c) => {
-              const selecionada = String(watch('categoriaId')) === String(c.id);
+              const selecionada = String(categoriaSelecionada) === String(c.id);
               return (
                 <button
                   key={c.id}
                   type="button"
+                  aria-pressed={selecionada}
+                  className={`dm-form-ocorrencia__categoria${selecionada ? ' dm-form-ocorrencia__categoria--ativa' : ''}`}
                   onClick={() => {
                     categoriaEscolhidaManualmente.current = true;
                     setValue('categoriaId', String(c.id), { shouldValidate: true });
                   }}
-                  title={c.nome}
-                  style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                    padding: '8px 4px', borderRadius: 10, cursor: 'pointer',
-                    border: `1.5px solid ${selecionada ? CORES.laranjaEscuro : CORES.linha}`,
-                    backgroundColor: selecionada ? `${CORES.laranja}14` : '#fff',
-                  }}
+                  title={c.descricao || c.nome}
                 >
-                  <img src={obterIconeCategoria(c.nome)} alt="" style={{ width: 40, height: 40, objectFit: 'contain' }} />
-                  <span style={{ fontSize: 10, textAlign: 'center', lineHeight: 1.2, color: selecionada ? CORES.laranjaEscuro : CORES.tintaSuave, fontWeight: selecionada ? 700 : 500 }}>
-                    {c.nome}
-                  </span>
+                  <img src={obterIconeCategoria(c.nome)} alt="" />
+                  <span>{c.nome}</span>
                 </button>
               );
             })}
           </div>
+          {errors.categoriaId && <span className="dm-erro">{errors.categoriaId.message}</span>}
+          {sugestao && (
+            <p className="dm-form-ocorrencia__sugestao" aria-live="polite">
+              <FiZap size={12} aria-hidden="true" /> {sugestao}
+            </p>
+          )}
         </div>
-        {errors.categoriaId && <span style={{ ...erroEstilo, display: 'block', margin: '6px 0 12px' }}>{errors.categoriaId.message}</span>}
-        {sugestao && <p style={{ fontSize: 12, color: CORES.laranjaEscuro, marginTop: 10, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 5 }}><FiZap size={12} aria-hidden="true" /> {sugestao}</p>}
 
-        <div style={{ marginBottom: 16 }}>
-          <label style={rotuloEstilo}>Gravidade</label>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {(['baixo', 'medio', 'alto'] as Gravidade[]).map((g) => (
-              <label key={g} style={{ flex: 1 }}>
-                <input type="radio" value={g} {...register('gravidade')} style={{ display: 'none' }} />
-                <SeletorGravidade valor={g} selecionado={watch('gravidade') === g} />
+        <fieldset className="dm-campo-grupo dm-form-ocorrencia__fieldset">
+          <legend className="dm-rotulo">Gravidade</legend>
+          <div className="dm-form-ocorrencia__gravidades">
+            {ORDEM_GRAVIDADE.map((g) => (
+              <label
+                key={g}
+                className={`dm-form-ocorrencia__gravidade dm-form-ocorrencia__gravidade--${g}${
+                  gravidadeSelecionada === g ? ' dm-form-ocorrencia__gravidade--ativa' : ''
+                }`}
+              >
+                <input type="radio" value={g} {...register('gravidade')} className="dm-visually-hidden" />
+                <span className="dm-form-ocorrencia__gravidade-caixa">
+                  <span className="dm-severidade__ponto" aria-hidden="true" />
+                  {ROTULO_GRAVIDADE[g]}
+                </span>
               </label>
             ))}
           </div>
-        </div>
+        </fieldset>
 
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: CORES.tintaSuave, marginBottom: 18, cursor: 'pointer' }}>
-          <input type="checkbox" {...register('anonimo')} />
-          Registrar de forma anônima (sua identidade não aparece pra outros usuários)
+        <label className="dm-form-ocorrencia__anonimo">
+          <span className="dm-form-ocorrencia__anonimo-texto">
+            <strong>Registrar de forma anônima</strong>
+            <span>Sua identidade não aparece pra outros usuários.</span>
+          </span>
+          <span className="dm-interruptor">
+            <input type="checkbox" {...register('anonimo')} />
+            <span className="dm-interruptor__trilho" aria-hidden="true" />
+          </span>
         </label>
 
-        <button
-          type="submit"
-          disabled={enviando}
-          className="dm-botao-primario dm-botao-seta"
-          style={{
-            width: '100%', padding: 15, borderRadius: 12, backgroundColor: CORES.laranjaEscuro,
-            color: '#fff', fontWeight: 700, fontSize: 13, letterSpacing: 1, textTransform: 'uppercase', cursor: enviando ? 'default' : 'pointer',
-            opacity: enviando ? 0.75 : 1,
-          }}
-        >
+        <button type="submit" disabled={enviando} className="dm-btn dm-btn--primario dm-btn--bloco">
           <span>{enviando ? 'Enviando…' : 'Registrar ocorrência'}</span>
         </button>
       </form>
-    </div>
+    </Modal>
   );
 }
-
-function SeletorGravidade(props: { valor: Gravidade; selecionado: boolean }) {
-  const cores: Record<Gravidade, string> = { baixo: CORES.verdeSalada, medio: CORES.laranja, alto: CORES.vermelhoAlerta };
-  const rotulos: Record<Gravidade, string> = { baixo: 'Baixa', medio: 'Média', alto: 'Alta' };
-  return (
-    <div
-      style={{
-        padding: '10px 0', textAlign: 'center', borderRadius: 10, fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
-        border: `1.5px solid ${props.selecionado ? cores[props.valor] : CORES.linha}`,
-        backgroundColor: props.selecionado ? `${cores[props.valor]}22` : '#fff',
-        color: props.selecionado ? cores[props.valor] : CORES.tintaSuave,
-      }}
-    >
-      {rotulos[props.valor]}
-    </div>
-  );
-}
-
-const rotuloEstilo: React.CSSProperties = {
-  fontFamily: FONTES.mono, fontSize: 10.5, fontWeight: 500, letterSpacing: 1, textTransform: 'uppercase',
-  color: CORES.tintaSuave, display: 'block', marginBottom: 7,
-};
-
-const campoEstilo: React.CSSProperties = {
-  width: '100%', padding: '11px 13px', backgroundColor: '#fff', border: `1.5px solid ${CORES.linha}`,
-  borderLeft: `3px solid ${CORES.linha}`, borderRadius: 10, color: CORES.verdeGarrafa, fontSize: 13.5,
-  outline: 'none', fontFamily: FONTES.corpo, resize: 'vertical',
-};
-
-const erroEstilo: React.CSSProperties = { fontSize: 11.5, color: CORES.vermelhoAlerta, marginTop: 4 };

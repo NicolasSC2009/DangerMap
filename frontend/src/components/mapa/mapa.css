@@ -1,0 +1,386 @@
+/* =========================================================================
+   Mapa (PaginaMapa + components/mapa/Mapa.tsx + LogoCanto)
+   ========================================================================= */
+
+/* ---------- página ---------- */
+
+.dm-mapa-pagina {
+  position: fixed;
+  inset: 0;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--dm-verde-garrafa-fundo);
+}
+
+/* ---------- container do Leaflet ---------- */
+
+.dm-mapa {
+  width: 100%;
+  height: 100%;
+  background: #0f1a15;
+}
+
+.dm-mapa__leaflet {
+  width: 100%;
+  height: 100%;
+  background: #0f1a15;
+  font-family: var(--dm-fonte-corpo);
+}
+
+/* OSM padrão um pouco menos saturado para os marcadores se destacarem */
+.dm-mapa--padrao .leaflet-tile-pane {
+  filter: saturate(0.65) brightness(1.08) contrast(0.94);
+}
+
+.dm-mapa .leaflet-control-zoom {
+  border: 1px solid var(--dm-linha) !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18) !important;
+}
+
+.dm-mapa .leaflet-control-zoom a {
+  width: 36px;
+  height: 36px;
+  line-height: 34px;
+  background: var(--dm-card);
+  color: var(--dm-titulo);
+  border-bottom-color: var(--dm-linha);
+}
+
+.dm-mapa .leaflet-control-zoom a:hover {
+  background: var(--dm-eggshell);
+  color: var(--dm-laranja-escuro);
+}
+
+.dm-mapa .leaflet-control-attribution {
+  font-family: var(--dm-fonte-corpo);
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+:root[data-tema='escuro'] .dm-mapa .leaflet-control-attribution {
+  background: rgba(15, 21, 18, 0.72);
+  color: var(--dm-tinta-suave);
+}
+
+:root[data-tema='escuro'] .dm-mapa .leaflet-control-attribution a {
+  color: var(--dm-verde-salada);
+}
+
+/* ---------- marcadores (HTML do divIcon) ---------- */
+
+.dm-marcador-ocorrencia,
+.dm-marcador-cluster,
+.dm-marcador-usuario {
+  background: none;
+  border: none;
+}
+
+.dm-marcador-ocorrencia__corpo {
+  position: relative;
+  transition: transform 0.15s ease;
+}
+
+.dm-marcador-ocorrencia:hover .dm-marcador-ocorrencia__corpo {
+  transform: translateY(-2px) scale(1.05);
+}
+
+.dm-marcador-ocorrencia__corpo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.45));
+}
+
+.dm-marcador-ocorrencia__badge {
+  position: absolute;
+  top: -1px;
+  right: 1px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.dm-marcador-cluster__corpo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-family: var(--dm-fonte-mono);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.dm-marcador-cluster:hover .dm-marcador-cluster__corpo {
+  transform: scale(1.08);
+}
+
+.dm-marcador-usuario__pulso,
+.dm-marcador-usuario__ponto {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--dm-verde-salada);
+}
+
+.dm-marcador-usuario__pulso {
+  inset: 0;
+  opacity: 0.35;
+  animation: dm-pulso 1.8s ease-out infinite;
+}
+
+.dm-marcador-usuario__ponto {
+  top: 4px;
+  left: 4px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #d8cfc6;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
+}
+
+@keyframes dm-pulso {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+/* ---------- cartão de permissão de localização ---------- */
+
+.dm-mapa-permissao {
+  position: fixed;
+  top: calc(16px + var(--dm-safe-t));
+  left: 0;
+  right: 0;
+  margin: 0 auto; /* centraliza sem transform (a animação de entrada usa transform) */
+  z-index: 1050; /* acima do mapa, abaixo da navbar e do dropdown dela */
+  width: min(380px, 100% - 32px);
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 18px 18px 16px;
+  border-radius: var(--dm-raio-md);
+  background: var(--dm-verde-garrafa-fundo);
+  border: 1px solid rgba(140, 200, 80, 0.2);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  color: var(--dm-texto-sobre-escuro);
+  animation: dm-fade-slide-up 0.35s ease both;
+}
+
+.dm-mapa-permissao__icone {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(140, 200, 80, 0.14);
+  color: var(--dm-verde-salada);
+}
+
+.dm-mapa-permissao__corpo {
+  flex: 1;
+  min-width: 0;
+}
+
+.dm-mapa-permissao__eyebrow {
+  margin-bottom: 6px;
+}
+
+.dm-mapa-permissao__titulo {
+  font-size: var(--dm-t-h3);
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.dm-mapa-permissao__texto {
+  font-size: var(--dm-t-sm);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.dm-mapa-permissao__acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dm-mapa-permissao__acoes .dm-btn {
+  min-height: 40px;
+}
+
+/* ---------- cápsula de coordenada + clima ---------- */
+
+.dm-mapa-clima {
+  position: fixed;
+  top: calc(20px + var(--dm-safe-t));
+  left: 72px;
+  z-index: var(--dm-z-mapa-ui);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 72px - 200px);
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: rgba(0, 50, 35, 0.9);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  color: #ece6dc;
+  font-family: var(--dm-fonte-mono);
+  font-size: var(--dm-t-xs);
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.dm-mapa-clima__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dm-mapa-clima__sep {
+  width: 1px;
+  height: 14px;
+  background: rgba(236, 230, 220, 0.25);
+}
+
+.dm-mapa-clima__suave {
+  opacity: 0.7;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* ---------- LogoCanto ---------- */
+
+.dm-logo-canto {
+  position: fixed;
+  left: 16px;
+  bottom: calc(16px + var(--dm-safe-b));
+  z-index: var(--dm-z-mapa-ui);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+  user-select: none;
+  cursor: pointer;
+  transition: transform var(--dm-transicao), box-shadow var(--dm-transicao);
+}
+
+.dm-logo-canto:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22);
+}
+
+.dm-logo-canto img {
+  display: block;
+  height: 20px;
+  width: auto;
+  max-width: none;
+}
+
+/* ---------- FAB "nova ocorrência" ---------- */
+
+.dm-fab {
+  position: fixed;
+  right: 16px;
+  bottom: calc(20px + var(--dm-safe-b));
+  z-index: 1050; /* acima do mapa (1000), abaixo da navbar (1100) */
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(155deg, var(--dm-laranja) 0%, var(--dm-laranja-escuro) 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(177, 63, 15, 0.45);
+  transition: transform 0.15s ease, box-shadow var(--dm-transicao);
+}
+
+.dm-fab:hover {
+  transform: scale(1.06);
+  box-shadow: 0 12px 26px rgba(177, 63, 15, 0.5);
+}
+
+.dm-fab:active {
+  transform: scale(0.97);
+}
+
+.dm-fab:focus-visible {
+  outline: 3px solid var(--dm-verde-salada);
+  outline-offset: 3px;
+}
+
+@media (min-width: 641px) {
+  .dm-fab {
+    right: 24px;
+    bottom: calc(28px + var(--dm-safe-b));
+  }
+}
+
+/* ---------- celular ---------- */
+
+@media (max-width: 640px) {
+  /* zoom do Leaflet desce para o canto inferior esquerdo, acima do LogoCanto */
+  .dm-mapa .leaflet-top.leaflet-left {
+    top: auto;
+    bottom: calc(64px + var(--dm-safe-b));
+  }
+  .dm-mapa .leaflet-top.leaflet-left .leaflet-control {
+    margin: 0 0 0 16px;
+  }
+
+  /* clima ao lado do zoom, também acima do LogoCanto */
+  .dm-mapa-clima {
+    top: auto;
+    left: 64px;
+    bottom: calc(64px + var(--dm-safe-b));
+    max-width: calc(100% - 64px - 88px);
+    padding: 8px 12px;
+    gap: 8px;
+  }
+
+  /* cartão de permissão abaixo da navbar flutuante */
+  .dm-mapa-permissao {
+    top: calc(72px + var(--dm-safe-t));
+  }
+}
+
+@media (max-width: 480px) {
+  /* cápsula colapsa para só ícones + números */
+  .dm-mapa-clima__texto-coord,
+  .dm-mapa-clima__condicao,
+  .dm-mapa-clima__sep {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dm-marcador-usuario__pulso,
+  .dm-mapa-permissao {
+    animation: none;
+  }
+}

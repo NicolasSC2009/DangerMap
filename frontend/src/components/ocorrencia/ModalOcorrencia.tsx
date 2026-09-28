@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FiCheck, FiHeart, FiShare2, FiAlertTriangle, FiX } from 'react-icons/fi';
-import { CORES, FONTES } from '../../theme/cores';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { FiCheck, FiHeart, FiShare2, FiAlertTriangle, FiImage } from 'react-icons/fi';
+import './ocorrencia.css';
+import { Modal } from '../comum/Modal';
 import { api } from '../../services/api';
+import { ROTULO_GRAVIDADE, ROTULO_STATUS } from '../../theme/rotulos';
 import { obterIconeCategoria } from '../../theme/iconesCategorias';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'react-toastify';
@@ -14,13 +16,11 @@ interface ModalOcorrenciaProps {
   aoMudar?: () => void; // avisa o mapa pra recarregar os clusters depois de uma ação
 }
 
-const ROTULO_GRAVIDADE: Record<string, string> = { baixo: 'Baixa', medio: 'Média', alto: 'Alta' };
-const ROTULO_STATUS: Record<string, string> = {
-  pendente: 'Pendente',
-  confirmado: 'Confirmado',
-  resolvido: 'Resolvido',
-  arquivado: 'Arquivado',
-};
+function formatarDataHora(iso: string): string {
+  const data = new Date(iso);
+  if (Number.isNaN(data.getTime())) return '—';
+  return `${data.toLocaleDateString('pt-BR')} · ${data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+}
 
 export function ModalOcorrencia(props: ModalOcorrenciaProps) {
   const { autenticado, usuario } = useAuth();
@@ -59,16 +59,7 @@ export function ModalOcorrencia(props: ModalOcorrenciaProps) {
     [props.ocorrenciaId]
   );
 
-  useEffect(function () {
-    function aoPressionarEsc(evento: KeyboardEvent) {
-      if (evento.key === 'Escape') props.aoFechar();
-    }
-    document.addEventListener('keydown', aoPressionarEsc);
-    return function () {
-      document.removeEventListener('keydown', aoPressionarEsc);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // ESC, clique fora e trava de scroll ficam a cargo do <Modal>.
 
   const ehCriador = Boolean(autenticado && usuario && ocorrencia?.usuario?.id === usuario.id);
 
@@ -173,271 +164,190 @@ export function ModalOcorrencia(props: ModalOcorrenciaProps) {
         await navigator.share(dadosCompartilhamento);
       } catch {}
     } else {
-      await navigator.clipboard.writeText(url);
-      toast.info('Link copiado para a área de transferência!');
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.info('Link copiado para a área de transferência!');
+      } catch {
+        toast.info(`Copie o link: ${url}`);
+      }
     }
   }
 
+  if (carregando || !ocorrencia) {
+    return (
+      <Modal aoFechar={props.aoFechar} largura={440} ariaLabel="Carregando ocorrência" className="dm-ocorrencia-modal">
+        <div className="dm-ocorrencia__carregando" role="status">
+          <span className="dm-ocorrencia__spinner" aria-hidden="true" />
+          Carregando…
+        </div>
+      </Modal>
+    );
+  }
+
+  const nomeCategoria = ocorrencia.categorias?.nome || 'Ocorrência';
+  const latitude = Number(ocorrencia.latitude);
+  const longitude = Number(ocorrencia.longitude);
+
   return (
-    <div
-      onClick={props.aoFechar}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(0, 27, 18, 0.55)',
-        backdropFilter: 'blur(2px)',
-        zIndex: 1400,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-      }}
+    <Modal
+      aoFechar={props.aoFechar}
+      largura={440}
+      ariaLabel={`Ocorrência: ${nomeCategoria}`}
+      className="dm-ocorrencia-modal"
     >
-      <div
-        className="dm-cantos-decorativos"
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          width: '100%',
-          maxWidth: 420,
-          maxHeight: '85vh',
-          overflowY: 'auto',
-          backgroundColor: CORES.canvas,
-          borderRadius: 20,
-          boxShadow: '0 40px 90px rgba(0,0,0,0.45)',
-          fontFamily: FONTES.corpo,
-        }}
-      >
-        {carregando || !ocorrencia ? (
-          <div style={{ padding: 40, textAlign: 'center', color: CORES.tintaSuave }}>Carregando…</div>
-        ) : (
-          <>
-            {ocorrencia.imagem_url && (
-              <img
-                src={ocorrencia.imagem_url}
-                alt=""
-                style={{ width: '100%', height: 180, objectFit: 'cover', borderRadius: '20px 20px 0 0' }}
-              />
-            )}
+      {ocorrencia.imagem_url ? (
+        <a
+          href={ocorrencia.imagem_url}
+          target="_blank"
+          rel="noreferrer"
+          className="dm-ocorrencia__imagem"
+          title="Abrir imagem em tamanho real"
+        >
+          <img src={ocorrencia.imagem_url} alt={`Foto da ocorrência: ${nomeCategoria}`} />
+        </a>
+      ) : (
+        <div className="dm-ocorrencia__imagem dm-ocorrencia__imagem--vazia">
+          <FiImage size={30} aria-hidden="true" />
+          <span>Sem imagem</span>
+        </div>
+      )}
 
-            <div style={{ padding: '20px 22px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <img
-                    src={obterIconeCategoria(ocorrencia.categorias?.nome)}
-                    alt=""
-                    style={{ width: 48, height: 48, objectFit: 'contain', flexShrink: 0 }}
-                  />
-                  <div>
-                    <span
-                      className="mono"
-                      style={{
-                        fontFamily: FONTES.mono,
-                        fontSize: 10.5,
-                        letterSpacing: 1,
-                        textTransform: 'uppercase',
-                        color: CORES.laranjaEscuro,
-                      }}
-                    >
-                      {ocorrencia.categorias?.nome || 'Ocorrência'}
-                    </span>
-                    <h2 style={{ fontFamily: FONTES.titulo, fontSize: 21, color: CORES.verdeGarrafa, margin: '4px 0 0' }}>
-                      {ROTULO_STATUS[ocorrencia.status]}
-                    </h2>
-                  </div>
-                </div>
-                <button
-                  onClick={props.aoFechar}
-                  aria-label="Fechar"
-                  style={{
-                    width: 30,
-                    height: 30,
-                    borderRadius: '50%',
-                    border: `1.5px solid ${CORES.linha}`,
-                    backgroundColor: '#fff',
-                    color: CORES.tintaSuave,
-                    cursor: 'pointer',
-                    flexShrink: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <FiX size={15} aria-hidden="true" />
-                </button>
-              </div>
-
-              <p style={{ fontSize: 13.5, color: CORES.tinta, lineHeight: 1.5, margin: '14px 0' }}>
-                {ocorrencia.descricao || 'Sem descrição informada.'}
-              </p>
-
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 16 }}>
-                <span
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 700,
-                    padding: '4px 10px',
-                    borderRadius: 20,
-                    backgroundColor:
-                      ocorrencia.gravidade === 'alto'
-                        ? CORES.vermelhoAlertaFundo
-                        : ocorrencia.gravidade === 'medio'
-                        ? `${CORES.laranja}22`
-                        : `${CORES.verdeSalada}26`,
-                    color: ocorrencia.gravidade === 'alto' ? CORES.vermelhoAlerta : CORES.laranjaEscuro,
-                  }}
-                >
-                  Gravidade {ROTULO_GRAVIDADE[ocorrencia.gravidade]}
-                </span>
-                <span style={{ fontSize: 12, color: CORES.tintaSuave, alignSelf: 'center' }}>
-                  {new Date(ocorrencia.data_registro).toLocaleDateString('pt-BR')}
-                </span>
-                {!ocorrencia.anonimo && ocorrencia.usuario && (
-                  <span style={{ fontSize: 12, color: CORES.tintaSuave, alignSelf: 'center' }}>
-                    por {ocorrencia.usuario.nome}
-                  </span>
-                )}
-              </div>
-
-              <div style={{ display: 'flex', gap: 8, marginBottom: ehCriador ? 6 : 14 }}>
-                <button
-                  onClick={alternarConfirmacao}
-                  disabled={ehCriador}
-                  title={ehCriador ? 'Você não pode confirmar sua própria ocorrência.' : undefined}
-                  style={{
-                    flex: 1,
-                    padding: '11px 12px',
-                    borderRadius: 10,
-                    border: 'none',
-                    backgroundColor: ehCriador ? CORES.linha : confirmado ? CORES.verdeSalada : CORES.verdeGarrafa,
-                    color: ehCriador ? CORES.tintaSuave : '#fff',
-                    fontWeight: 700,
-                    fontSize: 12.5,
-                    cursor: ehCriador ? 'not-allowed' : 'pointer',
-                  }}
-                >
-                  {confirmado ? (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                      <FiCheck size={14} aria-hidden="true" /> Confirmado
-                    </span>
-                  ) : (
-                    `Confirmar (${ocorrencia.qtd_confirmacoes})`
-                  )}
-                </button>
-                <button
-                  onClick={alternarCurtida}
-                  aria-label="Curtir"
-                  disabled={ehCriador}
-                  title={ehCriador ? 'Você não pode curtir sua própria ocorrência.' : undefined}
-                  style={{
-                    padding: '11px 16px',
-                    borderRadius: 10,
-                    border: `1.5px solid ${CORES.linha}`,
-                    backgroundColor: ehCriador ? CORES.linha : curtido ? `${CORES.laranja}1a` : '#fff',
-                    color: ehCriador ? CORES.tintaSuave : curtido ? CORES.laranjaEscuro : CORES.tinta,
-                    fontWeight: 700,
-                    fontSize: 12.5,
-                    cursor: ehCriador ? 'not-allowed' : 'pointer',
-                  }}
-                >
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                    <FiHeart size={14} aria-hidden="true" fill={curtido ? 'currentColor' : 'none'} /> {totalCurtidas}
-                  </span>
-                </button>
-                <button
-                  onClick={compartilhar}
-                  aria-label="Compartilhar"
-                  style={{
-                    padding: '11px 16px',
-                    borderRadius: 10,
-                    border: `1.5px solid ${CORES.linha}`,
-                    backgroundColor: '#fff',
-                    color: CORES.tinta,
-                    fontWeight: 700,
-                    fontSize: 12.5,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                  }}
-                >
-                  <FiShare2 size={14} aria-hidden="true" />
-                </button>
-              </div>
-
-              {ehCriador && (
-                <p style={{ fontSize: 11.5, color: CORES.tintaSuave, margin: '0 0 14px' }}>
-                  Você registrou esta ocorrência, por isso não pode confirmá-la nem curtir - peça pra outra pessoa validar.
-                </p>
-              )}
-
-              {!mostrarFormDenuncia ? (
-                <button
-                  onClick={() => setMostrarFormDenuncia(true)}
-                  style={{
-                    width: '100%',
-                    padding: '9px',
-                    background: 'none',
-                    border: 'none',
-                    color: CORES.vermelhoAlerta,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 6,
-                  }}
-                >
-                  <FiAlertTriangle size={13} aria-hidden="true" /> Denunciar esta ocorrência
-                </button>
-              ) : (
-                <div style={{ backgroundColor: CORES.vermelhoAlertaFundo, borderRadius: 12, padding: 14, marginTop: 4 }}>
-                  <textarea
-                    value={motivoDenuncia}
-                    onChange={(e) => setMotivoDenuncia(e.target.value)}
-                    placeholder="Por que você acha que essa ocorrência é falsa ou inadequada?"
-                    rows={3}
-                    style={{
-                      width: '100%',
-                      borderRadius: 8,
-                      border: `1px solid ${CORES.vermelhoAlerta}55`,
-                      padding: 10,
-                      fontSize: 13,
-                      fontFamily: FONTES.corpo,
-                      resize: 'vertical',
-                      marginBottom: 8,
-                    }}
-                  />
-                  <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                    <button
-                      onClick={() => setMostrarFormDenuncia(false)}
-                      style={{ padding: '8px 14px', border: 'none', background: 'none', color: CORES.tintaSuave, fontSize: 12.5, cursor: 'pointer' }}
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      onClick={enviarDenuncia}
-                      disabled={enviando}
-                      style={{
-                        padding: '8px 16px',
-                        borderRadius: 8,
-                        border: 'none',
-                        backgroundColor: CORES.vermelhoAlerta,
-                        color: '#fff',
-                        fontWeight: 700,
-                        fontSize: 12.5,
-                        cursor: enviando ? 'default' : 'pointer',
-                        opacity: enviando ? 0.7 : 1,
-                      }}
-                    >
-                      Enviar denúncia
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </>
-        )}
+      <div className="dm-ocorrencia__tags">
+        <span className="dm-tag dm-ocorrencia__tag-categoria">{nomeCategoria}</span>
+        <span className={`dm-tag dm-tag--${ocorrencia.status}`}>{ROTULO_STATUS[ocorrencia.status]}</span>
       </div>
-    </div>
+
+      <div className="dm-ocorrencia__titulo-linha">
+        <img src={obterIconeCategoria(ocorrencia.categorias?.nome)} alt="" className="dm-ocorrencia__icone" />
+        <h2 className="dm-ocorrencia__titulo">{nomeCategoria}</h2>
+      </div>
+
+      <dl className="dm-ocorrencia__detalhes">
+        <div className="dm-ocorrencia__linha">
+          <dt>Data</dt>
+          <dd className="dm-mono">{formatarDataHora(ocorrencia.data_registro)}</dd>
+        </div>
+        <div className="dm-ocorrencia__linha">
+          <dt>Gravidade</dt>
+          <dd>
+            <span className={`dm-severidade dm-severidade--${ocorrencia.gravidade}`}>
+              <span className="dm-severidade__ponto" aria-hidden="true" />
+              {ROTULO_GRAVIDADE[ocorrencia.gravidade]}
+            </span>
+          </dd>
+        </div>
+        {Number.isFinite(latitude) && Number.isFinite(longitude) && (
+          <div className="dm-ocorrencia__linha">
+            <dt>Local</dt>
+            <dd className="dm-mono">
+              {latitude.toFixed(4)}, {longitude.toFixed(4)}
+            </dd>
+          </div>
+        )}
+        <div className="dm-ocorrencia__linha">
+          <dt>Reportado por</dt>
+          <dd>
+            {!ocorrencia.anonimo && ocorrencia.usuario ? (
+              <Link to={`/usuarios/${ocorrencia.usuario.id}`} className="dm-ocorrencia__autor">
+                {ocorrencia.usuario.nome}
+              </Link>
+            ) : (
+              'Anônimo'
+            )}
+          </dd>
+        </div>
+        <div className="dm-ocorrencia__linha">
+          <dt>Confirmações</dt>
+          <dd className="dm-mono">{ocorrencia.qtd_confirmacoes}</dd>
+        </div>
+      </dl>
+
+      <p className={`dm-ocorrencia__descricao${ocorrencia.descricao ? '' : ' dm-ocorrencia__descricao--vazia'}`}>
+        {ocorrencia.descricao || 'Sem descrição informada.'}
+      </p>
+
+      <div className="dm-ocorrencia__acoes">
+        <button
+          type="button"
+          onClick={alternarConfirmacao}
+          disabled={ehCriador}
+          aria-pressed={confirmado}
+          title={ehCriador ? 'Você não pode confirmar sua própria ocorrência.' : undefined}
+          className={`dm-btn dm-ocorrencia__confirmar ${confirmado ? 'dm-btn--ghost dm-ocorrencia__confirmar--feito' : 'dm-btn--primario'}`}
+        >
+          {confirmado ? (
+            <>
+              <FiCheck size={15} aria-hidden="true" /> Confirmado
+            </>
+          ) : (
+            <span>Confirmar ({ocorrencia.qtd_confirmacoes})</span>
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={alternarCurtida}
+          disabled={ehCriador}
+          aria-pressed={curtido}
+          aria-label={`${curtido ? 'Remover curtida' : 'Curtir'} (${totalCurtidas})`}
+          title={ehCriador ? 'Você não pode curtir sua própria ocorrência.' : curtido ? 'Remover curtida' : 'Curtir'}
+          className={`dm-btn dm-btn--ghost dm-ocorrencia__icone-btn${curtido ? ' dm-ocorrencia__curtir--ativo' : ''}`}
+        >
+          <FiHeart size={15} aria-hidden="true" fill={curtido ? 'currentColor' : 'none'} />
+          <span className="dm-mono">{totalCurtidas}</span>
+        </button>
+        <button
+          type="button"
+          onClick={compartilhar}
+          aria-label="Compartilhar"
+          title="Compartilhar"
+          className="dm-btn dm-btn--ghost dm-ocorrencia__icone-btn"
+        >
+          <FiShare2 size={15} aria-hidden="true" />
+        </button>
+      </div>
+
+      {ehCriador && (
+        <p className="dm-dica dm-ocorrencia__aviso-criador">
+          Você registrou esta ocorrência, por isso não pode confirmá-la nem curtir - peça pra outra pessoa validar.
+        </p>
+      )}
+
+      {!mostrarFormDenuncia ? (
+        <button type="button" className="dm-ocorrencia__denunciar" onClick={() => setMostrarFormDenuncia(true)}>
+          <FiAlertTriangle size={13} aria-hidden="true" /> Denunciar esta ocorrência
+        </button>
+      ) : (
+        <div className="dm-caixa-perigo dm-ocorrencia__denuncia">
+          <label className="dm-campo-grupo">
+            <span className="dm-rotulo">Motivo da denúncia</span>
+            <textarea
+              className="dm-campo"
+              value={motivoDenuncia}
+              onChange={(e) => setMotivoDenuncia(e.target.value)}
+              placeholder="Por que você acha que essa ocorrência é falsa ou inadequada?"
+              rows={3}
+              autoFocus
+            />
+          </label>
+          <div className="dm-ocorrencia__denuncia-acoes">
+            <button
+              type="button"
+              className="dm-btn dm-btn--ghost dm-btn--pequeno"
+              onClick={() => setMostrarFormDenuncia(false)}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="dm-btn dm-btn--perigo-solido dm-btn--pequeno"
+              onClick={enviarDenuncia}
+              disabled={enviando}
+            >
+              {enviando ? 'Enviando…' : 'Enviar denúncia'}
+            </button>
+          </div>
+        </div>
+      )}
+    </Modal>
   );
 }

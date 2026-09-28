@@ -12,8 +12,6 @@ export interface ModalProps {
   largura?: number;
   /** Rodapé de ações (botões .dm-btn). Renderizado dentro de .dm-modal-acoes. */
   acoes?: React.ReactNode;
-  /** Remove o padding do card (útil para imagem de topo sangrando). */
-  semPadding?: boolean;
   /** 'eggshell' (padrão, telas PERFIL) ou 'claro' (fundo branco, telas Admin). */
   variante?: 'eggshell' | 'claro';
   /** Empilha acima de outro modal aberto (z-index maior). */
@@ -76,7 +74,6 @@ export function Modal(props: ModalProps) {
     'dm-modal-card',
     props.cantos === false ? '' : 'dm-cantos',
     props.variante === 'claro' ? 'dm-modal-card--claro' : '',
-    props.semPadding ? 'dm-modal-card--sem-padding' : '',
     props.className || '',
   ]
     .filter(Boolean)

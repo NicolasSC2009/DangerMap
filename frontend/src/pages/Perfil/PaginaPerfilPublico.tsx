@@ -1,41 +1,38 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useId, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { FiAlertTriangle } from 'react-icons/fi';
+import { FiFlag } from 'react-icons/fi';
 import { LayoutPadrao } from '../../components/comum/LayoutPadrao';
-import { ModalInfo } from '../../components/comum/ModalInfo';
-import { CartaoContribuicoes } from '../../components/perfil/CartaoContribuicoes';
+import { Modal } from '../../components/comum/Modal';
+import { HeroPerfil, LinhaInfoPerfil, EstatisticasPerfil, EstadoPerfil } from '../../components/perfil/HeroPerfil';
+import { HistoricoContribuicoes } from '../../components/perfil/HistoricoContribuicoes';
 import { ModalOcorrencia } from '../../components/ocorrencia/ModalOcorrencia';
-import { CORES, FONTES } from '../../theme/cores';
 import { api } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
-import type { PerfilPublico } from '@shared/types';
+import { usePerfil } from '../../hooks/usePerfil';
+import './perfil.css';
+
+const LIMITE_MOTIVO = 500;
 
 export function PaginaPerfilPublico() {
   const { id } = useParams<{ id: string }>();
-  const { autenticado, usuario } = useAuth();
+  const { autenticado, usuario, carregando: carregandoAuth } = useAuth();
   const navegar = useNavigate();
-  const [perfil, setPerfil] = useState<PerfilPublico | null>(null);
-  const [erro, setErro] = useState<string | null>(null);
+  const ehProprio = !!usuario && String(usuario.id) === id;
+  // GET /usuarios/:id/perfil exige login: só busca quando há sessão e não é o próprio perfil.
+  const { perfil, carregando, erro, recarregar } = usePerfil(autenticado && !ehProprio ? id : null);
   const [ocorrenciaAbertaId, setOcorrenciaAbertaId] = useState<number | null>(null);
   const [modalDenunciaAberto, setModalDenunciaAberto] = useState(false);
   const [motivoDenuncia, setMotivoDenuncia] = useState('');
   const [enviando, setEnviando] = useState(false);
+  const idMotivo = useId();
 
   useEffect(
     function () {
       // Perfil próprio tem sua própria página completa (com edição/exclusão)
-      if (usuario && String(usuario.id) === id) {
-        navegar('/perfil', { replace: true });
-        return;
-      }
-
-      api
-        .get<PerfilPublico>(`/usuarios/${id}/perfil`)
-        .then((r) => setPerfil(r.data))
-        .catch(() => setErro('Perfil não encontrado ou inativo.'));
+      if (ehProprio) navegar('/perfil', { replace: true });
     },
-    [id, usuario, navegar]
+    [ehProprio, navegar]
   );
 
   function enviarDenuncia() {
@@ -50,127 +47,146 @@ export function PaginaPerfilPublico() {
     }
     setEnviando(true);
     api
-      .post(`/usuarios/${id}/denunciar`, { motivo: motivoDenuncia })
+      .post(`/usuarios/${id}/denunciar`, { motivo: motivoDenuncia.trim() })
       .then(() => {
         toast.success('Denúncia enviada. Nossa moderação vai analisar.');
         setModalDenunciaAberto(false);
         setMotivoDenuncia('');
       })
-      .catch((erro) => toast.error(erro?.response?.data?.error || 'Não foi possível enviar a denúncia.'))
+      .catch((e) => toast.error(e?.response?.data?.error || 'Não foi possível enviar a denúncia.'))
       .finally(() => setEnviando(false));
   }
 
-  if (erro) {
+  if (!carregandoAuth && !autenticado) {
     return (
-      <LayoutPadrao>
-        <div style={{ textAlign: 'center', padding: 60, color: CORES.tintaSuave }}>{erro}</div>
+      <LayoutPadrao variante="escura">
+        <EstadoPerfil
+          tipo="erro"
+          mensagem="Entre na sua conta para ver o perfil e as contribuições de outros usuários."
+          acao={
+            <Link to="/entrar" className="dm-btn dm-btn--primario">
+              <span>Entrar</span>
+            </Link>
+          }
+        />
       </LayoutPadrao>
     );
   }
 
   if (!perfil) {
+    const naoEncontrado = erro === 'nao-encontrado';
     return (
-      <LayoutPadrao>
-        <div style={{ textAlign: 'center', padding: 60, color: CORES.tintaSuave }}>Carregando perfil…</div>
+      <LayoutPadrao variante="escura">
+        <EstadoPerfil
+          tipo={carregando || carregandoAuth || ehProprio || !erro ? 'carregando' : 'erro'}
+          mensagem={naoEncontrado ? 'Perfil não encontrado ou inativo.' : 'Não foi possível carregar este perfil.'}
+          aoTentarNovamente={naoEncontrado ? undefined : recarregar}
+          acao={
+            naoEncontrado ? (
+              <Link to="/" className="dm-btn dm-btn--sobre-escuro">
+                <span>Voltar ao mapa</span>
+              </Link>
+            ) : undefined
+          }
+        />
       </LayoutPadrao>
     );
   }
 
-  const iniciais = perfil.nome.trim().split(/\s+/).slice(0, 2).map((p) => p[0]).join('').toUpperCase();
+  const confirmadas = perfil.ocorrencias.filter((o) => o.status === 'confirmado').length;
+  const membroDesde = new Date(perfil.data_cadastro).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
 
   return (
-    <LayoutPadrao>
-      <div className="dm-container-pagina">
-        <div className="dm-grid-perfil">
-          <div
-            style={{
-              backgroundColor: CORES.verdeGarrafa,
-              borderRadius: 20,
-              padding: '36px 24px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              textAlign: 'center',
-              color: '#fff',
-            }}
-          >
-            <div
-              style={{
-                width: 84, height: 84, borderRadius: '50%', backgroundColor: CORES.laranja,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 800,
-                marginBottom: 16, border: '3px solid rgba(255,255,255,0.25)',
-              }}
-            >
-              {iniciais}
-            </div>
-            <h2 style={{ fontFamily: FONTES.titulo, fontSize: 20, margin: 0 }}>{perfil.nome}</h2>
-            <p style={{ fontSize: 12, opacity: 0.65, margin: '10px 0 0', fontFamily: FONTES.mono }}>
-              Membro desde {new Date(perfil.data_cadastro).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}
-            </p>
-          </div>
+    <LayoutPadrao variante="escura">
+      <HeroPerfil
+        usuarioId={perfil.id}
+        nome={perfil.nome}
+        dataCadastro={perfil.data_cadastro}
+        eyebrow="Estatísticas de contribuição"
+      >
+        <EstatisticasPerfil
+          itens={[
+            { valor: perfil._count.ocorrencias, rotulo: 'Ocorrências' },
+            { valor: confirmadas, rotulo: 'Confirmadas' },
+            { valor: perfil._count.confirmacoes, rotulo: 'Confirmações feitas' },
+          ]}
+        />
 
-          <div style={{ backgroundColor: CORES.card, border: `1px solid ${CORES.linha}`, borderRadius: 20, padding: 28 }}>
-            <span style={{ fontFamily: FONTES.mono, fontSize: 11, letterSpacing: 1.6, textTransform: 'uppercase', color: CORES.laranjaEscuro }}>
-              Estatísticas de contribuição
-            </span>
-            <div style={{ display: 'flex', gap: 20, margin: '16px 0 26px' }}>
-              <EstatCaixa valor={perfil._count.ocorrencias} rotulo="Ocorrências" />
-              <EstatCaixa valor={perfil._count.confirmacoes} rotulo="Confirmações" />
-            </div>
-
-            <button
-              onClick={() => setModalDenunciaAberto(true)}
-              style={{
-                padding: '11px 18px', borderRadius: 10, border: `1.5px solid ${CORES.vermelhoAlerta}`,
-                backgroundColor: '#fff', color: CORES.vermelhoAlerta, fontWeight: 700, fontSize: 12.5,
-                textTransform: 'uppercase', letterSpacing: 0.6, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: 8,
-              }}
-            >
-              <FiAlertTriangle size={13} aria-hidden="true" /> Denunciar perfil
-            </button>
-          </div>
+        <div className="dm-perfil-secao-titulo">Sobre</div>
+        <div className="dm-perfil-info">
+          <LinhaInfoPerfil rotulo="Nome">{perfil.nome}</LinhaInfoPerfil>
+          <LinhaInfoPerfil rotulo="Membro desde">{membroDesde}</LinhaInfoPerfil>
         </div>
+        <p className="dm-perfil-nota">Ocorrências registradas como anônimas não aparecem neste perfil.</p>
 
-        <CartaoContribuicoes perfil={perfil} aoAbrirOcorrencia={setOcorrenciaAbertaId} />
-      </div>
+        <div className="dm-perfil-acoes">
+          <button type="button" className="dm-btn dm-btn--perigo" onClick={() => setModalDenunciaAberto(true)}>
+            <FiFlag size={14} aria-hidden="true" />
+            Denunciar perfil
+          </button>
+        </div>
+      </HeroPerfil>
+
+      <HistoricoContribuicoes perfil={perfil} aoAbrirOcorrencia={setOcorrenciaAbertaId} />
 
       {modalDenunciaAberto && (
-        <ModalInfo titulo="Denunciar perfil" aoFechar={() => setModalDenunciaAberto(false)}>
-          <textarea
-            value={motivoDenuncia}
-            onChange={(e) => setMotivoDenuncia(e.target.value)}
-            placeholder="Descreva o comportamento inadequado…"
-            rows={4}
-            style={{ width: '100%', borderRadius: 10, border: `1.5px solid ${CORES.linha}`, padding: 12, fontSize: 13, fontFamily: FONTES.corpo, resize: 'vertical', marginBottom: 14 }}
-          />
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-            <button onClick={() => setModalDenunciaAberto(false)} style={{ padding: '10px 16px', border: 'none', background: 'none', color: CORES.tintaSuave, fontSize: 12.5, cursor: 'pointer' }}>
-              Cancelar
-            </button>
-            <button
-              onClick={enviarDenuncia}
-              disabled={enviando}
-              style={{ padding: '10px 20px', borderRadius: 10, border: 'none', backgroundColor: CORES.vermelhoAlerta, color: '#fff', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}
-            >
-              Enviar denúncia
-            </button>
+        <Modal
+          eyebrow="Moderação"
+          titulo="Denunciar perfil"
+          subtitulo={`Conte o que há de errado com o perfil de ${perfil.nome}. A equipe de moderação analisa cada denúncia.`}
+          aoFechar={() => setModalDenunciaAberto(false)}
+          bloquearFechamento={enviando}
+          acoes={
+            <>
+              <button
+                type="button"
+                className="dm-btn dm-btn--ghost"
+                onClick={() => setModalDenunciaAberto(false)}
+                disabled={enviando}
+              >
+                <span>Cancelar</span>
+              </button>
+              <button
+                type="button"
+                className="dm-btn dm-btn--perigo-solido"
+                onClick={enviarDenuncia}
+                disabled={enviando || !motivoDenuncia.trim()}
+              >
+                <span>{enviando ? 'Enviando…' : 'Enviar denúncia'}</span>
+              </button>
+            </>
+          }
+        >
+          <div className="dm-campo-grupo">
+            <div className="dm-rotulo-linha">
+              <label className="dm-rotulo" htmlFor={idMotivo}>
+                Motivo
+              </label>
+              <span>{LIMITE_MOTIVO - motivoDenuncia.length} restantes</span>
+            </div>
+            <textarea
+              id={idMotivo}
+              className="dm-campo"
+              value={motivoDenuncia}
+              onChange={(e) => setMotivoDenuncia(e.target.value.slice(0, LIMITE_MOTIVO))}
+              placeholder="Descreva o comportamento inadequado…"
+              rows={4}
+            />
           </div>
-        </ModalInfo>
+        </Modal>
       )}
 
       {ocorrenciaAbertaId !== null && (
-        <ModalOcorrencia ocorrenciaId={ocorrenciaAbertaId} aoFechar={() => setOcorrenciaAbertaId(null)} />
+        <ModalOcorrencia
+          ocorrenciaId={ocorrenciaAbertaId}
+          aoFechar={() => setOcorrenciaAbertaId(null)}
+          aoMudar={recarregar}
+        />
       )}
     </LayoutPadrao>
-  );
-}
-
-function EstatCaixa(props: { valor: number; rotulo: string }) {
-  return (
-    <div>
-      <div style={{ fontFamily: FONTES.titulo, fontSize: 30, fontWeight: 800, color: CORES.verdeGarrafa, lineHeight: 1 }}>{props.valor}</div>
-      <div style={{ fontSize: 11.5, color: CORES.tintaSuave, fontWeight: 600, textTransform: 'uppercase', marginTop: 4 }}>{props.rotulo}</div>
-    </div>
   );
 }

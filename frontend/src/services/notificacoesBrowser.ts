@@ -1,6 +1,6 @@
 import logo from '../assets/logo-preto.png';
 
-export const CHAVE_NOTIFICACOES_ATIVADAS = '@DangerMap:notificacoesAtivadas';
+const CHAVE_NOTIFICACOES_ATIVADAS = '@DangerMap:notificacoesAtivadas';
 
 export function suportaNotificacaoNavegador(): boolean {
   return typeof window !== 'undefined' && 'Notification' in window;

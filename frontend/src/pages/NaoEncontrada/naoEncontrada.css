@@ -60,3 +60,79 @@
   justify-content: center;
   gap: 12px;
 }
+
+/* decoração (curvas de nível tracejadas + pin "perdido", como no LOGIN) */
+.dm-404__card > :not(.dm-404__deco) {
+  position: relative;
+  z-index: 1;
+}
+
+.dm-404__card {
+  position: relative;
+}
+
+.dm-404__card .dm-404__deco {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(245, 235, 225, 0.08) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+}
+
+.dm-404__deco svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.dm-404__deco path {
+  fill: none;
+  stroke-width: 2;
+  stroke-dasharray: 16 12;
+  animation: dm-404-fluxo 20s linear infinite;
+}
+
+.dm-404__deco path:nth-child(1) {
+  stroke: rgba(255, 100, 0, 0.3);
+}
+
+.dm-404__deco path:nth-child(2) {
+  stroke: rgba(140, 200, 80, 0.22);
+  animation-direction: reverse;
+}
+
+.dm-404__pin {
+  position: absolute;
+  top: 14%;
+  right: 12%;
+  display: flex;
+  font-size: 26px;
+  color: var(--dm-laranja);
+  opacity: 0.85;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
+  animation: dm-404-pin 3.2s ease-in-out infinite;
+}
+
+@keyframes dm-404-fluxo {
+  to {
+    stroke-dashoffset: -280;
+  }
+}
+
+@keyframes dm-404-pin {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-8deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(8deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dm-404__deco path,
+  .dm-404__pin {
+    animation: none;
+  }
+}

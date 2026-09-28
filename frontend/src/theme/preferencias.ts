@@ -62,7 +62,7 @@ export function salvarPreferencias(p: Preferencias): void {
   }
 }
 
-export function sistemaPrefereEscuro(): boolean {
+function sistemaPrefereEscuro(): boolean {
   return typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-color-scheme: dark)').matches;
 }
 

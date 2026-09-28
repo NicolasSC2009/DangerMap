@@ -1,12 +1,25 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiMapPin, FiFolder, FiSettings, FiInfo, FiHelpCircle, FiShield, FiSmartphone, FiLogOut } from 'react-icons/fi';
+import {
+  FiMapPin,
+  FiFolder,
+  FiSettings,
+  FiInfo,
+  FiHelpCircle,
+  FiShield,
+  FiSmartphone,
+  FiLogOut,
+  FiLogIn,
+  FiUserPlus,
+} from 'react-icons/fi';
+import type { IconType } from 'react-icons';
 import './navbar.css';
-import { CORES } from '../../theme/cores';
 import { SininhoNotificacoes } from '../notificacoes/SininhoNotificacoes';
-import { ModalInfo } from '../comum/ModalInfo';
+import { Modal } from '../comum/Modal';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCategorias } from '../../hooks/useCategorias';
+import { useAvatarLocal } from '../../hooks/useAvatarLocal';
+import { iniciais as calcularIniciais } from '../../services/avatarLocal';
 import { obterIconeCategoria } from '../../theme/iconesCategorias';
 
 interface NavbarProps {
@@ -15,43 +28,53 @@ interface NavbarProps {
   variante?: 'flutuante' | 'embutida';
 }
 
-function IconeGradeNovePontos(props: { cor: string }) {
+interface ItemMenu {
+  Icone: IconType;
+  rotulo: string;
+  aoClicar: () => void;
+}
+
+function IconeGradeNovePontos() {
   const posicoes = [0, 1, 2];
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
       {posicoes.map((linha) =>
-        posicoes.map((coluna) => (
-          <circle
-            key={`${linha}-${coluna}`}
-            cx={4 + coluna * 8}
-            cy={4 + linha * 8}
-            r={2.1}
-            fill={props.cor}
-          />
-        ))
+        posicoes.map((coluna) => <circle key={`${linha}-${coluna}`} cx={4 + coluna * 8} cy={4 + linha * 8} r={2.1} />)
       )}
     </svg>
+  );
+}
+
+function AvatarUsuario(props: { avatar: string | null; nome: string | undefined; className?: string }) {
+  return (
+    <span className={`dm-navbar-avatar ${props.className || ''}`} aria-hidden="true">
+      {props.avatar ? <img src={props.avatar} alt="" /> : <span>{calcularIniciais(props.nome)}</span>}
+    </span>
   );
 }
 
 export function Navbar(props: NavbarProps) {
   const { usuario, autenticado, ehAdmin, sair } = useAuth();
   const { categorias } = useCategorias(autenticado);
+  const avatar = useAvatarLocal(usuario?.id);
   const navegar = useNavigate();
-  const [menuAberto, setMenuAberto] = useState(false);
+  // Só um painel (menu ou notificações) aberto por vez.
+  const [painel, setPainel] = useState<'menu' | 'sino' | null>(null);
+  const menuAberto = painel === 'menu';
+  const fecharPainel = useCallback(() => setPainel(null), []);
+  const alternarSino = useCallback(() => setPainel((p) => (p === 'sino' ? null : 'sino')), []);
   const [modalCategoriasAberto, setModalCategoriasAberto] = useState(false);
-  const [modalSobreAberto, setModalSobreAberto] = useState(false);
-  const [modalAjudaAberto, setModalAjudaAberto] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const variante = props.variante || 'flutuante';
 
   useEffect(function () {
     function aoClicarFora(evento: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(evento.target as Node)) {
-        setMenuAberto(false);
+        setPainel((p) => (p === 'menu' ? null : p));
       }
     }
     function aoPressionarEsc(evento: KeyboardEvent) {
-      if (evento.key === 'Escape') setMenuAberto(false);
+      if (evento.key === 'Escape') setPainel((p) => (p === 'menu' ? null : p));
     }
     document.addEventListener('mousedown', aoClicarFora);
     document.addEventListener('keydown', aoPressionarEsc);
@@ -61,244 +84,191 @@ export function Navbar(props: NavbarProps) {
     };
   }, []);
 
-  const iniciais = usuario?.nome
-    ? usuario.nome
-        .trim()
-        .split(/\s+/)
-        .slice(0, 2)
-        .map((parte) => parte[0])
-        .join('')
-        .toUpperCase()
-    : '?';
-
-  const itensMenu = [
+  const itensMenu: ItemMenu[] = [
     { Icone: FiMapPin, rotulo: 'Minhas ocorrências', aoClicar: () => navegar('/perfil') },
     { Icone: FiFolder, rotulo: 'Categorias de perigo', aoClicar: () => setModalCategoriasAberto(true) },
     { Icone: FiSettings, rotulo: 'Configurações', aoClicar: () => navegar('/configuracoes') },
-    { Icone: FiInfo, rotulo: 'Sobre o DangerMap', aoClicar: () => setModalSobreAberto(true) },
-    { Icone: FiHelpCircle, rotulo: 'Ajuda', aoClicar: () => setModalAjudaAberto(true) },
+    { Icone: FiHelpCircle, rotulo: 'Ajuda', aoClicar: () => navegar('/ajuda') },
+    { Icone: FiInfo, rotulo: 'Sobre o DangerMap', aoClicar: () => navegar('/ajuda#sobre') },
     ...(ehAdmin ? [{ Icone: FiShield, rotulo: 'Painel administrativo', aoClicar: () => navegar('/admin') }] : []),
     { Icone: FiSmartphone, rotulo: 'Baixar o app', aoClicar: () => navegar('/baixar-app') },
   ];
 
   function clicarItemMenu(aoClicar: () => void) {
-    setMenuAberto(false);
+    setPainel(null);
     aoClicar();
   }
 
+  // Setas ↑/↓ percorrem os itens do menu (padrão de role="menu").
+  function navegarPorTeclado(evento: React.KeyboardEvent<HTMLDivElement>) {
+    if (evento.key !== 'ArrowDown' && evento.key !== 'ArrowUp') return;
+    evento.preventDefault();
+    const itens = Array.from(evento.currentTarget.querySelectorAll<HTMLButtonElement>('[role="menuitem"]'));
+    if (itens.length === 0) return;
+    const atual = itens.indexOf(document.activeElement as HTMLButtonElement);
+    const proximo =
+      evento.key === 'ArrowDown' ? (atual + 1) % itens.length : (atual - 1 + itens.length) % itens.length;
+    itens[proximo].focus();
+  }
+
+  useEffect(
+    function () {
+      if (!menuAberto) return;
+      const primeiro = containerRef.current?.querySelector<HTMLButtonElement>('.dm-navbar-dropdown [role="menuitem"]');
+      primeiro?.focus({ preventScroll: true });
+    },
+    [menuAberto]
+  );
+
   return (
-    <div
-      ref={containerRef}
-      className={`dm-navbar dm-navbar--${props.variante || 'flutuante'}`}
-      style={{
-        ...(props.variante === 'embutida'
-          ? { position: 'relative' as const, zIndex: 1100 }
-          : { position: 'fixed' as const, top: 20, right: 20, zIndex: 1100 }),
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        fontFamily: "'Inter', system-ui, sans-serif",
-      }}
-    >
-      <SininhoNotificacoes autenticado={autenticado} aoSelecionarOcorrencia={props.aoSelecionarOcorrencia} />
+    <div ref={containerRef} className={`dm-navbar dm-navbar--${variante}`}>
+      <SininhoNotificacoes
+        autenticado={autenticado}
+        aoSelecionarOcorrencia={props.aoSelecionarOcorrencia}
+        aberto={painel === 'sino'}
+        aoAlternar={alternarSino}
+        aoFechar={fecharPainel}
+      />
 
-      <div style={{ position: 'relative' }}>
-        <button
-          className="dm-navbar-botao"
-          onClick={() => setMenuAberto((v) => !v)}
-          aria-haspopup="menu"
-          aria-expanded={menuAberto}
-          aria-label="Abrir mais opções"
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: '50%',
-            border: menuAberto ? 'none' : `1px solid ${CORES.linha}`,
-            backgroundColor: menuAberto ? CORES.laranja : '#fff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.16)',
-          }}
-        >
-          <IconeGradeNovePontos cor={menuAberto ? '#fff' : CORES.tinta} />
-        </button>
-
-        {menuAberto && (
-          <div
-            className="dm-navbar-dropdown"
-            role="menu"
-            style={{
-              position: 'absolute',
-              top: 54,
-              right: 0,
-              width: 248,
-              backgroundColor: CORES.eggshell,
-              borderRadius: 14,
-              boxShadow: '0 10px 30px rgba(0,0,0,0.4)',
-              overflow: 'hidden',
-            }}
-          >
-            <div
-              style={{
-                padding: '14px 16px',
-                backgroundColor: CORES.verdeGarrafaProfundo,
-                color: CORES.eggshell,
-              }}
-            >
-              <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 0.2 }}>DangerMap</div>
-              <div style={{ fontSize: 11, opacity: 0.65, marginTop: 2 }}>
-                {autenticado ? usuario?.nome : 'Você não está logado'}
-              </div>
-            </div>
-
-            <div style={{ padding: '6px 0' }}>
-              {itensMenu.map((item) => (
-                <button
-                  key={item.rotulo}
-                  role="menuitem"
-                  className="dm-navbar-item"
-                  onClick={() => clicarItemMenu(item.aoClicar)}
-                  style={{
-                    width: '100%',
-                    textAlign: 'left',
-                    padding: '10px 16px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: 13,
-                    color: CORES.verdeGarrafaProfundo,
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = CORES.eggshellMuted)}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-                >
-                  <item.Icone size={15} aria-hidden="true" />
-                  <span>{item.rotulo}</span>
-                </button>
-              ))}
-            </div>
-
-            {autenticado && (
-              <button
-                className="dm-navbar-item"
-                onClick={() => {
-                  setMenuAberto(false);
-                  sair();
-                  navegar('/');
-                }}
-                style={{
-                  width: '100%',
-                  textAlign: 'left',
-                  padding: '11px 16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  background: 'none',
-                  border: 'none',
-                  borderTop: `1px solid ${CORES.verdeGarrafa}22`,
-                  cursor: 'pointer',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: '#c0392b',
-                }}
-              >
-                <FiLogOut size={15} aria-hidden="true" />
-                <span>Sair</span>
-              </button>
-            )}
-          </div>
-        )}
-      </div>
+      <button
+        type="button"
+        className={`dm-navbar-botao${menuAberto ? ' dm-navbar-botao--ativo' : ''}`}
+        onClick={() => setPainel((p) => (p === 'menu' ? null : 'menu'))}
+        aria-haspopup="menu"
+        aria-expanded={menuAberto}
+        aria-label={menuAberto ? 'Fechar menu' : 'Abrir menu'}
+        title="Menu"
+      >
+        <IconeGradeNovePontos />
+      </button>
 
       {autenticado ? (
         <button
-          className="dm-navbar-botao"
+          type="button"
+          className="dm-navbar-botao dm-navbar-botao--avatar"
           title={usuario?.nome}
-          aria-label={`Perfil de ${usuario?.nome}`}
+          aria-label={`Meu perfil (${usuario?.nome ?? ''})`}
           onClick={() => navegar('/perfil')}
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: '50%',
-            border: `2px solid ${CORES.laranja}`,
-            padding: 0,
-            cursor: 'pointer',
-            overflow: 'hidden',
-            backgroundColor: CORES.verdeGarrafa,
-            boxShadow: '0 4px 14px rgba(0,0,0,0.35)',
-          }}
         >
-          <span style={{ color: CORES.eggshell, fontWeight: 700, fontSize: 15 }}>{iniciais}</span>
+          <AvatarUsuario avatar={avatar} nome={usuario?.nome} />
         </button>
       ) : (
-        <button
-          className="dm-entrar-botao dm-navbar-botao dm-botao-primario dm-botao-seta"
-          onClick={() => navegar('/entrar')}
-          style={{
-            padding: '11px 20px',
-            borderRadius: 22,
-            backgroundColor: CORES.laranja,
-            color: CORES.eggshell,
-            fontWeight: 700,
-            fontSize: 13,
-            boxShadow: '0 4px 14px rgba(0,0,0,0.35)',
-          }}
-        >
+        <button type="button" className="dm-btn dm-btn--primario dm-navbar-entrar" onClick={() => navegar('/entrar')}>
           <span>Entrar</span>
         </button>
       )}
 
+      {menuAberto && (
+        <div className="dm-navbar-dropdown" role="menu" aria-label="Menu do DangerMap" onKeyDown={navegarPorTeclado}>
+          <div className="dm-navbar-dropdown__cabecalho">
+            {autenticado ? (
+              <>
+                <AvatarUsuario avatar={avatar} nome={usuario?.nome} className="dm-navbar-avatar--grande" />
+                <div className="dm-navbar-dropdown__identidade">
+                  <strong>{usuario?.nome}</strong>
+                  <span>{ehAdmin ? 'Administrador' : 'Cidadão'}</span>
+                </div>
+              </>
+            ) : (
+              <div className="dm-navbar-dropdown__identidade">
+                <strong>DangerMap</strong>
+                <span>Você não está logado</span>
+              </div>
+            )}
+          </div>
+
+          <div className="dm-navbar-dropdown__lista">
+            {itensMenu.map((item) => (
+              <button
+                key={item.rotulo}
+                type="button"
+                role="menuitem"
+                className="dm-navbar-item"
+                onClick={() => clicarItemMenu(item.aoClicar)}
+              >
+                <item.Icone size={16} aria-hidden="true" />
+                <span>{item.rotulo}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="dm-navbar-dropdown__rodape">
+            {autenticado ? (
+              <button
+                type="button"
+                role="menuitem"
+                className="dm-navbar-item dm-navbar-item--perigo"
+                onClick={() => {
+                  setPainel(null);
+                  sair();
+                  navegar('/');
+                }}
+              >
+                <FiLogOut size={16} aria-hidden="true" />
+                <span>Sair</span>
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="dm-navbar-item dm-navbar-item--destaque"
+                  onClick={() => clicarItemMenu(() => navegar('/entrar'))}
+                >
+                  <FiLogIn size={16} aria-hidden="true" />
+                  <span>Entrar</span>
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="dm-navbar-item"
+                  onClick={() => clicarItemMenu(() => navegar('/entrar?modo=cadastro'))}
+                >
+                  <FiUserPlus size={16} aria-hidden="true" />
+                  <span>Criar conta</span>
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {modalCategoriasAberto && (
-        <ModalInfo titulo="Categorias de perigo" aoFechar={() => setModalCategoriasAberto(false)}>
+        <Modal
+          eyebrow="Guia rápido"
+          titulo="Categorias de perigo"
+          subtitulo="Tipos de ocorrência que você pode registrar no mapa."
+          largura={600}
+          aoFechar={() => setModalCategoriasAberto(false)}
+        >
           {!autenticado ? (
-            <p>Entre na sua conta para ver as categorias disponíveis.</p>
+            <div className="dm-navbar-categorias__vazio">
+              <p>Entre na sua conta para ver as categorias disponíveis.</p>
+              <button
+                type="button"
+                className="dm-btn dm-btn--primario"
+                onClick={() => {
+                  setModalCategoriasAberto(false);
+                  navegar('/entrar');
+                }}
+              >
+                <span>Entrar</span>
+              </button>
+            </div>
           ) : categorias.length === 0 ? (
-            <p>Nenhuma categoria cadastrada ainda.</p>
+            <p className="dm-navbar-categorias__vazio">Nenhuma categoria cadastrada ainda.</p>
           ) : (
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <ul className="dm-navbar-categorias">
               {categorias.map((c) => (
-                <li key={c.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                  <img src={obterIconeCategoria(c.nome)} alt="" style={{ width: 42, height: 42, objectFit: 'contain', flexShrink: 0 }} />
-                  <div>
-                    <strong style={{ fontSize: 14 }}>{c.nome}</strong>
-                    {c.descricao && <div style={{ fontSize: 12.5, opacity: 0.75, marginTop: 2 }}>{c.descricao}</div>}
-                  </div>
+                <li key={c.id} className="dm-navbar-categoria">
+                  <img src={obterIconeCategoria(c.nome)} alt="" />
+                  <strong>{c.nome}</strong>
+                  {c.descricao && <span>{c.descricao}</span>}
                 </li>
               ))}
             </ul>
           )}
-        </ModalInfo>
-      )}
-
-      {modalSobreAberto && (
-        <ModalInfo titulo="Sobre o DangerMap" aoFechar={() => setModalSobreAberto(false)}>
-          <p>
-            O DangerMap é uma plataforma cidadã de mapeamento colaborativo de perigos urbanos: buracos,
-            alagamentos, iluminação, sinalização danificada e focos de incêndio. Qualquer pessoa pode
-            reportar um problema, confirmar ocorrências de terceiros e acompanhar a resolução pelo mapa.
-          </p>
-        </ModalInfo>
-      )}
-
-      {modalAjudaAberto && (
-        <ModalInfo titulo="Ajuda" aoFechar={() => setModalAjudaAberto(false)}>
-          <p style={{ marginBottom: 10 }}>
-            <strong>Como reportar:</strong> clique em qualquer ponto do mapa e preencha a categoria, a
-            gravidade e (se quiser) uma foto e descrição.
-          </p>
-          <p style={{ marginBottom: 10 }}>
-            <strong>Como confirmar:</strong> clique num marcador existente e use o botão de confirmação
-            para validar que o problema ainda está lá.
-          </p>
-          <p>
-            <strong>Encontrou algo errado?</strong> Use o botão de denúncia dentro de cada ocorrência ou
-            perfil para avisar a moderação.
-          </p>
-        </ModalInfo>
+        </Modal>
       )}
     </div>
   );

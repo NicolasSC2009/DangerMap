@@ -1,4 +1,3 @@
-import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { PaginaMapa } from './pages/Mapa/PaginaMapa';
 import { PaginaAuth } from './pages/Auth/PaginaAuth';

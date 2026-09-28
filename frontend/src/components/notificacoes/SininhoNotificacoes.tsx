@@ -1,19 +1,50 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { FiBell } from 'react-icons/fi';
-import { CORES } from '../../theme/cores';
+import { useEffect, useRef, useState } from 'react';
+import { FiBell, FiX, FiMapPin, FiCheckCircle, FiCheck, FiShield, FiInfo, FiEye } from 'react-icons/fi';
+import type { IconType } from 'react-icons';
+import './notificacoes.css';
 import { api } from '../../services/api';
 import { dispararNotificacaoNavegador } from '../../services/notificacoesBrowser';
-import type { Notificacao, RespostaNotificacoes } from '@shared/types';
+import { ROTULO_TIPO_NOTIFICACAO } from '../../theme/rotulos';
+import type { Notificacao, RespostaNotificacoes, TipoNotificacao } from '@shared/types';
 
 interface SininhoProps {
   autenticado: boolean;
   aoSelecionarOcorrencia?: (ocorrenciaId: number) => void;
+  /** Estado controlado pela Navbar (só um painel aberto por vez). */
+  aberto: boolean;
+  aoAlternar: () => void;
+  aoFechar: () => void;
+}
+
+const ICONE_TIPO: Record<TipoNotificacao, IconType> = {
+  proximidade: FiMapPin,
+  validacao_campo: FiEye,
+  confirmacao: FiCheck,
+  resolucao: FiCheckCircle,
+  sistema: FiInfo,
+  moderacao: FiShield,
+};
+
+// "agora", "há 5 min", "há 3 h", "há 2 dias", ou a data.
+function tempoRelativo(dataIso: string): string {
+  const data = new Date(dataIso);
+  const segundos = Math.round((Date.now() - data.getTime()) / 1000);
+  if (Number.isNaN(segundos)) return '';
+  if (segundos < 60) return 'agora';
+  const minutos = Math.floor(segundos / 60);
+  if (minutos < 60) return `há ${minutos} min`;
+  const horas = Math.floor(minutos / 60);
+  if (horas < 24) return `há ${horas} h`;
+  const dias = Math.floor(horas / 24);
+  if (dias < 7) return `há ${dias} ${dias === 1 ? 'dia' : 'dias'}`;
+  return data.toLocaleDateString('pt-BR');
 }
 
 export function SininhoNotificacoes(props: SininhoProps) {
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>([]);
-  const [aberto, setAberto] = useState<boolean>(false);
+  const { aberto, aoFechar } = props;
   const idsConhecidos = useRef<Set<number> | null>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   function carregarNotificacoes() {
     if (!props.autenticado) return;
@@ -52,19 +83,36 @@ export function SininhoNotificacoes(props: SininhoProps) {
         clearInterval(intervalo);
       };
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [props.autenticado]
   );
 
-  function alternarMenu() {
-    setAberto(!aberto);
-  }
+  // Fecha ao clicar fora ou apertar ESC.
+  useEffect(
+    function () {
+      if (!aberto) return;
+      function aoClicarFora(evento: MouseEvent) {
+        if (wrapperRef.current && !wrapperRef.current.contains(evento.target as Node)) aoFechar();
+      }
+      function aoPressionarEsc(evento: KeyboardEvent) {
+        if (evento.key === 'Escape') aoFechar();
+      }
+      document.addEventListener('mousedown', aoClicarFora);
+      document.addEventListener('keydown', aoPressionarEsc);
+      return function () {
+        document.removeEventListener('mousedown', aoClicarFora);
+        document.removeEventListener('keydown', aoPressionarEsc);
+      };
+    },
+    [aberto, aoFechar]
+  );
 
   function marcarComoLida(id: number, ocorrenciaId?: number | null) {
     api.patch(`/notificacoes/${id}/ler`).then(function () {
       carregarNotificacoes();
       if (ocorrenciaId && props.aoSelecionarOcorrencia) {
         props.aoSelecionarOcorrencia(ocorrenciaId);
-        setAberto(false);
+        aoFechar();
       }
     });
   }
@@ -73,6 +121,16 @@ export function SininhoNotificacoes(props: SininhoProps) {
     api.patch('/notificacoes/ler-todas').then(function () {
       carregarNotificacoes();
     });
+  }
+
+  function excluir(id: number) {
+    setNotificacoes((lista) => lista.filter((n) => n.id !== id));
+    api
+      .delete(`/notificacoes/${id}`)
+      .catch(function (err) {
+        console.error('[ERRO AO EXCLUIR NOTIFICACAO]:', err);
+      })
+      .finally(carregarNotificacoes);
   }
 
   if (!props.autenticado) {
@@ -84,106 +142,84 @@ export function SininhoNotificacoes(props: SininhoProps) {
   }).length;
 
   return (
-    <div style={{ position: 'relative', fontFamily: "'Inter', system-ui, sans-serif" }}>
+    <div ref={wrapperRef} className="dm-sininho">
       <button
-        onClick={alternarMenu}
-        aria-label="Abrir notificações"
-        style={{
-          position: 'relative',
-          width: 44,
-          height: 44,
-          borderRadius: '50%',
-          border: `1px solid ${CORES.linha}`,
-          backgroundColor: '#fff',
-          color: CORES.tinta,
-          cursor: 'pointer',
-          boxShadow: '0 2px 10px rgba(0,0,0,0.16)',
-          fontSize: 18,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
+        type="button"
+        className={`dm-navbar-botao${aberto ? ' dm-navbar-botao--ativo' : ''}`}
+        onClick={props.aoAlternar}
+        aria-haspopup="dialog"
+        aria-expanded={aberto}
+        aria-label={naoLidasCount > 0 ? `Notificações (${naoLidasCount} não lidas)` : 'Notificações'}
+        title="Notificações"
       >
         <FiBell size={18} aria-hidden="true" />
         {naoLidasCount > 0 && (
-          <span
-            style={{
-              position: 'absolute',
-              top: -2,
-              right: -2,
-              backgroundColor: CORES.laranja,
-              color: CORES.eggshell,
-              borderRadius: '50%',
-              minWidth: 16,
-              height: 16,
-              padding: '0 3px',
-              fontSize: 10,
-              fontWeight: 700,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              border: `1.5px solid ${CORES.verdeGarrafaProfundo}`,
-            }}
-          >
-            {naoLidasCount}
+          <span className="dm-sininho__contador" aria-hidden="true">
+            {naoLidasCount > 99 ? '99+' : naoLidasCount}
           </span>
         )}
       </button>
 
       {aberto && (
-        <div
-          style={{
-            position: 'absolute',
-            right: 0,
-            marginTop: 10,
-            width: 320,
-            maxHeight: 400,
-            overflowY: 'auto',
-            backgroundColor: CORES.eggshell,
-            borderRadius: 14,
-            boxShadow: '0 10px 30px rgba(0,0,0,0.4)',
-            padding: 12,
-            color: CORES.verdeGarrafaProfundo,
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <strong style={{ fontSize: 13 }}>Notificações</strong>
+        <div className="dm-sininho__painel" role="dialog" aria-label="Notificações">
+          <div className="dm-sininho__cabecalho">
+            <div>
+              <h2 className="dm-sininho__titulo">Notificações</h2>
+              <span className="dm-sininho__resumo">
+                {naoLidasCount > 0 ? `${naoLidasCount} não ${naoLidasCount === 1 ? 'lida' : 'lidas'}` : 'Tudo em dia'}
+              </span>
+            </div>
             {naoLidasCount > 0 && (
-              <button
-                onClick={marcarTodasLidas}
-                style={{ fontSize: 12, background: 'none', border: 'none', color: CORES.laranja, fontWeight: 700, cursor: 'pointer' }}
-              >
+              <button type="button" className="dm-sininho__limpar" onClick={marcarTodasLidas}>
                 Limpar pendências
               </button>
             )}
           </div>
 
           {notificacoes.length === 0 ? (
-            <p style={{ fontSize: 13, color: `${CORES.verdeGarrafaProfundo}99`, textAlign: 'center', padding: '10px 0' }}>
+            <p className="dm-sininho__vazio">
+              <FiBell size={22} aria-hidden="true" />
               Nenhuma notificação no momento.
             </p>
           ) : (
-            notificacoes.map(function (item) {
-              return (
-                <div
-                  key={item.id}
-                  onClick={function () {
-                    marcarComoLida(item.id, item.ocorrencia_id);
-                  }}
-                  style={{
-                    padding: 10,
-                    borderRadius: 10,
-                    backgroundColor: item.lida ? `${CORES.verdeGarrafa}0d` : `${CORES.verdeSalada}26`,
-                    marginBottom: 8,
-                    cursor: 'pointer',
-                    borderLeft: item.lida ? '3px solid transparent' : `3px solid ${CORES.laranja}`,
-                  }}
-                >
-                  <div style={{ fontSize: 13, fontWeight: 700 }}>{item.titulo}</div>
-                  <div style={{ fontSize: 12, color: `${CORES.verdeGarrafaProfundo}b3`, marginTop: 2 }}>{item.mensagem}</div>
-                </div>
-              );
-            })
+            <ul className="dm-sininho__lista">
+              {notificacoes.map(function (item) {
+                const Icone = ICONE_TIPO[item.tipo_notificacao] || FiInfo;
+                return (
+                  <li key={item.id} className={`dm-sininho__item${item.lida ? '' : ' dm-sininho__item--nao-lida'}`}>
+                    <button
+                      type="button"
+                      className="dm-sininho__item-corpo"
+                      onClick={function () {
+                        marcarComoLida(item.id, item.ocorrencia_id);
+                      }}
+                    >
+                      <span className="dm-sininho__icone" aria-hidden="true">
+                        <Icone size={15} />
+                      </span>
+                      <span className="dm-sininho__texto">
+                        <span className="dm-sininho__meta">
+                          {ROTULO_TIPO_NOTIFICACAO[item.tipo_notificacao] || 'Aviso'}
+                          <span aria-hidden="true"> · </span>
+                          <time dateTime={item.data_envio}>{tempoRelativo(item.data_envio)}</time>
+                        </span>
+                        <strong>{item.titulo}</strong>
+                        <span className="dm-sininho__mensagem">{item.mensagem}</span>
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className="dm-sininho__excluir"
+                      onClick={() => excluir(item.id)}
+                      aria-label={`Excluir notificação "${item.titulo}"`}
+                      title="Excluir"
+                    >
+                      <FiX size={14} aria-hidden="true" />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           )}
         </div>
       )}

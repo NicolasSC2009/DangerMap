@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
-import { CORES } from '../../theme/cores';
+import { FiEdit2, FiPlus } from 'react-icons/fi';
 import { api } from '../../services/api';
 import { obterIconeCategoria } from '../../theme/iconesCategorias';
-import { estilosAdmin as s } from './estilosAdmin';
+import { Modal } from '../../components/comum/Modal';
 import type { Categoria } from '@shared/types';
+import { CabecalhoAba } from './componentes/CabecalhoAba';
 
 interface CamposCategoria {
   nome: string;
@@ -13,18 +14,33 @@ interface CamposCategoria {
   icone_url: string;
 }
 
+type Filtro = 'todas' | 'ativas' | 'inativas';
+
 export function AbaCategorias() {
-  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[] | null>(null);
+  const [erro, setErro] = useState(false);
   const [mostrarForm, setMostrarForm] = useState(false);
   const [editandoId, setEditandoId] = useState<number | null>(null);
   const [processandoId, setProcessandoId] = useState<number | null>(null);
-  const { register, handleSubmit, reset } = useForm<CamposCategoria>();
+  const [filtro, setFiltro] = useState<Filtro>('todas');
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<CamposCategoria>();
 
   function carregar() {
     api
       .get<Categoria[]>('/categorias/admin')
-      .then((r) => setCategorias(r.data))
-      .catch(() => toast.error('Não foi possível carregar as categorias.'));
+      .then(function (r) {
+        setCategorias(r.data);
+        setErro(false);
+      })
+      .catch(function () {
+        setErro(true);
+        toast.error('Não foi possível carregar as categorias.');
+      });
   }
 
   useEffect(carregar, []);
@@ -61,110 +77,160 @@ export function AbaCategorias() {
     setProcessandoId(cat.id);
     api
       .patch(`/categorias/${cat.id}/status`, { ativo: !cat.ativo })
-      .then(() => carregar())
+      .then(function () {
+        toast.success(cat.ativo ? `"${cat.nome}" desativada.` : `"${cat.nome}" ativada.`);
+        carregar();
+      })
       .catch(() => toast.error('Não foi possível alterar o status agora.'))
       .finally(() => setProcessandoId(null));
   }
 
-  return (
-    <div>
-      <div style={s.topbar}>
-        <div>
-          <span style={s.eyebrow}>Configuração</span>
-          <h1 style={s.titulo}>Categorias de perigo</h1>
-          <p style={s.subtitulo}>Desativar uma categoria não apaga o histórico de ocorrências já vinculadas a ela.</p>
-        </div>
-        <button className="dm-botao-primario dm-botao-seta" style={s.btnPrimario} onClick={abrirCriacao}><span>+ Nova categoria</span></button>
-      </div>
+  const lista = categorias ?? [];
+  const ativas = lista.filter((c) => c.ativo).length;
+  const visiveis = lista.filter((c) => (filtro === 'ativas' ? c.ativo : filtro === 'inativas' ? !c.ativo : true));
+  const nomeEditando = editandoId ? lista.find((c) => c.id === editandoId)?.nome : null;
 
-      <div style={s.painel}>
-        <table style={s.tabela}>
-          <thead>
-            <tr>
-              <th style={s.th}></th>
-              <th style={s.th}>Nome</th>
-              <th style={s.th}>Descrição</th>
-              <th style={s.th}>Status</th>
-              <th style={s.th}>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {categorias.map((cat) => (
-              <tr key={cat.id}>
-                <td style={s.td}>
-                  <img src={obterIconeCategoria(cat.nome)} alt="" style={{ width: 38, height: 38, objectFit: 'contain' }} />
-                </td>
-                <td style={s.td}>{cat.nome}</td>
-                <td style={{ ...s.td, maxWidth: 320, color: CORES.tintaSuave }}>{cat.descricao || 'Sem descrição'}</td>
-                <td style={s.td}>
-                  <span
-                    style={{
-                      fontFamily: 'JetBrains Mono, monospace', fontSize: 10.5, padding: '4px 9px', borderRadius: 20, textTransform: 'uppercase',
-                      backgroundColor: cat.ativo ? `${CORES.verdeSalada}22` : `${CORES.tintaSuave}22`,
-                      color: cat.ativo ? CORES.verdeAprovado : CORES.tintaSuave,
-                    }}
-                  >
-                    {cat.ativo ? 'Ativa' : 'Inativa'}
-                  </span>
-                </td>
-                <td style={s.td}>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    <button onClick={() => abrirEdicao(cat)} style={{ padding: '7px 12px', borderRadius: 7, border: `1.5px solid ${CORES.linha}`, backgroundColor: '#fff', color: CORES.verdeGarrafa, fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => alternarStatus(cat)}
-                      disabled={processandoId === cat.id}
-                      style={{
-                        padding: '7px 12px', borderRadius: 7, border: 'none', fontSize: 11.5, fontWeight: 700, cursor: 'pointer',
-                        backgroundColor: cat.ativo ? CORES.vermelhoAlerta : CORES.verdeSalada, color: '#fff', opacity: processandoId === cat.id ? 0.5 : 1,
-                      }}
-                    >
-                      {cat.ativo ? 'Desativar' : 'Ativar'}
-                    </button>
-                  </div>
-                </td>
-              </tr>
+  return (
+    <>
+      <CabecalhoAba
+        eyebrow="Configuração"
+        titulo="Categorias de perigo"
+        subtitulo="Desativar uma categoria não apaga o histórico de ocorrências já vinculadas a ela."
+        acoes={
+          <button type="button" className="dm-btn dm-btn--primario dm-btn--pequeno" onClick={abrirCriacao}>
+            <FiPlus aria-hidden="true" /> Nova categoria
+          </button>
+        }
+      />
+
+      <section className="dm-painel dm-admin-painel">
+        <div className="dm-painel-cabecalho">
+          <h3>Categorias</h3>
+          <span className="dm-painel-nota">{categorias ? `${ativas} de ${lista.length} ativas` : 'Carregando…'}</span>
+        </div>
+
+        {lista.length > 0 && (
+          <div className="dm-chips dm-admin-filtros" role="group" aria-label="Filtrar categorias">
+            {(
+              [
+                ['todas', `Todas · ${lista.length}`],
+                ['ativas', `Ativas · ${ativas}`],
+                ['inativas', `Inativas · ${lista.length - ativas}`],
+              ] as Array<[Filtro, string]>
+            ).map(([chave, rotulo]) => (
+              <button key={chave} type="button" className="dm-chip dm-chip--claro" aria-pressed={filtro === chave} onClick={() => setFiltro(chave)}>
+                {rotulo}
+              </button>
             ))}
-          </tbody>
-        </table>
-      </div>
+          </div>
+        )}
+
+        {erro && !categorias ? (
+          <p className="dm-admin-vazio">Não foi possível carregar as categorias.</p>
+        ) : !categorias ? (
+          <div className="dm-admin-esqueleto" aria-hidden="true" />
+        ) : visiveis.length === 0 ? (
+          <p className="dm-admin-vazio">Nenhuma categoria neste filtro.</p>
+        ) : (
+          <div className="dm-tabela-wrap">
+            <table className="dm-tabela dm-tabela--empilhada">
+              <thead>
+                <tr>
+                  <th scope="col">
+                    <span className="dm-visually-hidden">Ícone</span>
+                  </th>
+                  <th scope="col">Nome</th>
+                  <th scope="col">Descrição</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visiveis.map((cat) => (
+                  <tr key={cat.id} className={cat.ativo ? undefined : 'dm-admin-linha-inativa'}>
+                    <td data-rotulo="Ícone" className="dm-admin-celula-icone">
+                      <img src={obterIconeCategoria(cat.nome)} alt="" width={38} height={38} />
+                    </td>
+                    <td data-rotulo="Nome">
+                      <strong className="dm-admin-nome-categoria">{cat.nome}</strong>
+                    </td>
+                    <td data-rotulo="Descrição" className="dm-admin-celula-texto dm-admin-apagado">
+                      {cat.descricao || 'Sem descrição'}
+                    </td>
+                    <td data-rotulo="Status">
+                      <span className={cat.ativo ? 'dm-pill dm-pill--sucesso' : 'dm-pill'}>{cat.ativo ? 'Ativa' : 'Inativa'}</span>
+                    </td>
+                    <td data-rotulo="Ações">
+                      <div className="dm-admin-acoes-linha">
+                        <button type="button" className="dm-btn dm-btn--ghost dm-btn--pequeno" onClick={() => abrirEdicao(cat)}>
+                          <FiEdit2 aria-hidden="true" /> Editar
+                        </button>
+                        <button
+                          type="button"
+                          className={`dm-btn dm-btn--pequeno ${cat.ativo ? 'dm-btn--perigo' : 'dm-btn--ghost'}`}
+                          onClick={() => alternarStatus(cat)}
+                          disabled={processandoId === cat.id}
+                        >
+                          {cat.ativo ? 'Desativar' : 'Ativar'}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
       {mostrarForm && (
-        <div
-          onClick={() => setMostrarForm(false)}
-          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,27,18,0.55)', backdropFilter: 'blur(2px)', zIndex: 1300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+        <Modal
+          variante="claro"
+          largura={460}
+          eyebrow={editandoId ? 'Editar' : 'Nova'}
+          titulo={editandoId ? 'Editar categoria' : 'Nova categoria'}
+          subtitulo={editandoId ? `Alterando "${nomeEditando}".` : 'Ela aparece para os cidadãos assim que for criada.'}
+          aoFechar={() => setMostrarForm(false)}
+          bloquearFechamento={isSubmitting}
         >
-          <form
-            className="dm-cantos-decorativos"
-            onClick={(e) => e.stopPropagation()}
-            onSubmit={handleSubmit(salvar)}
-            style={{ width: '100%', maxWidth: 420, maxHeight: '85vh', overflowY: 'auto', backgroundColor: CORES.canvas, borderRadius: 20, padding: 26, boxShadow: '0 40px 90px rgba(0,0,0,0.45)' }}
-          >
-            <h2 style={{ fontSize: 20, color: CORES.verdeGarrafa, fontWeight: 800, marginBottom: 18 }}>
-              {editandoId ? 'Editar categoria' : 'Nova categoria'}
-            </h2>
-            <div style={{ marginBottom: 12 }}>
-              <label style={s.rotuloCampo}>Nome</label>
-              <input style={s.campo} {...register('nome', { required: true })} />
+          <form className="dm-admin-form" onSubmit={handleSubmit(salvar)} noValidate>
+            <div className="dm-campo-grupo">
+              <label className="dm-rotulo" htmlFor="cat-nome">
+                Nome
+              </label>
+              <input
+                id="cat-nome"
+                className="dm-campo"
+                autoFocus
+                aria-invalid={errors.nome ? 'true' : undefined}
+                {...register('nome', { required: 'Informe o nome da categoria.', validate: (v) => v.trim().length > 0 || 'Informe o nome da categoria.' })}
+              />
+              {errors.nome && <span className="dm-erro">{errors.nome.message}</span>}
             </div>
-            <div style={{ marginBottom: 12 }}>
-              <label style={s.rotuloCampo}>Descrição</label>
-              <textarea rows={3} style={{ ...s.campo, resize: 'vertical' }} {...register('descricao')} />
+            <div className="dm-campo-grupo">
+              <label className="dm-rotulo" htmlFor="cat-descricao">
+                Descrição
+              </label>
+              <textarea id="cat-descricao" rows={3} className="dm-campo" {...register('descricao')} />
             </div>
-            <div style={{ marginBottom: 18 }}>
-              <label style={s.rotuloCampo}>URL do ícone (opcional)</label>
-              <input style={s.campo} {...register('icone_url')} />
+            <div className="dm-campo-grupo">
+              <label className="dm-rotulo" htmlFor="cat-icone">
+                URL do ícone (opcional)
+              </label>
+              <input id="cat-icone" className="dm-campo" inputMode="url" {...register('icone_url')} />
+              <span className="dm-dica">O app escolhe o ícone exibido pelo nome da categoria; este campo fica salvo para uso futuro.</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-              <button type="button" onClick={() => setMostrarForm(false)} style={{ padding: '10px 16px', border: 'none', background: 'none', color: CORES.tintaSuave, fontSize: 12.5, cursor: 'pointer' }}>
+            <div className="dm-modal-acoes">
+              <button type="button" className="dm-btn dm-btn--ghost" onClick={() => setMostrarForm(false)} disabled={isSubmitting}>
                 Cancelar
               </button>
-              <button type="submit" className="dm-botao-primario dm-botao-seta" style={s.btnPrimario}><span>Salvar</span></button>
+              <button type="submit" className="dm-btn dm-btn--primario" disabled={isSubmitting}>
+                <span>{isSubmitting ? 'Salvando…' : 'Salvar'}</span>
+              </button>
             </div>
           </form>
-        </div>
+        </Modal>
       )}
-    </div>
+    </>
   );
 }

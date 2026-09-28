@@ -99,19 +99,6 @@ body.dm-tela-mapa #root {
   border: 0;
 }
 
-.dm-somente-mobile {
-  display: none !important;
-}
-
-@media (max-width: 640px) {
-  .dm-somente-mobile {
-    display: revert !important;
-  }
-  .dm-somente-desktop {
-    display: none !important;
-  }
-}
-
 /* ---------- páginas / containers ---------- */
 
 .dm-container {
@@ -590,11 +577,6 @@ textarea.dm-campo {
 .dm-tag--arquivado {
   background: var(--dm-vermelho);
 }
-.dm-tag--neutro {
-  background: transparent;
-  color: var(--dm-tinta-suave);
-  border: 1px solid var(--dm-linha-forte);
-}
 
 :root[data-tema="escuro"] .dm-tag--confirmado {
   background: #2e5a3f;
@@ -757,10 +739,6 @@ textarea.dm-campo {
 
 .dm-modal-card--claro {
   background: var(--dm-card);
-}
-
-.dm-modal-card--sem-padding {
-  padding: 0;
 }
 
 .dm-modal-fechar {
@@ -1207,107 +1185,4 @@ textarea.dm-campo {
   .dm-modal-card {
     animation: none;
   }
-}
-
-/* =========================================================================
-   ALIASES LEGADOS — mantidos só durante a migração paralela (P1–P4).
-   Serão removidos no P5 quando nenhum componente os usar mais.
-   ========================================================================= */
-
-.dm-container-pagina {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 0 var(--dm-gutter) 60px;
-}
-
-/* dentro do LayoutPadrao o .dm-container já dá o gutter */
-.dm-container .dm-container-pagina {
-  padding-left: 0;
-  padding-right: 0;
-}
-
-.dm-botao-primario {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background var(--dm-transicao), transform 0.15s ease, box-shadow var(--dm-transicao);
-}
-
-.dm-botao-primario:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: var(--dm-sombra-hover-laranja);
-}
-
-.dm-botao-primario:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.dm-botao-primario span {
-  position: relative;
-  display: inline-block;
-}
-
-.dm-botao-primario.dm-botao-seta span::after {
-  content: '\2192';
-  display: inline-block;
-  width: 0;
-  overflow: hidden;
-  opacity: 0;
-  transition: width var(--dm-transicao), opacity var(--dm-transicao), margin-left var(--dm-transicao);
-  vertical-align: middle;
-}
-
-.dm-botao-primario.dm-botao-seta:hover:not(:disabled) span::after {
-  width: 1em;
-  opacity: 1;
-  margin-left: 8px;
-}
-
-.dm-cantos-decorativos {
-  position: relative;
-}
-
-.dm-cantos-decorativos::before,
-.dm-cantos-decorativos::after {
-  content: '';
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  border: 1.5px solid rgba(0, 50, 35, 0.16);
-  pointer-events: none;
-}
-
-.dm-cantos-decorativos::before {
-  top: 10px;
-  left: 10px;
-  border-right: none;
-  border-bottom: none;
-}
-
-.dm-cantos-decorativos::after {
-  bottom: 10px;
-  right: 10px;
-  border-left: none;
-  border-top: none;
-}
-
-.dm-botao-flutuante {
-  transition: transform 0.15s ease, box-shadow var(--dm-transicao);
-}
-
-.dm-botao-flutuante:hover {
-  transform: scale(1.06);
-  box-shadow: 0 12px 26px rgba(177, 63, 15, 0.5) !important;
-}
-
-.dm-botao-flutuante:active {
-  transform: scale(0.97);
-}
-
-.dm-mapa-estilizado .leaflet-tile-pane {
-  filter: saturate(0.65) brightness(1.08) contrast(0.94);
 }

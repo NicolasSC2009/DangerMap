@@ -12,23 +12,17 @@ export const CORES = {
   verdeGarrafa: '#003223',
   verdeGarrafaProfundo: '#001b12',
   verdeSalada: '#8CC850',
-  verdeAprovado: '#3d6b2e',
   sidebar: '#00251a',
 
   // Superfícies claras
   eggshell: '#d8cfc6',
-  eggshellMuted: '#e9e2da',
   canvas: '#F6F2EA',
   card: '#ffffff',
-
-  // Fundo das telas escuras (perfil/login)
-  fundoEscuro: '#14140f',
 
   // Estados
   vermelhoAlerta: '#a02617',
   vermelhoAlertaHover: '#c22f1c',
   vermelhoAlertaFundo: 'rgba(160, 38, 23, 0.08)',
-  alertaAdmin: '#C8432A',
 
   // Texto e bordas
   tinta: '#1b2420',
@@ -43,6 +37,3 @@ export const FONTES = {
   mono: "'JetBrains Mono', ui-monospace, monospace",
   corpo: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
 } as const;
-
-// Gradiente do painel de acento (hero do perfil, lado verde do login).
-export const GRADIENTE_ACENTO = `linear-gradient(150deg, ${CORES.verdeGarrafaProfundo} 0%, ${CORES.verdeGarrafa} 45%, ${CORES.verdeSalada} 130%)`;

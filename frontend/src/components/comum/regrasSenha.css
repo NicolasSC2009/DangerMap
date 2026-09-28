@@ -1,0 +1,47 @@
+/* RegrasSenha — checklist ao vivo dos critérios de senha forte. */
+
+.dm-regras-senha {
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 0 2px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 3px 12px;
+}
+
+.dm-regras-senha li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: calc(11.5px * var(--dm-escala));
+  line-height: 1.4;
+  color: var(--dm-tinta-suave);
+  transition: color var(--dm-transicao);
+}
+
+.dm-regras-senha__icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--dm-linha-forte);
+  transition: background var(--dm-transicao), border-color var(--dm-transicao);
+}
+
+.dm-regras-senha li[data-ok='true'] {
+  color: var(--dm-titulo);
+}
+
+.dm-regras-senha li[data-ok='true'] .dm-regras-senha__icone {
+  background: var(--dm-verde-garrafa);
+  border-color: var(--dm-verde-garrafa);
+  color: #fff;
+}
+
+:root[data-tema='escuro'] .dm-regras-senha li[data-ok='true'] .dm-regras-senha__icone {
+  background: #3d6b2e;
+  border-color: #3d6b2e;
+}

@@ -1,12 +1,12 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { FiPlus } from 'react-icons/fi';
-import { Mapa } from '../../components/mapa/Mapa';
+import { Mapa, lerUltimaVistaMapa } from '../../components/mapa/Mapa';
 import { Navbar } from '../../components/navbar/Navbar';
 import { LogoCanto } from '../../components/comum/LogoCanto';
 import { ModalOcorrencia } from '../../components/ocorrencia/ModalOcorrencia';
 import { FormularioOcorrencia } from '../../components/ocorrencia/FormularioOcorrencia';
-import { CORES } from '../../theme/cores';
+import { usePreferencias } from '../../contexts/PreferenciasContext';
 import { api } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'react-toastify';
@@ -30,8 +30,11 @@ export function PaginaMapa() {
   const { autenticado } = useAuth();
   const navegar = useNavigate();
   const [parametrosBusca, setParametrosBusca] = useSearchParams();
+  const { preferencias } = usePreferencias();
+  // Vista inicial: a última lembrada (se a preferência estiver ligada) ou o padrão do Mapa.
+  const [vistaInicial] = useState(() => (preferencias.lembrarPosicaoMapa ? lerUltimaVistaMapa() : null));
   const [clusters, setClusters] = useState<ClusterOcorrencia[]>([]);
-  const [zoomAtual, setZoomAtual] = useState(5);
+  const [zoomAtual, setZoomAtual] = useState(vistaInicial?.zoom ?? 5);
   const [ocorrenciaSelecionadaId, setOcorrenciaSelecionadaId] = useState<number | null>(null);
   const [pontoNovaOcorrencia, setPontoNovaOcorrencia] = useState<{ lat: number; lng: number } | null>(null);
 
@@ -93,8 +96,32 @@ export function PaginaMapa() {
     }
   }
 
+  function registrarNaMinhaPosicao() {
+    if (!autenticado) {
+      toast.info('Entre na sua conta para registrar uma ocorrência.');
+      navegar('/entrar');
+      return;
+    }
+    if (!navigator.geolocation) {
+      toast.info('Clique em um ponto do mapa para registrar a ocorrência lá.');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (posicao) => {
+        const lat = posicao.coords.latitude;
+        const lng = posicao.coords.longitude;
+        if (!dentroDoBrasil(lat, lng)) {
+          toast.warn('O DangerMap só aceita ocorrências dentro do território brasileiro.');
+          return;
+        }
+        setPontoNovaOcorrencia({ lat, lng });
+      },
+      () => toast.info('Clique em um ponto do mapa para registrar a ocorrência lá.')
+    );
+  }
+
   return (
-    <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+    <div className="dm-mapa-pagina">
       <Navbar aoSelecionarOcorrencia={setOcorrenciaSelecionadaId} />
       <LogoCanto />
       <Mapa
@@ -102,48 +129,17 @@ export function PaginaMapa() {
         aoClicarNoMapa={tratarCliqueNoMapa}
         aoClicarOcorrencia={setOcorrenciaSelecionadaId}
         aoMudarZoom={aoMudarZoom}
+        posicaoInicial={vistaInicial ? [vistaInicial.lat, vistaInicial.lng] : undefined}
+        zoomInicial={vistaInicial?.zoom}
+        lembrarVista
       />
 
       <button
-        onClick={() => {
-          if (!autenticado) {
-            toast.info('Entre na sua conta para registrar uma ocorrência.');
-            navegar('/entrar');
-            return;
-          }
-          navigator.geolocation?.getCurrentPosition(
-            (posicao) => {
-              const lat = posicao.coords.latitude;
-              const lng = posicao.coords.longitude;
-              if (!dentroDoBrasil(lat, lng)) {
-                toast.warn('O DangerMap só aceita ocorrências dentro do território brasileiro.');
-                return;
-              }
-              setPontoNovaOcorrencia({ lat, lng });
-            },
-            () => toast.info('Clique em um ponto do mapa para registrar a ocorrência lá.')
-          );
-        }}
-        aria-label="Registrar nova ocorrência"
+        type="button"
+        onClick={registrarNaMinhaPosicao}
+        aria-label="Registrar nova ocorrência na minha posição"
         title="Registrar nova ocorrência"
-        className="dm-botao-flutuante"
-        style={{
-          position: 'fixed',
-          bottom: 24,
-          right: 24,
-          zIndex: 1050,
-          width: 58,
-          height: 58,
-          borderRadius: '50%',
-          border: 'none',
-          background: `linear-gradient(155deg, ${CORES.laranja} 0%, ${CORES.laranjaEscuro} 100%)`,
-          color: '#fff',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 8px 22px rgba(177, 63, 15, 0.45)',
-        }}
+        className="dm-fab"
       >
         <FiPlus size={26} aria-hidden="true" />
       </button>

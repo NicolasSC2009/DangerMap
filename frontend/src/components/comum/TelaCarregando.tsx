@@ -1,4 +1,3 @@
-import React from 'react';
 import logo from '../../assets/logo-dangermap.png';
 
 // Tela cheia exibida enquanto a sessão é verificada (rotas protegidas).

@@ -1,168 +1,228 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { CORES } from '../../theme/cores';
+import { FiDownload, FiMap, FiRefreshCw } from 'react-icons/fi';
 import { api } from '../../services/api';
-import { estilosAdmin as s } from './estilosAdmin';
+import { ROTULO_GRAVIDADE, ROTULO_STATUS, ORDEM_GRAVIDADE, ORDEM_STATUS, COR_GRAVIDADE, COR_STATUS } from '../../theme/rotulos';
 import type { EstatisticasDashboard } from '@shared/types';
+import { CabecalhoAba } from './componentes/CabecalhoAba';
+import { CartaoEstatistica } from './componentes/CartaoEstatistica';
+import { GraficoBarras, type PontoSerie } from './componentes/GraficoBarras';
+import { LegendaCategorias } from './componentes/LegendaCategorias';
+import { CartaoExtracao } from './componentes/CartaoExtracao';
+import { TabelaOcorrenciasRecentes } from './componentes/TabelaOcorrenciasRecentes';
+import { ModalExportarRelatorio } from './componentes/ModalExportarRelatorio';
+import { ModalExtracaoRegional } from './componentes/ModalExtracaoRegional';
 
-const CORES_CATEGORIA = [CORES.verdeSalada, CORES.laranja, CORES.verdeGarrafa, CORES.vermelhoAlerta, CORES.laranjaEscuro, CORES.tintaSuave];
+type Janela = 14 | 30;
+
+function chaveDia(data: Date): string {
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${data.getFullYear()}-${p(data.getMonth() + 1)}-${p(data.getDate())}`;
+}
+
+// A série do backend só traz dias com registro; completa os dias vazios
+// com zero para o gráfico não "pular" datas.
+function completarSerie(serie: EstatisticasDashboard['serieTemporal'], dias: number): PontoSerie[] {
+  const porDia = new Map<string, number>();
+  for (const item of serie) porDia.set(String(item.dia).slice(0, 10), Number(item.total) || 0);
+  const hoje = new Date();
+  const resultado: PontoSerie[] = [];
+  for (let i = dias - 1; i >= 0; i--) {
+    const d = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() - i);
+    const chave = chaveDia(d);
+    resultado.push({ dia: chave, total: porDia.get(chave) ?? 0 });
+  }
+  return resultado;
+}
 
 export function AbaVisaoGeral() {
   const [dados, setDados] = useState<EstatisticasDashboard | null>(null);
-  const [exportando, setExportando] = useState(false);
+  const [erro, setErro] = useState(false);
+  const [janela, setJanela] = useState<Janela>(14);
+  const [modalExportar, setModalExportar] = useState(false);
+  const [modalExtracao, setModalExtracao] = useState(false);
+  const [versao, setVersao] = useState(0);
 
-  useEffect(function () {
-    api
-      .get<EstatisticasDashboard>('/admin/dashboard/estatisticas')
-      .then((r) => setDados(r.data))
-      .catch(() => toast.error('Não foi possível carregar as estatísticas.'));
-  }, []);
+  useEffect(
+    function () {
+      setErro(false);
+      api
+        .get<EstatisticasDashboard>('/admin/dashboard/estatisticas')
+        .then((r) => setDados(r.data))
+        .catch(function () {
+          setErro(true);
+          toast.error('Não foi possível carregar as estatísticas.');
+        });
+    },
+    [versao]
+  );
 
-  async function exportarPdf() {
-    setExportando(true);
-    try {
-      const resposta = await api.get('/admin/dashboard/relatorio.pdf', { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([resposta.data], { type: 'application/pdf' }));
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'relatorio-dangermap.pdf';
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch {
-      toast.error('Não foi possível exportar o relatório agora.');
-    } finally {
-      setExportando(false);
-    }
-  }
+  const serie30 = useMemo(() => (dados ? completarSerie(dados.serieTemporal, 30) : []), [dados]);
+  const serieVisivel = janela === 30 ? serie30 : serie30.slice(-14);
+  const ultimos7 = serie30.slice(-7).reduce((acc, p) => acc + p.total, 0);
+
+  const acoes = (
+    <>
+      <button type="button" className="dm-btn dm-btn--ghost dm-btn--pequeno" onClick={() => setModalExtracao(true)}>
+        <FiMap aria-hidden="true" /> Extração regional
+      </button>
+      <button type="button" className="dm-btn dm-btn--primario dm-btn--pequeno" onClick={() => setModalExportar(true)} disabled={!dados}>
+        <FiDownload aria-hidden="true" /> Exportar relatório
+      </button>
+    </>
+  );
 
   if (!dados) {
-    return <p style={{ color: CORES.tintaSuave }}>Carregando estatísticas…</p>;
+    return (
+      <>
+        <CabecalhoAba eyebrow="Painel administrativo" titulo="Visão geral" subtitulo="Monitoramento geral e exportação de dados consolidados." acoes={acoes} />
+        {erro ? (
+          <div className="dm-painel dm-admin-erro">
+            <p>Não foi possível carregar as estatísticas.</p>
+            <button type="button" className="dm-btn dm-btn--ghost dm-btn--pequeno" onClick={() => setVersao((v) => v + 1)}>
+              <FiRefreshCw aria-hidden="true" /> Tentar de novo
+            </button>
+          </div>
+        ) : (
+          <div className="dm-admin-visao" aria-busy="true">
+            <div className="dm-admin-stats">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="dm-admin-stat dm-admin-esqueleto" />
+              ))}
+            </div>
+          </div>
+        )}
+        {modalExtracao && <ModalExtracaoRegional aoFechar={() => setModalExtracao(false)} />}
+      </>
+    );
   }
 
-  const maiorContagemDia = Math.max(1, ...dados.serieTemporal.map((d) => d.total));
-  const totalCategorias = dados.ocorrenciasPorCategoria.reduce((acc, c) => acc + c.total, 0) || 1;
+  const t = dados.totais;
+  const geradoEm = new Date(dados.geradoEm);
+  const mediaConfirmacoes = t.totalOcorrencias > 0 ? t.totalConfirmacoes / t.totalOcorrencias : 0;
+  const porStatus = new Map(dados.ocorrenciasPorStatus.map((i) => [i.status, i.total]));
+  const porGravidade = new Map(dados.ocorrenciasPorGravidade.map((i) => [i.gravidade, i.total]));
 
   return (
-    <div>
-      <div style={s.topbar}>
-        <div>
-          <span style={s.eyebrow}>Painel administrativo</span>
-          <h1 style={s.titulo}>Visão geral</h1>
-          <p style={s.subtitulo}>Resumo da atividade do DangerMap nos últimos 30 dias.</p>
-        </div>
-        <button style={s.btnPrimario} onClick={exportarPdf} disabled={exportando}>
-          {exportando ? 'Gerando…' : 'Exportar PDF'}
-        </button>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 22 }}>
-        <CartaoEstatistica label="Ocorrências totais" valor={dados.totais.totalOcorrencias} />
-        <CartaoEstatistica label="Usuários" valor={`${dados.totais.totalUsuarios} (${dados.totais.totalUsuariosAtivos} ativos)`} />
-        <CartaoEstatistica label="Denúncias" valor={dados.totais.totalDenuncias} risco />
-        <CartaoEstatistica label="Confirmações" valor={dados.totais.totalConfirmacoes} />
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 16, marginBottom: 16 }}>
-        <div style={s.painel}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 18 }}>
-            <h3 style={{ fontSize: 17, color: CORES.verdeGarrafa, fontWeight: 700 }}>Registros por dia</h3>
-            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10.5, color: '#9aa79e', textTransform: 'uppercase' }}>Últimos 30 dias</span>
-          </div>
-          {dados.serieTemporal.length === 0 ? (
-            <p style={{ fontSize: 13, color: CORES.tintaSuave }}>Sem registros no período.</p>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 150, paddingTop: 6 }}>
-              {dados.serieTemporal.map((dia) => {
-                const altura = Math.max(4, (dia.total / maiorContagemDia) * 130);
-                const pico = dia.total === maiorContagemDia;
-                return (
-                  <div key={dia.dia} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '100%', gap: 6 }} title={`${new Date(dia.dia).toLocaleDateString('pt-BR')}: ${dia.total}`}>
-                    <div
-                      style={{
-                        width: '100%',
-                        maxWidth: 14,
-                        height: altura,
-                        borderRadius: '4px 4px 0 0',
-                        background: pico
-                          ? `linear-gradient(180deg, ${CORES.laranja} 0%, ${CORES.laranjaEscuro} 160%)`
-                          : `linear-gradient(180deg, ${CORES.verdeSalada} 0%, ${CORES.verdeGarrafa} 160%)`,
-                      }}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        <div style={s.painel}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 18 }}>
-            <h3 style={{ fontSize: 17, color: CORES.verdeGarrafa, fontWeight: 700 }}>Por categoria</h3>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {dados.ocorrenciasPorCategoria.length === 0 ? (
-              <p style={{ fontSize: 13, color: CORES.tintaSuave }}>Sem dados.</p>
-            ) : (
-              dados.ocorrenciasPorCategoria.map((cat, i) => (
-                <div key={String(cat.categoriaId) + i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13 }}>
-                  <span style={{ width: 9, height: 9, borderRadius: '50%', backgroundColor: CORES_CATEGORIA[i % CORES_CATEGORIA.length], flexShrink: 0 }} />
-                  <span style={{ flex: 1, color: CORES.tinta }}>{cat.categoriaNome}</span>
-                  <span style={{ fontFamily: 'JetBrains Mono, monospace', color: CORES.tintaSuave, fontSize: 12 }}>
-                    {Math.round((cat.total / totalCategorias) * 100)}%
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        <div style={s.painel}>
-          <h3 style={{ fontSize: 17, color: CORES.verdeGarrafa, fontWeight: 700, marginBottom: 16 }}>Por status</h3>
-          {dados.ocorrenciasPorStatus.map((item) => (
-            <LinhaBarra key={item.status} rotulo={item.status} valor={item.total} total={dados.totais.totalOcorrencias} />
-          ))}
-        </div>
-        <div style={s.painel}>
-          <h3 style={{ fontSize: 17, color: CORES.verdeGarrafa, fontWeight: 700, marginBottom: 16 }}>Por gravidade</h3>
-          {dados.ocorrenciasPorGravidade.map((item) => (
-            <LinhaBarra key={item.gravidade} rotulo={item.gravidade} valor={item.total} total={dados.totais.totalOcorrencias} />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CartaoEstatistica(props: { label: string; valor: number | string; risco?: boolean }) {
-  return (
-    <div style={s.statCard}>
-      <div
-        style={{
-          position: 'absolute', top: 14, right: 16, width: 8, height: 8, borderRadius: '50%',
-          backgroundColor: props.risco ? CORES.vermelhoAlerta : CORES.verdeSalada,
-          boxShadow: props.risco ? `0 0 0 4px ${CORES.vermelhoAlerta}28` : `0 0 0 4px ${CORES.verdeSalada}28`,
-        }}
+    <>
+      <CabecalhoAba
+        eyebrow="Painel administrativo"
+        titulo="Visão geral"
+        subtitulo="Monitoramento geral e exportação de dados consolidados."
+        acoes={acoes}
       />
-      <div style={s.statLabel}>{props.label}</div>
-      <div style={s.statValue}>{props.valor}</div>
-    </div>
+
+      <div className="dm-admin-visao">
+        <section className="dm-admin-stats" aria-label="Indicadores">
+          <CartaoEstatistica
+            indice={0}
+            nota={`GERADO ÀS ${geradoEm.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`}
+            rotulo="Ocorrências totais"
+            valor={t.totalOcorrencias}
+            delta={`+${ultimos7.toLocaleString('pt-BR')} nos últimos 7 dias`}
+          />
+          <CartaoEstatistica
+            indice={1}
+            nota="CADASTRADOS"
+            rotulo="Usuários"
+            valor={t.totalUsuarios}
+            delta={`${t.totalUsuariosAtivos.toLocaleString('pt-BR')} ativos`}
+          />
+          <CartaoEstatistica
+            indice={2}
+            nota="TOTAL ACUMULADO"
+            rotulo="Denúncias"
+            valor={t.totalDenuncias}
+            risco
+            delta={<Link to="/admin/moderacao">Ver fila de moderação →</Link>}
+          />
+          <CartaoEstatistica
+            indice={3}
+            nota="PELA COMUNIDADE"
+            rotulo="Confirmações"
+            valor={t.totalConfirmacoes}
+            delta={`${mediaConfirmacoes.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} por ocorrência`}
+          />
+        </section>
+
+        <section className="dm-painel dm-admin-painel dm-admin-area-barras">
+          <div className="dm-painel-cabecalho">
+            <h3>Registros nos últimos {janela} dias</h3>
+            <div className="dm-admin-segmentado" role="group" aria-label="Período do gráfico">
+              {([14, 30] as Janela[]).map((j) => (
+                <button key={j} type="button" aria-pressed={janela === j} onClick={() => setJanela(j)}>
+                  {j} d
+                </button>
+              ))}
+            </div>
+          </div>
+          <GraficoBarras serie={serieVisivel} />
+        </section>
+
+        <section className="dm-painel dm-admin-painel dm-admin-area-categorias">
+          <div className="dm-painel-cabecalho">
+            <h3>Por categoria</h3>
+            <span className="dm-painel-nota">Todas as ocorrências</span>
+          </div>
+          <LegendaCategorias itens={dados.ocorrenciasPorCategoria} />
+        </section>
+
+        <div className="dm-admin-linha-3">
+          <CartaoExtracao aoAbrirRapido={() => setModalExtracao(true)} />
+
+          <section className="dm-painel dm-admin-painel">
+            <div className="dm-painel-cabecalho">
+              <h3>Por status</h3>
+            </div>
+            {ORDEM_STATUS.map((status) => (
+              <LinhaBarra
+                key={status}
+                rotulo={ROTULO_STATUS[status]}
+                valor={porStatus.get(status) ?? 0}
+                total={t.totalOcorrencias}
+                cor={COR_STATUS[status]}
+              />
+            ))}
+          </section>
+
+          <section className="dm-painel dm-admin-painel">
+            <div className="dm-painel-cabecalho">
+              <h3>Por gravidade</h3>
+            </div>
+            {ORDEM_GRAVIDADE.map((gravidade) => (
+              <LinhaBarra
+                key={gravidade}
+                rotulo={ROTULO_GRAVIDADE[gravidade]}
+                valor={porGravidade.get(gravidade) ?? 0}
+                total={t.totalOcorrencias}
+                cor={COR_GRAVIDADE[gravidade]}
+              />
+            ))}
+          </section>
+        </div>
+
+        <TabelaOcorrenciasRecentes />
+      </div>
+
+      {modalExportar && <ModalExportarRelatorio dados={dados} aoFechar={() => setModalExportar(false)} />}
+      {modalExtracao && <ModalExtracaoRegional aoFechar={() => setModalExtracao(false)} />}
+    </>
   );
 }
 
-function LinhaBarra(props: { rotulo: string; valor: number; total: number }) {
-  const pct = props.total > 0 ? Math.round((props.valor / props.total) * 100) : 0;
+function LinhaBarra(props: { rotulo: string; valor: number; total: number; cor: string }) {
+  const pct = props.total > 0 ? (props.valor / props.total) * 100 : 0;
   return (
-    <div style={{ marginBottom: 12 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, marginBottom: 5 }}>
-        <span style={{ textTransform: 'capitalize', color: CORES.tinta }}>{props.rotulo}</span>
-        <span style={{ color: CORES.tintaSuave, fontFamily: 'JetBrains Mono, monospace' }}>{props.valor}</span>
+    <div className="dm-admin-linha-barra" style={{ '--pct': `${pct}%`, '--c': props.cor } as React.CSSProperties}>
+      <div className="dm-admin-linha-barra__topo">
+        <span>{props.rotulo}</span>
+        <span className="dm-mono">
+          {props.valor.toLocaleString('pt-BR')} <small>· {Math.round(pct)}%</small>
+        </span>
       </div>
-      <div style={{ height: 6, borderRadius: 4, backgroundColor: `${CORES.verdeGarrafa}12` }}>
-        <div style={{ width: `${pct}%`, height: '100%', borderRadius: 4, backgroundColor: CORES.verdeSalada }} />
+      <div className="dm-admin-linha-barra__trilho" aria-hidden="true">
+        <div className="dm-admin-linha-barra__preenchimento" />
       </div>
     </div>
   );

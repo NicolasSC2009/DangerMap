@@ -1,0 +1,33 @@
+/* CampoSenha — input de senha com botão mostrar/ocultar. */
+.dm-campo-senha {
+  position: relative;
+  width: 100%;
+}
+
+.dm-campo-senha > input {
+  width: 100%;
+  padding-right: 46px;
+}
+
+.dm-campo-senha__alternar {
+  position: absolute;
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  color: var(--dm-tinta-fraca);
+  cursor: pointer;
+  transition: color var(--dm-transicao);
+}
+
+.dm-campo-senha__alternar:hover {
+  color: var(--dm-laranja-escuro);
+}

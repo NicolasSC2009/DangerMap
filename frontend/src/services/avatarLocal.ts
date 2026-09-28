@@ -4,7 +4,7 @@
 
 export const EVENTO_AVATAR_ALTERADO = 'dm:avatar-alterado';
 
-export function chaveAvatar(userId: number | string): string {
+function chaveAvatar(userId: number | string): string {
   return `@DangerMap:avatar:${userId}`;
 }
 
