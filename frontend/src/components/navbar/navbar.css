@@ -14,6 +14,12 @@
   font-family: var(--dm-fonte-corpo);
 }
 
+@media (max-width: 480px) {
+  .dm-navbar {
+    gap: 6px;
+  }
+}
+
 .dm-navbar--flutuante {
   position: fixed;
   top: calc(16px + var(--dm-safe-t));
@@ -51,6 +57,13 @@
 .dm-navbar--embutida .dm-navbar-botao {
   box-shadow: none;
   border-color: var(--dm-linha-forte);
+}
+
+@media (max-width: 480px) {
+  .dm-navbar-botao {
+    width: 36px;
+    height: 36px;
+  }
 }
 
 .dm-pagina-escura .dm-navbar--embutida .dm-navbar-botao:not(.dm-navbar-botao--avatar) {

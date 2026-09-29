@@ -152,6 +152,12 @@ body.dm-tela-mapa #root {
   width: auto;
 }
 
+@media (max-width: 480px) {
+  .dm-layout-marca img {
+    height: 28px;
+  }
+}
+
 .dm-layout-voltar {
   display: inline-flex;
   align-items: center;
