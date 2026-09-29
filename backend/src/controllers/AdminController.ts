@@ -9,6 +9,7 @@ import { ParametroService } from '../services/ParametroService.js';
 import { DashboardService } from '../services/DashboardService.js';
 import { OcorrenciaRepository } from '../repositories/OcorrenciaRepository.js';
 import { UsuarioRepository } from '../repositories/UsuarioRepository.js';
+import { obterMalhaEstado } from '../services/MalhaGeograficaService.js';
 
 const adminService = new AdminService();
 const ocorrenciaRepository = new OcorrenciaRepository();
@@ -182,6 +183,37 @@ export class AdminController {
     } catch (error: unknown) {
       console.error('[ERRO POSTGIS RELATORIO]:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro ao gerar relatório geográfico.';
+      return res.status(500).json({ error: errorMessage });
+    }
+  }
+
+  async relatorioPorEstado(req: RequisicaoAutenticada, res: Response) {
+    try {
+      const uf = String(req.query.uf || '').toUpperCase();
+      if (!/^[A-Z]{2}$/.test(uf)) {
+        return res.status(400).json({ error: 'Informe uma UF válida (ex.: SC).' });
+      }
+
+      const poligono = await obterMalhaEstado(uf);
+      if (!poligono) {
+        return res.status(502).json({ error: 'Não foi possível obter a fronteira desse estado agora.' });
+      }
+
+      const geometriaJson = JSON.stringify(poligono);
+      const ocorrencias = await prisma.$queryRaw`
+        SELECT o.id, o.descricao, o.latitude, o.longitude, o.gravidade, o.status, o.data_registro
+        FROM ocorrencias o
+        WHERE ST_Contains(
+          ST_SetSRID(ST_GeomFromGeoJSON(${geometriaJson}), 4326),
+          ST_SetSRID(ST_MakePoint(o.longitude, o.latitude), 4326)
+        )
+        ORDER BY o.data_registro DESC;
+      `;
+
+      return res.status(200).json({ uf, poligono, ocorrencias });
+    } catch (error: unknown) {
+      console.error('[ERRO POSTGIS RELATORIO POR ESTADO]:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao gerar relatório por estado.';
       return res.status(500).json({ error: errorMessage });
     }
   }

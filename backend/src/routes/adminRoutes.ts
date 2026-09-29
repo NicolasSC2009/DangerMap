@@ -10,6 +10,7 @@ router.patch('/admin/usuarios/:usuarioId/desbanir', autenticarToken, autorizarAd
 router.patch('/admin/ocorrencias/:ocorrenciaId/moderar', autenticarToken, autorizarAdmin, adminController.moderarOcorrencia);
 router.patch('/admin/usuarios/:usuarioId/banir', autenticarToken, autorizarAdmin, adminController.banirUsuario);
 router.get('/admin/relatorio-regiao', autenticarToken, autorizarAdmin, adminController.relatorioAreaGeografica);
+router.get('/admin/relatorio-estado', autenticarToken, autorizarAdmin, adminController.relatorioPorEstado);
 
 router.get('/admin/dashboard/estatisticas', autenticarToken, autorizarAdmin, adminController.obterEstatisticas);
 router.get('/admin/dashboard/relatorio.pdf', autenticarToken, autorizarAdmin, adminController.exportarRelatorioPdf);

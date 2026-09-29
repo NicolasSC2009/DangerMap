@@ -156,6 +156,28 @@ export interface ResultadoRelatorioRegiao {
   distancia_metros: string;
 }
 
+// Item de GET /admin/relatorio-estado (ocorrências dentro da fronteira do estado).
+export interface ResultadoRelatorioEstado {
+  id: number;
+  descricao: string | null;
+  latitude: string;
+  longitude: string;
+  gravidade: Gravidade;
+  status: StatusOcorrencia;
+  data_registro: string;
+}
+
+export interface GeometriaGeoJSON {
+  type: string;
+  coordinates: unknown;
+}
+
+export interface RespostaRelatorioEstado {
+  uf: string;
+  poligono: GeometriaGeoJSON;
+  ocorrencias: ResultadoRelatorioEstado[];
+}
+
 export interface RespostaErro {
   error?: string;
   erros?: string[];

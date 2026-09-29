@@ -1,6 +1,6 @@
 // Geração de CSV no cliente (sem dependências). Separador ";" e BOM UTF-8
 // para o Excel em pt-BR abrir acentos e colunas corretamente.
-import type { EstatisticasDashboard, ResultadoRelatorioRegiao } from '@shared/types';
+import type { EstatisticasDashboard, ResultadoRelatorioRegiao, ResultadoRelatorioEstado } from '@shared/types';
 import { ROTULO_GRAVIDADE, ROTULO_STATUS } from '../../../theme/rotulos';
 
 type Celula = string | number | null | undefined;
@@ -90,6 +90,26 @@ export function csvRelatorioRegiao(
       ROTULO_GRAVIDADE[r.gravidade] ?? r.gravidade,
       ROTULO_STATUS[r.status] ?? r.status,
       Number(r.distancia_metros),
+      new Date(r.data_registro).toLocaleString('pt-BR'),
+      r.latitude,
+      r.longitude,
+    ]),
+  ];
+}
+
+export function csvRelatorioEstado(resultados: ResultadoRelatorioEstado[], meta: { uf: string; nomeEstado: string }): Celula[][] {
+  return [
+    ['DangerMap - Extração por estado'],
+    ['Estado', `${meta.nomeEstado} (${meta.uf})`],
+    ['Gerado em', new Date().toLocaleString('pt-BR')],
+    ['Ocorrências', resultados.length],
+    [],
+    ['ID', 'Descrição', 'Gravidade', 'Status', 'Data de registro', 'Latitude', 'Longitude'],
+    ...resultados.map((r) => [
+      r.id,
+      r.descricao ?? '',
+      ROTULO_GRAVIDADE[r.gravidade] ?? r.gravidade,
+      ROTULO_STATUS[r.status] ?? r.status,
       new Date(r.data_registro).toLocaleString('pt-BR'),
       r.latitude,
       r.longitude,
