@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiMapPin } from 'react-icons/fi';
 import { ORDEM_STATUS, ROTULO_GRAVIDADE, ROTULO_STATUS, ROTULO_STATUS_PLURAL } from '../../theme/rotulos';
+import { resolverUrlUpload } from '../../services/api';
 import type { PerfilPublico, StatusOcorrencia } from '@shared/types';
 import '../../pages/Perfil/perfil.css';
 
@@ -111,7 +112,7 @@ export function HistoricoContribuicoes(props: HistoricoContribuicoesProps) {
                   <h3>{oc.categorias?.nome || 'Ocorrência'}</h3>
                   <p>{oc.descricao?.trim() || 'Sem descrição.'}</p>
                 </div>
-                {oc.imagem_url && <img className="dm-historico-card__foto" src={oc.imagem_url} alt="" loading="lazy" />}
+                {oc.imagem_url && <img className="dm-historico-card__foto" src={resolverUrlUpload(oc.imagem_url) ?? undefined} alt="" loading="lazy" />}
               </div>
               <span className={`dm-historico-card__rodape dm-severidade dm-severidade--${oc.gravidade}`}>
                 <span className="dm-severidade__ponto" aria-hidden="true" />

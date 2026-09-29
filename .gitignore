@@ -9,3 +9,7 @@ dist/
 backend/.env
 
 backend/uploads/
+
+# instaladores gerados localmente (grandes demais pro git sem LFS) — regenere com
+# `npm run build:win` em desktop/ e `Compress-Archive` do release/win-unpacked
+frontend/public/downloads/

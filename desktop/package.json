@@ -1,0 +1,30 @@
+{
+  "name": "dangermap-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DangerMap — app de desktop (Electron), carrega o build do frontend e fala com o backend local.",
+  "main": "main.js",
+  "scripts": {
+    "preparar-frontend": "node scripts/copiar-frontend.js",
+    "dev": "npm run preparar-frontend && electron .",
+    "build:win": "npm run preparar-frontend && electron-builder --win"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.dangermap.desktop",
+    "productName": "DangerMap",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.js",
+      "app/**/*"
+    ],
+    "win": {
+      "target": "nsis"
+    }
+  }
+}

@@ -8,6 +8,7 @@ const origensPadrao = [
   'capacitor://localhost',
   'ionic://localhost',
   'http://localhost',
+  'null', // páginas carregadas via file:// (app desktop Electron) mandam Origin: null
 ];
 
 const origensEnv = (process.env.CORS_ORIGINS || '')

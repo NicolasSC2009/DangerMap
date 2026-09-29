@@ -11,6 +11,9 @@ interface Plataforma {
   tecnologia: string;
   descricao: string;
   recursos: string[];
+  /** Quando presente, a plataforma já tem um download real (link direto pro arquivo). */
+  urlDownload?: string;
+  rotuloDownload?: string;
 }
 
 const PLATAFORMAS: Plataforma[] = [
@@ -23,10 +26,12 @@ const PLATAFORMAS: Plataforma[] = [
   },
   {
     Icone: FiMonitor,
-    titulo: 'Windows e Linux',
+    titulo: 'Windows',
     tecnologia: 'Electron',
-    descricao: 'Aplicativo de desktop para quem prefere acompanhar o mapa fora do navegador, numa janela própria.',
-    recursos: ['Janela própria', 'Atalho na área de trabalho'],
+    descricao: 'Aplicativo de desktop pra acompanhar o mapa fora do navegador, numa janela própria. Baixe, extraia e rode — não precisa instalar.',
+    recursos: ['Janela própria', 'Requer o backend do DangerMap rodando na mesma rede'],
+    urlDownload: '/downloads/DangerMap-Windows.zip',
+    rotuloDownload: 'Baixar para Windows (.zip)',
   },
 ];
 
@@ -76,8 +81,8 @@ export function PaginaBaixarApp() {
           </div>
           <h1>Leve o DangerMap com você</h1>
           <p>
-            Os aplicativos nativos para Android e desktop ainda estão em desenvolvimento. Enquanto isso, você já pode
-            instalar o site no celular ou no computador e usá-lo como um app.
+            O app de desktop pra Windows já está disponível. O app nativo para Android ainda está em desenvolvimento
+            — enquanto isso, você já pode instalar o site no celular ou no computador e usá-lo como um app.
           </p>
         </header>
 
@@ -88,12 +93,12 @@ export function PaginaBaixarApp() {
                 <span className="dm-baixar-card__icone" aria-hidden="true">
                   <p.Icone size={24} />
                 </span>
-                <span className="dm-pill dm-pill--aviso">Em desenvolvimento</span>
+                {!p.urlDownload && <span className="dm-pill dm-pill--aviso">Em desenvolvimento</span>}
               </div>
               <h2>{p.titulo}</h2>
               <span className="dm-baixar-card__tec">Feito com {p.tecnologia}</span>
               <p>{p.descricao}</p>
-              <span className="dm-baixar-card__planejado">Planejado</span>
+              {!p.urlDownload && <span className="dm-baixar-card__planejado">Planejado</span>}
               <ul className="dm-baixar-card__recursos">
                 {p.recursos.map((r) => (
                   <li key={r}>
@@ -101,9 +106,15 @@ export function PaginaBaixarApp() {
                   </li>
                 ))}
               </ul>
-              <button type="button" className="dm-btn dm-btn--ghost dm-btn--bloco" disabled>
-                <FiDownload size={15} aria-hidden="true" /> Download em breve
-              </button>
+              {p.urlDownload ? (
+                <a href={p.urlDownload} download className="dm-btn dm-btn--primario dm-btn--bloco">
+                  <FiDownload size={15} aria-hidden="true" /> {p.rotuloDownload}
+                </a>
+              ) : (
+                <button type="button" className="dm-btn dm-btn--ghost dm-btn--bloco" disabled>
+                  <FiDownload size={15} aria-hidden="true" /> Download em breve
+                </button>
+              )}
             </li>
           ))}
 
@@ -141,7 +152,7 @@ export function PaginaBaixarApp() {
         </ul>
 
         <p className="dm-baixar-nota">
-          Assim que os instaladores estiverem prontos, os links de download aparecerão aqui. Dúvidas?{' '}
+          O app de desktop precisa que o backend do DangerMap esteja rodando na sua rede pra funcionar. Dúvidas?{' '}
           <Link to="/ajuda#faq">
             Veja a central de ajuda <FiArrowRight size={12} aria-hidden="true" />
           </Link>

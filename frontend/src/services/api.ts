@@ -1,9 +1,22 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 // Caminho relativo: em dev passa pelo proxy do Vite (vite.config.ts) até
-// http://localhost:3000; em produção assume que frontend e backend ficam
-// atrás do mesmo domínio/reverse proxy — nunca hardcoda um host.
-const API_URL = '/api';
+// http://localhost:3000; em produção (web) assume que frontend e backend
+// ficam atrás do mesmo domínio/reverse proxy — nunca hardcoda um host.
+// Exceção: o app desktop (Electron) carrega a página via file://, que não
+// tem um "mesmo domínio" pra ancorar um caminho relativo — nesse caso
+// aponta direto pro backend local.
+const NO_APP_DESKTOP = window.location.protocol === 'file:';
+const API_URL = NO_APP_DESKTOP ? 'http://localhost:3000/api' : '/api';
+
+// Fotos de ocorrência vêm do backend como caminho relativo (/uploads/...).
+// No app desktop isso quebraria do mesmo jeito que o /api — usa pra
+// qualquer <img>/link que aponte pra um upload do backend.
+export function resolverUrlUpload(caminho: string | null | undefined): string | null {
+  if (!caminho) return null;
+  if (!NO_APP_DESKTOP || /^https?:\/\//.test(caminho)) return caminho;
+  return `http://localhost:3000${caminho}`;
+}
 
 export const CHAVE_TOKEN = '@DangerMap:token';
 

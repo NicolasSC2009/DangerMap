@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FiCheck, FiHeart, FiShare2, FiAlertTriangle, FiImage } from 'react-icons/fi';
 import './ocorrencia.css';
 import { Modal } from '../comum/Modal';
-import { api } from '../../services/api';
+import { api, resolverUrlUpload } from '../../services/api';
 import { ROTULO_GRAVIDADE, ROTULO_STATUS } from '../../theme/rotulos';
 import { obterIconeCategoria } from '../../theme/iconesCategorias';
 import { useAuth } from '../../contexts/AuthContext';
@@ -197,13 +197,13 @@ export function ModalOcorrencia(props: ModalOcorrenciaProps) {
     >
       {ocorrencia.imagem_url ? (
         <a
-          href={ocorrencia.imagem_url}
+          href={resolverUrlUpload(ocorrencia.imagem_url) ?? undefined}
           target="_blank"
           rel="noreferrer"
           className="dm-ocorrencia__imagem"
           title="Abrir imagem em tamanho real"
         >
-          <img src={ocorrencia.imagem_url} alt={`Foto da ocorrência: ${nomeCategoria}`} />
+          <img src={resolverUrlUpload(ocorrencia.imagem_url) ?? undefined} alt={`Foto da ocorrência: ${nomeCategoria}`} />
         </a>
       ) : (
         <div className="dm-ocorrencia__imagem dm-ocorrencia__imagem--vazia">

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:desktop": "tsc && vite build --base=./",
     "preview": "vite preview"
   },
   "keywords": [],
