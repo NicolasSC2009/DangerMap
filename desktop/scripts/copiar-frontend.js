@@ -17,5 +17,13 @@ if (existsSync(destino)) {
   rmSync(destino, { recursive: true, force: true });
 }
 
-cpSync(distFrontend, destino, { recursive: true });
+// Exclui frontend/public/downloads (o instalador servido pelo site) — sem
+// isso, o instalador anterior fica empacotado dentro do proprio instalador
+// (e dobra de tamanho a cada rebuild).
+cpSync(distFrontend, destino, {
+  recursive: true,
+  filter: function (caminhoOrigem) {
+    return !caminhoOrigem.split(path.sep).includes('downloads');
+  },
+});
 console.log('[desktop] frontend copiado para desktop/app.');
