@@ -142,6 +142,18 @@ export function Navbar(props: NavbarProps) {
         <IconeGradeNovePontos />
       </button>
 
+      {ehAdmin && (
+        <button
+          type="button"
+          className="dm-navbar-botao"
+          onClick={() => navegar('/admin')}
+          aria-label="Painel administrativo"
+          title="Painel administrativo"
+        >
+          <FiShield size={18} aria-hidden="true" />
+        </button>
+      )}
+
       {autenticado ? (
         <button
           type="button"
