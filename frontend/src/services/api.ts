@@ -1,21 +1,37 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import { Capacitor } from '@capacitor/core';
 
 // Caminho relativo: em dev passa pelo proxy do Vite (vite.config.ts) até
 // http://localhost:3000; em produção (web) assume que frontend e backend
 // ficam atrás do mesmo domínio/reverse proxy — nunca hardcoda um host.
-// Exceção: o app desktop (Electron) carrega a página via file://, que não
-// tem um "mesmo domínio" pra ancorar um caminho relativo — nesse caso
-// aponta direto pro backend local.
-const NO_APP_DESKTOP = window.location.protocol === 'file:';
-const API_URL = NO_APP_DESKTOP ? 'http://localhost:3000/api' : '/api';
+// Duas exceções, onde não existe um "mesmo domínio" pra ancorar um caminho
+// relativo, então aponta direto pro backend local:
+// - app desktop (Electron): carrega a página via file://
+// - app Android (Capacitor): 10.0.2.2 é o apelido que o EMULADOR usa pra
+//   enxergar o localhost da máquina que roda ele. Num celular físico (não
+//   emulador) isso não funciona — troque pelo IP da máquina na rede local
+//   (ex.: http://192.168.0.15:3000), já que o celular não tem como saber
+//   qual é "localhost" do seu PC.
+const EH_APP_DESKTOP = window.location.protocol === 'file:';
+const EH_APP_ANDROID = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
+const HOST_BACKEND_DESKTOP = 'http://localhost:3000';
+const HOST_BACKEND_ANDROID = 'http://10.0.2.2:3000';
+
+const API_URL = EH_APP_DESKTOP
+  ? `${HOST_BACKEND_DESKTOP}/api`
+  : EH_APP_ANDROID
+    ? `${HOST_BACKEND_ANDROID}/api`
+    : '/api';
 
 // Fotos de ocorrência vêm do backend como caminho relativo (/uploads/...).
-// No app desktop isso quebraria do mesmo jeito que o /api — usa pra
-// qualquer <img>/link que aponte pra um upload do backend.
+// Nos apps desktop/Android isso quebraria do mesmo jeito que o /api — usa
+// pra qualquer <img>/link que aponte pra um upload do backend.
 export function resolverUrlUpload(caminho: string | null | undefined): string | null {
   if (!caminho) return null;
-  if (!NO_APP_DESKTOP || /^https?:\/\//.test(caminho)) return caminho;
-  return `http://localhost:3000${caminho}`;
+  if (/^https?:\/\//.test(caminho)) return caminho;
+  if (EH_APP_DESKTOP) return `${HOST_BACKEND_DESKTOP}${caminho}`;
+  if (EH_APP_ANDROID) return `${HOST_BACKEND_ANDROID}${caminho}`;
+  return caminho;
 }
 
 export const CHAVE_TOKEN = '@DangerMap:token';

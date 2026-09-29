@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">DangerMap</string>
+    <string name="title_activity_main">DangerMap</string>
+    <string name="package_name">com.dangermap.app</string>
+    <string name="custom_url_scheme">com.dangermap.app</string>
+</resources>

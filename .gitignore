@@ -1,6 +1,7 @@
 
 node_modules/
 dist/
+frontend/dist-mobile/
 
 .docker/db_data/
 .docker/pgadmin/

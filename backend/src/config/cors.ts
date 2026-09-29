@@ -8,6 +8,7 @@ const origensPadrao = [
   'capacitor://localhost',
   'ionic://localhost',
   'http://localhost',
+  'https://localhost', // Capacitor Android usa esse esquema por padrão (androidScheme: 'https')
   'null', // páginas carregadas via file:// (app desktop Electron) mandam Origin: null
 ];
 
