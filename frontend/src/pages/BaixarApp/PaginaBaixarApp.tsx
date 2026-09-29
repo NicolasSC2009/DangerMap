@@ -28,10 +28,10 @@ const PLATAFORMAS: Plataforma[] = [
     Icone: FiMonitor,
     titulo: 'Windows',
     tecnologia: 'Electron',
-    descricao: 'Aplicativo de desktop pra acompanhar o mapa fora do navegador, numa janela própria. Baixe, extraia e rode — não precisa instalar.',
-    recursos: ['Janela própria', 'Requer o backend do DangerMap rodando na mesma rede'],
-    urlDownload: '/downloads/DangerMap-Windows.zip',
-    rotuloDownload: 'Baixar para Windows (.zip)',
+    descricao: 'Aplicativo de desktop pra acompanhar o mapa fora do navegador, numa janela própria.',
+    recursos: ['Instalador com atalho automático', 'Requer o backend do DangerMap rodando na mesma rede'],
+    urlDownload: '/downloads/DangerMap-Setup-Windows.exe',
+    rotuloDownload: 'Baixar para Windows (.exe)',
   },
 ];
 
