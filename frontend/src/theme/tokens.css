@@ -99,9 +99,17 @@
   }
 }
 
-:root[data-animacoes="reduzidas"] *,
-:root[data-animacoes="reduzidas"] *::before,
-:root[data-animacoes="reduzidas"] *::after {
+/* O react-toastify fecha o aviso no evento "animationend" da barra de progresso
+   (e remove no fim da animação de saída). Com "animation: none" esse evento
+   nunca dispara e o aviso fica travado na tela — por isso ele fica de fora
+   daqui e, no lugar, só tem a entrada/saída encurtadas. */
+:root[data-animacoes="reduzidas"] *:not(.Toastify):not(.Toastify *),
+:root[data-animacoes="reduzidas"] *:not(.Toastify):not(.Toastify *)::before,
+:root[data-animacoes="reduzidas"] *:not(.Toastify):not(.Toastify *)::after {
   animation: none !important;
   transition: none !important;
+}
+
+:root[data-animacoes="reduzidas"] .Toastify__toast {
+  animation-duration: 0.01ms !important;
 }
