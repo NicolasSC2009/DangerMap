@@ -277,6 +277,12 @@
   text-decoration: underline;
 }
 
+.dm-auth-link:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
 .dm-auth-link--suave {
   font-weight: 600;
 }

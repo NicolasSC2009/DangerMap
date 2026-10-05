@@ -1,0 +1,76 @@
+/* =========================================================================
+   Sobre (/sobre) — reaproveita o hero e as seções da Central de ajuda
+   (ajuda.css); aqui só o que é próprio desta página.
+   ========================================================================= */
+
+.dm-sobre {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(28px, 4vw, 48px);
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.dm-sobre-grade {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.dm-sobre-grade--tres {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dm-sobre-cartao {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 22px 22px 24px;
+}
+
+.dm-sobre-cartao h3 {
+  font-size: var(--dm-t-h3);
+  color: var(--dm-titulo);
+}
+
+.dm-sobre-cartao p {
+  font-size: var(--dm-t-sm);
+  line-height: 1.55;
+  color: var(--dm-tinta-suave);
+}
+
+.dm-sobre-cartao__icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--dm-verde-garrafa);
+  color: var(--dm-verde-salada);
+}
+
+.dm-sobre-cartao__num {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  font-family: var(--dm-fonte-mono);
+  font-size: var(--dm-t-xl, 28px);
+  font-weight: 500;
+  color: var(--dm-laranja);
+}
+
+.dm-sobre-acao {
+  margin-top: 18px;
+}
+
+@media (max-width: 760px) {
+  .dm-sobre-grade,
+  .dm-sobre-grade--tres {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

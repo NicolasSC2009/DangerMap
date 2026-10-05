@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
-import { FiX, FiCamera, FiZap } from 'react-icons/fi';
+import { FiX, FiCamera, FiZap, FiMapPin } from 'react-icons/fi';
 import './ocorrencia.css';
 import { Modal } from '../comum/Modal';
 import { api } from '../../services/api';
-import { ORDEM_GRAVIDADE, ROTULO_GRAVIDADE } from '../../theme/rotulos';
+import { buscarEndereco, type Endereco } from '../../services/geo';
+import { ROTULO_GRAVIDADE } from '../../theme/rotulos';
 import { useCategorias } from '../../hooks/useCategorias';
 import { obterIconeCategoria } from '../../theme/iconesCategorias';
 import type { Gravidade, Ocorrencia } from '@shared/types';
@@ -19,7 +20,6 @@ interface FormularioOcorrenciaProps {
 
 interface CamposFormulario {
   categoriaId: string;
-  gravidade: Gravidade;
   descricao: string;
   anonimo: boolean;
 }
@@ -33,16 +33,61 @@ export function FormularioOcorrencia(props: FormularioOcorrenciaProps) {
     setValue,
     formState: { errors },
   } = useForm<CamposFormulario>({
-    defaultValues: { gravidade: 'medio', anonimo: false, descricao: '' },
+    defaultValues: { anonimo: false, descricao: '' },
   });
   const [foto, setFoto] = useState<File | null>(null);
   const [previaFoto, setPreviaFoto] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [sugerindo, setSugerindo] = useState(false);
   const [sugestao, setSugestao] = useState<string | null>(null);
+  const [gravidadeEstimada, setGravidadeEstimada] = useState<Gravidade | null>(null);
+  const [endereco, setEndereco] = useState<Endereco | null>(null);
+  const [buscandoEndereco, setBuscandoEndereco] = useState(true);
   const categoriaEscolhidaManualmente = useRef(false);
 
   const descricaoAtual = watch('descricao');
+  const categoriaSelecionada = watch('categoriaId');
+
+  // Rua/bairro/cidade do ponto escolhido, no lugar de só coordenadas.
+  useEffect(
+    function () {
+      let cancelado = false;
+      setBuscandoEndereco(true);
+      buscarEndereco(props.latitude, props.longitude).then(function (resultado) {
+        if (cancelado) return;
+        setEndereco(resultado);
+        setBuscandoEndereco(false);
+      });
+      return function () { cancelado = true; };
+    },
+    [props.latitude, props.longitude]
+  );
+
+  // A gravidade não é escolhida pelo usuário: o servidor calcula pela categoria
+  // e pela descrição. Aqui só mostramos a estimativa pra ele saber o que vai.
+  useEffect(
+    function () {
+      if (!categoriaSelecionada) {
+        setGravidadeEstimada(null);
+        return;
+      }
+      let cancelado = false;
+      const temporizador = setTimeout(function () {
+        api
+          .post<{ gravidade: Gravidade }>('/ocorrencias/estimar-gravidade', {
+            categoriaId: Number(categoriaSelecionada),
+            descricao: (descricaoAtual || '').trim() || undefined,
+          })
+          .then((resposta) => { if (!cancelado) setGravidadeEstimada(resposta.data.gravidade); })
+          .catch(() => { if (!cancelado) setGravidadeEstimada(null); });
+      }, 400);
+      return function () {
+        cancelado = true;
+        clearTimeout(temporizador);
+      };
+    },
+    [categoriaSelecionada, descricaoAtual]
+  );
 
   function selecionarFoto(evento: React.ChangeEvent<HTMLInputElement>) {
     const arquivo = evento.target.files?.[0];
@@ -86,6 +131,8 @@ export function FormularioOcorrencia(props: FormularioOcorrenciaProps) {
       setSugerindo(true);
       const formData = new FormData();
       formData.append('imagem', foto);
+      const textoDigitado = (descricaoAtual || '').trim();
+      if (textoDigitado) formData.append('descricao', textoDigitado);
       api
         .post('/ocorrencias/sugerir-categoria-imagem', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
         .then((resposta) => { if (!cancelado) aplicarSugestao(resposta.data); })
@@ -124,7 +171,6 @@ export function FormularioOcorrencia(props: FormularioOcorrenciaProps) {
     try {
       const resposta = await api.post<{ mensagem: string; ocorrencia: Ocorrencia }>('/ocorrencias', {
         categoriaId: Number(campos.categoriaId),
-        gravidade: campos.gravidade,
         descricao: campos.descricao?.trim() || undefined,
         latitude: props.latitude,
         longitude: props.longitude,
@@ -156,9 +202,6 @@ export function FormularioOcorrencia(props: FormularioOcorrenciaProps) {
     }
   }
 
-  const categoriaSelecionada = watch('categoriaId');
-  const gravidadeSelecionada = watch('gravidade');
-
   return (
     <Modal
       aoFechar={props.aoFechar}
@@ -168,9 +211,17 @@ export function FormularioOcorrencia(props: FormularioOcorrenciaProps) {
       bloquearFechamento={enviando}
       className="dm-ocorrencia-modal"
     >
-      <p className="dm-form-ocorrencia__coord dm-mono">
-        {props.latitude.toFixed(5)}, {props.longitude.toFixed(5)}
-      </p>
+      <div className="dm-form-ocorrencia__local">
+        <FiMapPin size={15} aria-hidden="true" />
+        <div>
+          <strong>
+            {endereco?.texto || (buscandoEndereco ? 'Buscando endereço…' : 'Endereço não encontrado')}
+          </strong>
+          <span className="dm-mono">
+            {props.latitude.toFixed(5)}, {props.longitude.toFixed(5)}
+          </span>
+        </div>
+      </div>
 
       <form className="dm-form-ocorrencia" onSubmit={handleSubmit(enviar)} noValidate>
         <div className="dm-campo-grupo">
@@ -262,25 +313,18 @@ export function FormularioOcorrencia(props: FormularioOcorrenciaProps) {
           )}
         </div>
 
-        <fieldset className="dm-campo-grupo dm-form-ocorrencia__fieldset">
-          <legend className="dm-rotulo">Gravidade</legend>
-          <div className="dm-form-ocorrencia__gravidades">
-            {ORDEM_GRAVIDADE.map((g) => (
-              <label
-                key={g}
-                className={`dm-form-ocorrencia__gravidade dm-form-ocorrencia__gravidade--${g}${
-                  gravidadeSelecionada === g ? ' dm-form-ocorrencia__gravidade--ativa' : ''
-                }`}
-              >
-                <input type="radio" value={g} {...register('gravidade')} className="dm-visually-hidden" />
-                <span className="dm-form-ocorrencia__gravidade-caixa">
-                  <span className="dm-severidade__ponto" aria-hidden="true" />
-                  {ROTULO_GRAVIDADE[g]}
-                </span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
+        <div className="dm-form-ocorrencia__gravidade-auto" aria-live="polite">
+          <span className="dm-rotulo">Gravidade</span>
+          {gravidadeEstimada ? (
+            <span className={`dm-severidade dm-severidade--${gravidadeEstimada}`}>
+              <span className="dm-severidade__ponto" aria-hidden="true" />
+              {ROTULO_GRAVIDADE[gravidadeEstimada]}
+            </span>
+          ) : (
+            <span className="dm-form-ocorrencia__gravidade-vazia">escolha a categoria</span>
+          )}
+          <small>Definida automaticamente pela categoria e pela descrição.</small>
+        </div>
 
         <label className="dm-form-ocorrencia__anonimo">
           <span className="dm-form-ocorrencia__anonimo-texto">

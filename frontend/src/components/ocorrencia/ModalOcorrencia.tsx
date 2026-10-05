@@ -4,6 +4,8 @@ import { FiCheck, FiHeart, FiShare2, FiAlertTriangle, FiImage } from 'react-icon
 import './ocorrencia.css';
 import { Modal } from '../comum/Modal';
 import { api, resolverUrlUpload } from '../../services/api';
+import { buscarEndereco, type Endereco } from '../../services/geo';
+import { Esqueleto } from '../comum/Esqueleto';
 import { ROTULO_GRAVIDADE, ROTULO_STATUS } from '../../theme/rotulos';
 import { obterIconeCategoria } from '../../theme/iconesCategorias';
 import { useAuth } from '../../contexts/AuthContext';
@@ -57,6 +59,23 @@ export function ModalOcorrencia(props: ModalOcorrenciaProps) {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },
     [props.ocorrenciaId]
+  );
+
+  // Rua/bairro/cidade da ocorrência (as coordenadas ficam como detalhe).
+  const [endereco, setEndereco] = useState<Endereco | null>(null);
+  useEffect(
+    function () {
+      if (!ocorrencia) return;
+      const lat = Number(ocorrencia.latitude);
+      const lng = Number(ocorrencia.longitude);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+      let cancelado = false;
+      buscarEndereco(lat, lng).then(function (resultado) {
+        if (!cancelado) setEndereco(resultado);
+      });
+      return function () { cancelado = true; };
+    },
+    [ocorrencia?.latitude, ocorrencia?.longitude]
   );
 
   // ESC, clique fora e trava de scroll ficam a cargo do <Modal>.
@@ -176,9 +195,14 @@ export function ModalOcorrencia(props: ModalOcorrenciaProps) {
   if (carregando || !ocorrencia) {
     return (
       <Modal aoFechar={props.aoFechar} largura={440} ariaLabel="Carregando ocorrência" className="dm-ocorrencia-modal">
-        <div className="dm-ocorrencia__carregando" role="status">
-          <span className="dm-ocorrencia__spinner" aria-hidden="true" />
-          Carregando…
+        <div className="dm-ocorrencia__esqueleto" role="status" aria-busy="true">
+          <span className="dm-visually-hidden">Carregando ocorrência…</span>
+          <Esqueleto altura={150} raio={14} />
+          <Esqueleto largura="55%" altura={26} />
+          <Esqueleto altura={14} />
+          <Esqueleto altura={14} />
+          <Esqueleto largura="70%" altura={14} />
+          <Esqueleto altura={48} raio={12} style={{ marginTop: 6 }} />
         </div>
       </Modal>
     );
@@ -237,10 +261,21 @@ export function ModalOcorrencia(props: ModalOcorrenciaProps) {
           </dd>
         </div>
         {Number.isFinite(latitude) && Number.isFinite(longitude) && (
-          <div className="dm-ocorrencia__linha">
+          <div className="dm-ocorrencia__linha dm-ocorrencia__linha--local">
             <dt>Local</dt>
-            <dd className="dm-mono">
-              {latitude.toFixed(4)}, {longitude.toFixed(4)}
+            <dd>
+              {endereco?.texto ? (
+                <>
+                  <span className="dm-ocorrencia__endereco">{endereco.texto}</span>
+                  <span className="dm-mono dm-ocorrencia__coordenadas">
+                    {latitude.toFixed(4)}, {longitude.toFixed(4)}
+                  </span>
+                </>
+              ) : (
+                <span className="dm-mono">
+                  {latitude.toFixed(4)}, {longitude.toFixed(4)}
+                </span>
+              )}
             </dd>
           </div>
         )}

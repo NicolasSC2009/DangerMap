@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiSettings } from 'react-icons/fi';
+import { FiSettings, FiTrash2 } from 'react-icons/fi';
 import { LayoutPadrao } from '../../components/comum/LayoutPadrao';
 import { HeroPerfil, LinhaInfoPerfil, EstatisticasPerfil, EstadoPerfil } from '../../components/perfil/HeroPerfil';
 import { HistoricoContribuicoes } from '../../components/perfil/HistoricoContribuicoes';
@@ -42,7 +42,7 @@ export function PaginaPerfilProprio() {
         usuarioId={usuario.id}
         nome={conta.nome}
         dataCadastro={conta.data_cadastro}
-        papel={conta.tipo_usuario === 'admin' ? 'Administrador' : 'Cidadão'}
+        papel={conta.tipo_usuario === 'admin' ? 'Administrador' : 'Usuário'}
         eyebrow="Resumo da conta"
         editavel
       >
@@ -59,7 +59,7 @@ export function PaginaPerfilProprio() {
           <LinhaInfoPerfil rotulo="Nome completo">{conta.nome}</LinhaInfoPerfil>
           <LinhaInfoPerfil rotulo="E-mail">{conta.email}</LinhaInfoPerfil>
           <LinhaInfoPerfil rotulo="Tipo de conta">
-            {conta.tipo_usuario === 'admin' ? 'Administrador' : 'Cidadão'}
+            {conta.tipo_usuario === 'admin' ? 'Administrador' : 'Usuário'}
           </LinhaInfoPerfil>
           <LinhaInfoPerfil rotulo="Membro desde">{membroDesde}</LinhaInfoPerfil>
         </div>
@@ -72,8 +72,14 @@ export function PaginaPerfilProprio() {
             <FiSettings size={14} aria-hidden="true" />
             Configurações
           </Link>
-          <button type="button" className="dm-btn dm-btn--perigo" onClick={() => setModal('excluir')}>
-            <span>Excluir conta</span>
+          <button
+            type="button"
+            className="dm-btn dm-btn--perigo dm-perfil-acoes__icone-perigo"
+            onClick={() => setModal('excluir')}
+            aria-label="Excluir conta"
+            title="Excluir conta"
+          >
+            <FiTrash2 size={17} aria-hidden="true" />
           </button>
         </div>
       </HeroPerfil>

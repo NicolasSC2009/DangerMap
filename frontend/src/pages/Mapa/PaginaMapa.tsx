@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { FiPlus } from 'react-icons/fi';
 import { Mapa, lerUltimaVistaMapa } from '../../components/mapa/Mapa';
 import { Navbar } from '../../components/navbar/Navbar';
 import { LogoCanto } from '../../components/comum/LogoCanto';
@@ -8,15 +7,29 @@ import { ModalOcorrencia } from '../../components/ocorrencia/ModalOcorrencia';
 import { FormularioOcorrencia } from '../../components/ocorrencia/FormularioOcorrencia';
 import { usePreferencias } from '../../contexts/PreferenciasContext';
 import { api } from '../../services/api';
+import { pontoDentroDoBrasil } from '../../services/geo';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'react-toastify';
 import type { ClusterOcorrencia } from '@shared/types';
 
-const LIMITES_BRASIL = { latMin: -34, latMax: 6, lngMin: -74, lngMax: -28 };
-
-function dentroDoBrasil(lat: number, lng: number): boolean {
-  return lat >= LIMITES_BRASIL.latMin && lat <= LIMITES_BRASIL.latMax && lng >= LIMITES_BRASIL.lngMin && lng <= LIMITES_BRASIL.lngMax;
+// Pino de mapa com um "+" dentro: deixa claro que o botão marca um ponto novo.
+function IconePinMais() {
+  return (
+    <svg className="dm-fab__icone" width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z"
+        fill="currentColor"
+        fillOpacity="0.18"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path d="M12 6.8v6.4M8.8 10h6.4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
 }
+
+const MENSAGEM_FORA_DO_BRASIL = 'O DangerMap só aceita ocorrências dentro do território brasileiro.';
 
 const LATITUDE_REFERENCIA_BRASIL = -15;
 const PIXELS_ALVO_AGRUPAMENTO = 45;
@@ -91,18 +104,24 @@ export function PaginaMapa() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Abre o formulário só se o ponto estiver mesmo dentro do Brasil (fronteira
+  // real, conferida no servidor) — vale pra qualquer tipo de conta, inclusive admin.
+  async function abrirFormularioSeDentroDoBrasil(lat: number, lng: number) {
+    if (!(await pontoDentroDoBrasil(lat, lng))) {
+      toast.warn(MENSAGEM_FORA_DO_BRASIL);
+      return;
+    }
+    setPontoNovaOcorrencia({ lat, lng });
+  }
+
   function tratarCliqueNoMapa(lat: number, lng: number) {
     if (!autenticado) {
       toast.info('Entre na sua conta para registrar uma ocorrência.');
       navegar('/entrar');
       return;
     }
-    if (!dentroDoBrasil(lat, lng)) {
-      toast.warn('O DangerMap só aceita ocorrências dentro do território brasileiro.');
-      return;
-    }
     if (ehAdmin) {
-      setPontoNovaOcorrencia({ lat, lng });
+      void abrirFormularioSeDentroDoBrasil(lat, lng);
       return;
     }
     if (!navigator.geolocation) {
@@ -115,7 +134,7 @@ export function PaginaMapa() {
         toast.warn(`Você só pode registrar ocorrências a até ${RAIO_MAXIMO_CIDADAO_METROS / 1000} km da sua localização atual.`);
         return;
       }
-      setPontoNovaOcorrencia({ lat, lng });
+      void abrirFormularioSeDentroDoBrasil(lat, lng);
     }, tratarErroGeolocalizacao);
   }
 
@@ -143,13 +162,7 @@ export function PaginaMapa() {
     }
     navigator.geolocation.getCurrentPosition(
       (posicao) => {
-        const lat = posicao.coords.latitude;
-        const lng = posicao.coords.longitude;
-        if (!dentroDoBrasil(lat, lng)) {
-          toast.warn('O DangerMap só aceita ocorrências dentro do território brasileiro.');
-          return;
-        }
-        setPontoNovaOcorrencia({ lat, lng });
+        void abrirFormularioSeDentroDoBrasil(posicao.coords.latitude, posicao.coords.longitude);
       },
       tratarErroGeolocalizacao
     );
@@ -176,7 +189,8 @@ export function PaginaMapa() {
         title="Registrar nova ocorrência"
         className="dm-fab"
       >
-        <FiPlus size={26} aria-hidden="true" />
+        <IconePinMais />
+        <span className="dm-fab__rotulo">Registrar ocorrência</span>
       </button>
 
       {ocorrenciaSelecionadaId !== null && (

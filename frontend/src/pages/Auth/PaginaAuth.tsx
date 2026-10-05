@@ -208,7 +208,7 @@ export function PaginaAuth() {
                     <CampoSenha
                       id="login-senha"
                       className="dm-campo"
-                      placeholder="••••••••"
+                      autoComplete="current-password"
                       registro={formLogin.register('senha', { required: 'Informe sua senha.' })}
                     />
                     {errosLogin.senha && <span className="dm-erro" role="alert">{errosLogin.senha.message}</span>}

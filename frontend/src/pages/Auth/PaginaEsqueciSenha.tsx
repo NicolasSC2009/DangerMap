@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
-import { FiMail } from 'react-icons/fi';
+import { FiMail, FiCheckCircle } from 'react-icons/fi';
 import { api } from '../../services/api';
 import { CampoSenha } from '../../components/comum/CampoSenha';
 import { RegrasSenha } from '../../components/comum/RegrasSenha';
@@ -15,41 +15,109 @@ interface CamposEtapa1 {
 }
 interface CamposEtapa2 {
   token: string;
+}
+interface CamposEtapa3 {
   novaSenha: string;
 }
 
+type Etapa = 1 | 2 | 3;
+
+const ESPERA_REENVIO_SEGUNDOS = 30;
+
+const TEXTOS: Record<Etapa, { eyebrow: string; titulo: string; subtitulo: string }> = {
+  1: {
+    eyebrow: 'Recuperar acesso',
+    titulo: 'Esqueceu a senha?',
+    subtitulo: 'Informe o e-mail da sua conta e enviaremos um código de recuperação.',
+  },
+  2: {
+    eyebrow: 'Confirmar código',
+    titulo: 'Digite o código',
+    subtitulo: 'Enviamos um código de 6 dígitos para o seu e-mail. Ele vale por 15 minutos.',
+  },
+  3: {
+    eyebrow: 'Definir nova senha',
+    titulo: 'Crie a nova senha',
+    subtitulo: 'Código confirmado. Agora escolha uma senha forte para a sua conta.',
+  },
+};
+
 // Mesma casca da PaginaAuth (painel eggshell + acento verde), sem carrossel.
+// Fluxo em 3 etapas: e-mail → confirmar o código recebido → definir a senha.
 export function PaginaEsqueciSenha() {
   const navegar = useNavigate();
   const local = useLocation();
   const emailInicial = (local.state as { email?: string } | null)?.email || '';
-  const [etapa, setEtapa] = useState<1 | 2>(1);
+  const [etapa, setEtapa] = useState<Etapa>(1);
   const [emailEnviado, setEmailEnviado] = useState('');
+  const [codigoConfirmado, setCodigoConfirmado] = useState('');
   const [enviando, setEnviando] = useState(false);
+  const [segundosParaReenviar, setSegundosParaReenviar] = useState(0);
   const formEtapa1 = useForm<CamposEtapa1>({ defaultValues: { email: emailInicial } });
   const formEtapa2 = useForm<CamposEtapa2>({ mode: 'onTouched' });
-  const novaSenha = formEtapa2.watch('novaSenha');
+  const formEtapa3 = useForm<CamposEtapa3>({ mode: 'onTouched' });
+  const novaSenha = formEtapa3.watch('novaSenha');
   const erros1 = formEtapa1.formState.errors;
   const erros2 = formEtapa2.formState.errors;
+  const erros3 = formEtapa3.formState.errors;
+  const textos = TEXTOS[etapa];
 
-  async function solicitarCodigo(campos: CamposEtapa1) {
+  useEffect(
+    function () {
+      if (segundosParaReenviar <= 0) return;
+      const t = window.setTimeout(() => setSegundosParaReenviar((s) => s - 1), 1000);
+      return () => window.clearTimeout(t);
+    },
+    [segundosParaReenviar]
+  );
+
+  async function enviarCodigo(email: string): Promise<boolean> {
     setEnviando(true);
     try {
-      const resposta = await api.post('/auth/esqueci-senha', campos);
+      const resposta = await api.post('/auth/esqueci-senha', { email });
       toast.info(resposta.data?.mensagem || 'Se o e-mail estiver cadastrado, um código foi enviado.');
-      setEmailEnviado(campos.email.trim());
-      setEtapa(2);
-    } catch {
-      toast.error('Não foi possível processar a solicitação agora.');
+      setEmailEnviado(email);
+      setSegundosParaReenviar(ESPERA_REENVIO_SEGUNDOS);
+      return true;
+    } catch (erro: any) {
+      toast.error(erro?.response?.data?.error || 'Não foi possível processar a solicitação agora.');
+      return false;
     } finally {
       setEnviando(false);
     }
   }
 
-  async function redefinirSenha(campos: CamposEtapa2) {
+  async function solicitarCodigo(campos: CamposEtapa1) {
+    if (await enviarCodigo(campos.email.trim())) {
+      formEtapa2.reset();
+      setEtapa(2);
+    }
+  }
+
+  async function reenviarCodigo() {
+    if (segundosParaReenviar > 0 || enviando) return;
+    await enviarCodigo(emailEnviado);
+  }
+
+  async function confirmarCodigo(campos: CamposEtapa2) {
     setEnviando(true);
     try {
-      await api.post('/auth/resetar-senha', { token: campos.token.trim(), novaSenha: campos.novaSenha });
+      const token = campos.token.trim();
+      await api.post('/auth/verificar-codigo', { email: emailEnviado, token });
+      setCodigoConfirmado(token);
+      toast.success('Código confirmado!');
+      setEtapa(3);
+    } catch (erro: any) {
+      toast.error(erro?.response?.data?.error || 'Código inválido ou expirado.');
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  async function redefinirSenha(campos: CamposEtapa3) {
+    setEnviando(true);
+    try {
+      await api.post('/auth/resetar-senha', { email: emailEnviado, token: codigoConfirmado, novaSenha: campos.novaSenha });
       toast.success('Senha alterada! Faça login com a nova senha.');
       navegar('/entrar');
     } catch (erro: any) {
@@ -59,8 +127,10 @@ export function PaginaEsqueciSenha() {
     }
   }
 
-  function voltarParaEtapa1() {
+  function trocarEmail() {
     formEtapa2.reset();
+    formEtapa3.reset();
+    setCodigoConfirmado('');
     setEtapa(1);
   }
 
@@ -75,24 +145,21 @@ export function PaginaEsqueciSenha() {
             <div className="dm-auth-panel-inner dm-auth-entrando" key={etapa}>
               <span className="dm-eyebrow">
                 <span className="dm-eyebrow__marca" aria-hidden="true" />
-                {etapa === 1 ? 'Recuperar acesso' : 'Definir nova senha'}
+                {textos.eyebrow}
               </span>
-              <h1>{etapa === 1 ? 'Esqueceu a senha?' : 'Digite o código'}</h1>
-              <p className="dm-auth-subtitle">
-                {etapa === 1
-                  ? 'Informe o e-mail da sua conta e enviaremos um código de recuperação.'
-                  : 'Enviamos um código de 6 dígitos para o seu e-mail. Ele vale por 15 minutos.'}
-              </p>
+              <h1>{textos.titulo}</h1>
+              <p className="dm-auth-subtitle">{textos.subtitulo}</p>
 
-              <div className="dm-auth-etapas" aria-label={`Etapa ${etapa} de 2`}>
+              <div className="dm-auth-etapas" aria-label={`Etapa ${etapa} de 3`}>
                 <span className="dm-auth-etapas__barra" aria-hidden="true">
                   <span data-ativa="true" />
-                  <span data-ativa={etapa === 2} />
+                  <span data-ativa={etapa >= 2} />
+                  <span data-ativa={etapa >= 3} />
                 </span>
-                Etapa {etapa} de 2
+                Etapa {etapa} de 3
               </div>
 
-              {etapa === 1 ? (
+              {etapa === 1 && (
                 <form className="dm-auth-form" onSubmit={formEtapa1.handleSubmit(solicitarCodigo)} noValidate>
                   <div className="dm-campo-grupo">
                     <label className="dm-rotulo" htmlFor="recuperar-email">E-mail</label>
@@ -115,8 +182,10 @@ export function PaginaEsqueciSenha() {
                     <span>{enviando ? 'Enviando…' : 'Enviar código'}</span>
                   </button>
                 </form>
-              ) : (
-                <form className="dm-auth-form" onSubmit={formEtapa2.handleSubmit(redefinirSenha)} noValidate>
+              )}
+
+              {etapa === 2 && (
+                <form className="dm-auth-form" onSubmit={formEtapa2.handleSubmit(confirmarCodigo)} noValidate>
                   <div className="dm-auth-aviso">
                     <FiMail size={15} aria-hidden="true" />
                     <span>
@@ -142,19 +211,33 @@ export function PaginaEsqueciSenha() {
                     />
                     {erros2.token && <span className="dm-erro" role="alert">{erros2.token.message}</span>}
                   </div>
+                  <button type="submit" disabled={enviando} className="dm-btn dm-btn--primario dm-btn--bloco">
+                    <span>{enviando ? 'Confirmando…' : 'Confirmar código'}</span>
+                  </button>
+                </form>
+              )}
+
+              {etapa === 3 && (
+                <form className="dm-auth-form" onSubmit={formEtapa3.handleSubmit(redefinirSenha)} noValidate>
+                  <div className="dm-auth-aviso">
+                    <FiCheckCircle size={15} aria-hidden="true" />
+                    <span>
+                      Código confirmado para <strong>{emailEnviado}</strong>.
+                    </span>
+                  </div>
                   <div className="dm-campo-grupo">
                     <label className="dm-rotulo" htmlFor="recuperar-senha">Nova senha</label>
                     <CampoSenha
                       id="recuperar-senha"
                       className="dm-campo"
-                      placeholder="Crie uma nova senha"
-                      registro={formEtapa2.register('novaSenha', {
+                      autoComplete="new-password"
+                      registro={formEtapa3.register('novaSenha', {
                         required: 'Crie uma nova senha.',
                         validate: validarSenhaForte,
                       })}
                     />
                     <RegrasSenha senha={novaSenha} />
-                    {erros2.novaSenha && <span className="dm-erro" role="alert">{erros2.novaSenha.message}</span>}
+                    {erros3.novaSenha && <span className="dm-erro" role="alert">{erros3.novaSenha.message}</span>}
                   </div>
                   <button type="submit" disabled={enviando} className="dm-btn dm-btn--primario dm-btn--bloco">
                     <span>{enviando ? 'Salvando…' : 'Redefinir senha'}</span>
@@ -164,12 +247,25 @@ export function PaginaEsqueciSenha() {
 
               <div className="dm-auth-form-footer">
                 {etapa === 2 && (
-                  <p>
-                    Não recebeu?{' '}
-                    <button type="button" className="dm-auth-link" onClick={voltarParaEtapa1}>
-                      Enviar novamente
-                    </button>
-                  </p>
+                  <>
+                    <p>
+                      Não recebeu?{' '}
+                      <button
+                        type="button"
+                        className="dm-auth-link"
+                        onClick={reenviarCodigo}
+                        disabled={segundosParaReenviar > 0 || enviando}
+                      >
+                        {segundosParaReenviar > 0 ? `Enviar novamente (${segundosParaReenviar}s)` : 'Enviar novamente'}
+                      </button>
+                    </p>
+                    <p>
+                      E-mail errado?{' '}
+                      <button type="button" className="dm-auth-link" onClick={trocarEmail}>
+                        Trocar e-mail
+                      </button>
+                    </p>
+                  </>
                 )}
                 <p>
                   Lembrou a senha?{' '}
@@ -182,7 +278,7 @@ export function PaginaEsqueciSenha() {
           </div>
           <PainelAcento
             titulo="Recuperar acesso"
-            texto="Em dois passos você define uma nova senha e volta a mapear os riscos da sua região."
+            texto="Em três passos você confirma seu e-mail, define uma nova senha e volta a mapear os riscos da sua região."
           />
         </div>
       </div>

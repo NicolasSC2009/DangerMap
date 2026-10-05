@@ -9,6 +9,7 @@ interface CampoSenhaProps {
   className?: string;
   style?: React.CSSProperties;
   id?: string;
+  autoComplete?: string;
 }
 
 export function CampoSenha(props: CampoSenhaProps) {
@@ -20,6 +21,7 @@ export function CampoSenha(props: CampoSenhaProps) {
         {...props.registro}
         id={props.id}
         type={visivel ? 'text' : 'password'}
+        autoComplete={props.autoComplete}
         placeholder={props.placeholder}
         className={props.className}
         // estilo legado vindo de quem chama: garante espaço para o botão do olho

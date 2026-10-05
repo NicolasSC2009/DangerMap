@@ -14,7 +14,6 @@ export type IdSecaoAjuda =
   | 'categorias'
   | 'faq'
   | 'moderacao'
-  | 'sobre'
   | 'contato';
 
 export const SECOES_AJUDA: Array<{ id: IdSecaoAjuda; rotulo: string }> = [
@@ -23,7 +22,6 @@ export const SECOES_AJUDA: Array<{ id: IdSecaoAjuda; rotulo: string }> = [
   { id: 'categorias', rotulo: 'Categorias' },
   { id: 'faq', rotulo: 'Perguntas frequentes' },
   { id: 'moderacao', rotulo: 'Moderação' },
-  { id: 'sobre', rotulo: 'Sobre' },
   { id: 'contato', rotulo: 'Contato' },
 ];
 
@@ -49,7 +47,7 @@ export const PASSOS: PassoAjuda[] = [
   {
     titulo: 'Registre a ocorrência',
     texto:
-      'Toque no ponto exato do mapa e escolha a categoria e a gravidade. Foto e descrição são opcionais, e você pode registrar de forma anônima.',
+      'Toque no ponto exato do mapa e escolha a categoria — a gravidade é definida automaticamente. Foto e descrição são opcionais, e você pode registrar de forma anônima.',
     acao: { rotulo: 'Registrar agora', para: '/' },
   },
   {
@@ -215,9 +213,3 @@ export const REGRAS_CONVIVENCIA: string[] = [
   'Evite duplicatas: confirme a ocorrência existente em vez de criar outra.',
   'Em emergências, ligue primeiro para 190, 192 ou 193 — o DangerMap não substitui os serviços públicos.',
 ];
-
-export const TEXTO_SOBRE =
-  'O DangerMap é uma plataforma cidadã de mapeamento colaborativo de perigos urbanos: buracos, alagamentos, iluminação, sinalização danificada e focos de incêndio. Qualquer pessoa pode reportar um problema, confirmar ocorrências de terceiros e acompanhar a resolução pelo mapa.';
-
-export const TEXTO_MISSAO =
-  'Transformar o que cada pessoa vê na rua em informação útil para todos — e dar visibilidade aos riscos que precisam de solução.';

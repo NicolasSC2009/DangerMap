@@ -14,7 +14,6 @@ import {
   FiPlusCircle,
   FiSearch,
   FiShield,
-  FiSmartphone,
   FiUserPlus,
   FiX,
 } from 'react-icons/fi';
@@ -33,9 +32,6 @@ import {
   PASSOS,
   REGRAS_CONVIVENCIA,
   SECOES_AJUDA,
-  TEXTO_MISSAO,
-  TEXTO_SOBRE,
-  ULTIMA_ATUALIZACAO,
   URL_ISSUES,
   URL_REPOSITORIO,
   type IdSecaoAjuda,
@@ -122,7 +118,7 @@ export function PaginaAjuda() {
     [termo]
   );
 
-  // Deep-link: /ajuda#faq, /ajuda#sobre (Navbar) etc.
+  // Deep-link: /ajuda#faq, /ajuda#legenda (Navbar) etc.
   useEffect(
     function () {
       if (!local.hash) window.scrollTo(0, 0);
@@ -537,35 +533,10 @@ export function PaginaAjuda() {
             </ul>
           </section>
 
-          {/* ---------- SOBRE ---------- */}
-          <section id="sobre" className="dm-ajuda-secao">
-            <CabecalhoSecao numero="06" Icone={FiMapPin} titulo="Sobre o DangerMap" />
-            <div className="dm-ajuda-sobre">
-              <div className="dm-ajuda-sobre__texto">
-                <p>{TEXTO_SOBRE}</p>
-                <p>
-                  O projeto é de código aberto: o mapa, a moderação e os alertas são construídos em público e qualquer
-                  pessoa pode sugerir melhorias.
-                </p>
-              </div>
-              <aside className="dm-ajuda-cartao-verde">
-                <div className="dm-eyebrow dm-eyebrow--sobre-escuro">
-                  <span className="dm-eyebrow__marca" aria-hidden="true" />
-                  Nossa missão
-                </div>
-                <p className="dm-ajuda-cartao-verde__texto">{TEXTO_MISSAO}</p>
-                <Link to="/baixar-app" className="dm-btn dm-btn--primario dm-btn--pequeno">
-                  <FiSmartphone size={14} aria-hidden="true" />
-                  <span>Leve no celular</span>
-                </Link>
-              </aside>
-            </div>
-          </section>
-
           {/* ---------- CONTATO ---------- */}
           <section id="contato" className="dm-ajuda-secao">
             <CabecalhoSecao
-              numero="07"
+              numero="06"
               Icone={FiGithub}
               titulo="Contato"
               descricao="Não achou sua resposta? Fale com quem mantém o projeto."
@@ -603,16 +574,6 @@ export function PaginaAjuda() {
           </section>
         </div>
       </div>
-
-      {/* ---------- RODAPÉ ---------- */}
-      <footer className="dm-ajuda-rodape">
-        <span className="dm-mono">Última atualização: {ULTIMA_ATUALIZACAO}</span>
-        <nav aria-label="Links úteis">
-          {autenticado && <Link to="/configuracoes">Configurações</Link>}
-          <Link to="/baixar-app">Baixar o app</Link>
-          <Link to="/">Voltar ao mapa</Link>
-        </nav>
-      </footer>
     </LayoutPadrao>
   );
 }

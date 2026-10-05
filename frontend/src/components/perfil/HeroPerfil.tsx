@@ -4,6 +4,7 @@ import { FiEdit2 } from 'react-icons/fi';
 import { iniciais } from '../../services/avatarLocal';
 import { useAvatarLocal } from '../../hooks/useAvatarLocal';
 import { ModalAjustarFoto, lerImagemComoDataUrl } from './ModalAjustarFoto';
+import { EsqueletoPerfilBloco } from '../comum/Esqueleto';
 import '../../pages/Perfil/perfil.css';
 
 interface HeroPerfilProps {
@@ -138,9 +139,9 @@ export function EstadoPerfil(props: {
 }) {
   if (props.tipo === 'carregando') {
     return (
-      <div className="dm-perfil-estado" role="status">
-        <span className="dm-spinner" aria-hidden="true" />
-        <span className="dm-perfil-estado__rotulo">Carregando perfil…</span>
+      <div role="status" aria-busy="true">
+        <span className="dm-visually-hidden">Carregando perfil…</span>
+        <EsqueletoPerfilBloco />
       </div>
     );
   }

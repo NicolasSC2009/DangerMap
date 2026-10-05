@@ -89,7 +89,7 @@ export function Navbar(props: NavbarProps) {
     { Icone: FiFolder, rotulo: 'Categorias de perigo', aoClicar: () => setModalCategoriasAberto(true) },
     { Icone: FiSettings, rotulo: 'Configurações', aoClicar: () => navegar('/configuracoes') },
     { Icone: FiHelpCircle, rotulo: 'Ajuda', aoClicar: () => navegar('/ajuda') },
-    { Icone: FiInfo, rotulo: 'Sobre o DangerMap', aoClicar: () => navegar('/ajuda#sobre') },
+    { Icone: FiInfo, rotulo: 'Sobre o DangerMap', aoClicar: () => navegar('/sobre') },
     ...(ehAdmin ? [{ Icone: FiShield, rotulo: 'Painel administrativo', aoClicar: () => navegar('/admin') }] : []),
     { Icone: FiSmartphone, rotulo: 'Baixar o app', aoClicar: () => navegar('/baixar-app') },
   ];
@@ -178,7 +178,7 @@ export function Navbar(props: NavbarProps) {
                 <AvatarUsuario avatar={avatar} nome={usuario?.nome} className="dm-navbar-avatar--grande" />
                 <div className="dm-navbar-dropdown__identidade">
                   <strong>{usuario?.nome}</strong>
-                  <span>{ehAdmin ? 'Administrador' : 'Cidadão'}</span>
+                  <span>{ehAdmin ? 'Administrador' : 'Usuário'}</span>
                 </div>
               </>
             ) : (

@@ -338,10 +338,38 @@
   outline-offset: 3px;
 }
 
+.dm-fab__rotulo {
+  display: none;
+}
+
+.dm-fab__icone {
+  flex-shrink: 0;
+}
+
 @media (min-width: 641px) {
   .dm-fab {
     right: 24px;
     bottom: calc(28px + var(--dm-safe-b));
+  }
+}
+
+/* Desktop: botão em pílula com texto, bem mais fácil de achar que um "+" solto. */
+@media (min-width: 1025px) {
+  .dm-fab {
+    width: auto;
+    height: 60px;
+    gap: 10px;
+    padding: 0 26px 0 20px;
+    border-radius: 999px;
+  }
+
+  .dm-fab__rotulo {
+    display: inline;
+    font-family: var(--dm-fonte-corpo);
+    font-size: calc(15px * var(--dm-escala));
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
   }
 }
 

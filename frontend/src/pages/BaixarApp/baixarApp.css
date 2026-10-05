@@ -1,12 +1,12 @@
 /* Baixar o app (/baixar-app) — prefixo .dm-baixar-* (página clara) */
 
 .dm-baixar {
-  padding-bottom: 20px;
+  padding-bottom: 0;
 }
 
 .dm-baixar-hero {
   max-width: 680px;
-  margin-bottom: clamp(26px, 4vw, 40px);
+  margin-bottom: clamp(20px, 3vw, 30px);
 }
 
 .dm-baixar-hero h1 {
@@ -85,6 +85,14 @@
 
 .dm-baixar-card__planejado {
   margin-top: 4px;
+}
+
+/* Cards lado a lado: reserva 3 linhas pra descrição, assim o rótulo, a lista de
+   recursos e o botão ficam alinhados mesmo com textos de tamanhos diferentes. */
+@media (min-width: 900px) {
+  .dm-baixar-card > p {
+    min-height: calc(1.6em * 3);
+  }
 }
 
 .dm-baixar-card__recursos {
@@ -240,7 +248,7 @@
 /* ---------- nota final ---------- */
 
 .dm-baixar-nota {
-  margin-top: 28px;
+  margin-top: 18px;
   font-size: var(--dm-t-sm);
   line-height: 1.6;
   color: var(--dm-tinta-suave);

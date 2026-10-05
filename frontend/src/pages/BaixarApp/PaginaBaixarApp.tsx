@@ -93,12 +93,16 @@ export function PaginaBaixarApp() {
                 <span className="dm-baixar-card__icone" aria-hidden="true">
                   <p.Icone size={24} />
                 </span>
-                {!p.urlDownload && <span className="dm-pill dm-pill--aviso">Em desenvolvimento</span>}
+                {p.urlDownload ? (
+                  <span className="dm-pill dm-pill--sucesso">Disponível</span>
+                ) : (
+                  <span className="dm-pill dm-pill--aviso">Em desenvolvimento</span>
+                )}
               </div>
               <h2>{p.titulo}</h2>
               <span className="dm-baixar-card__tec">Feito com {p.tecnologia}</span>
               <p>{p.descricao}</p>
-              {!p.urlDownload && <span className="dm-baixar-card__planejado">Planejado</span>}
+              <span className="dm-baixar-card__planejado">{p.urlDownload ? 'Inclui' : 'Planejado'}</span>
               <ul className="dm-baixar-card__recursos">
                 {p.recursos.map((r) => (
                   <li key={r}>

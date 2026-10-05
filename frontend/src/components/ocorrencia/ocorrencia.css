@@ -170,6 +170,30 @@ a.dm-ocorrencia__imagem:hover img {
   overflow-wrap: anywhere;
 }
 
+.dm-ocorrencia__esqueleto {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 0 4px;
+}
+
+.dm-ocorrencia__linha--local {
+  align-items: flex-start;
+}
+
+.dm-ocorrencia__endereco {
+  display: block;
+  line-height: 1.35;
+}
+
+.dm-ocorrencia__coordenadas {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--dm-t-xs);
+  font-weight: 400;
+  color: var(--dm-tinta-suave);
+}
+
 .dm-ocorrencia__autor {
   color: var(--dm-titulo);
   text-decoration: underline;
@@ -292,8 +316,35 @@ a.dm-ocorrencia__imagem:hover img {
    FormularioOcorrencia
    ========================================================================= */
 
-.dm-form-ocorrencia__coord {
+.dm-form-ocorrencia__local {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
   margin: -2px 0 20px;
+  color: var(--dm-laranja-escuro);
+}
+
+.dm-form-ocorrencia__local svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.dm-form-ocorrencia__local > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.dm-form-ocorrencia__local strong {
+  font-size: var(--dm-t-sm);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--dm-titulo);
+  overflow-wrap: anywhere;
+}
+
+.dm-form-ocorrencia__local span {
   font-size: var(--dm-t-xs);
   color: var(--dm-tinta-suave);
   letter-spacing: 0.4px;
@@ -481,80 +532,34 @@ a.dm-ocorrencia__imagem:hover img {
   color: var(--dm-laranja);
 }
 
-/* gravidade */
+/* gravidade (automática, só informativa) */
 
-.dm-form-ocorrencia__gravidades {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.dm-form-ocorrencia__gravidade {
-  position: relative;
-  cursor: pointer;
-}
-
-.dm-form-ocorrencia__gravidade-caixa {
+.dm-form-ocorrencia__gravidade-auto {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 8px 6px;
-  border-radius: 10px;
-  border: 1.5px solid var(--dm-linha);
+  gap: 4px 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1.5px dashed var(--dm-linha);
   background: var(--dm-campo-fundo);
+}
+
+.dm-form-ocorrencia__gravidade-auto > .dm-rotulo {
+  margin: 0;
+}
+
+.dm-form-ocorrencia__gravidade-auto small {
+  flex-basis: 100%;
+  font-size: var(--dm-t-xs);
   color: var(--dm-tinta-suave);
+}
+
+.dm-form-ocorrencia__gravidade-vazia {
   font-size: var(--dm-t-sm);
-  font-weight: 700;
-  transition: border-color var(--dm-transicao), background var(--dm-transicao), color var(--dm-transicao);
+  color: var(--dm-tinta-suave);
+  font-style: italic;
 }
-
-.dm-form-ocorrencia__gravidade:hover .dm-form-ocorrencia__gravidade-caixa {
-  border-color: var(--dm-linha-forte);
-}
-
-.dm-form-ocorrencia__gravidade input:focus-visible + .dm-form-ocorrencia__gravidade-caixa {
-  outline: 2px solid var(--dm-laranja);
-  outline-offset: 2px;
-}
-
-.dm-form-ocorrencia__gravidade--baixo .dm-severidade__ponto {
-  background: var(--dm-verde-salada);
-}
-.dm-form-ocorrencia__gravidade--medio .dm-severidade__ponto {
-  background: var(--dm-laranja);
-}
-.dm-form-ocorrencia__gravidade--alto .dm-severidade__ponto {
-  background: var(--dm-vermelho);
-}
-
-.dm-form-ocorrencia__gravidade--ativa.dm-form-ocorrencia__gravidade--baixo .dm-form-ocorrencia__gravidade-caixa {
-  border-color: var(--dm-verde-salada);
-  background: rgba(140, 200, 80, 0.16);
-  color: #3d6b2e;
-}
-.dm-form-ocorrencia__gravidade--ativa.dm-form-ocorrencia__gravidade--medio .dm-form-ocorrencia__gravidade-caixa {
-  border-color: var(--dm-laranja);
-  background: rgba(255, 100, 0, 0.12);
-  color: var(--dm-laranja-escuro);
-}
-.dm-form-ocorrencia__gravidade--ativa.dm-form-ocorrencia__gravidade--alto .dm-form-ocorrencia__gravidade-caixa {
-  border-color: var(--dm-vermelho);
-  background: rgba(160, 38, 23, 0.1);
-  color: var(--dm-vermelho);
-}
-
-:root[data-tema='escuro'] .dm-form-ocorrencia__gravidade--ativa.dm-form-ocorrencia__gravidade--baixo .dm-form-ocorrencia__gravidade-caixa {
-  color: var(--dm-verde-salada);
-}
-:root[data-tema='escuro'] .dm-form-ocorrencia__gravidade--ativa.dm-form-ocorrencia__gravidade--medio .dm-form-ocorrencia__gravidade-caixa {
-  color: var(--dm-laranja);
-}
-:root[data-tema='escuro'] .dm-form-ocorrencia__gravidade--ativa.dm-form-ocorrencia__gravidade--alto .dm-form-ocorrencia__gravidade-caixa {
-  color: #e2644f;
-}
-
 /* anônimo */
 
 .dm-form-ocorrencia__anonimo {

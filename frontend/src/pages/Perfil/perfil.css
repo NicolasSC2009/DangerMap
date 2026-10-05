@@ -94,8 +94,14 @@
   transition: background var(--dm-transicao), transform var(--dm-transicao);
 }
 
+/* A cor de fundo do lápis é fixa de propósito: não muda no hover/foco/clique. */
+.dm-perfil-avatar__editar:hover,
+.dm-perfil-avatar__editar:focus-visible,
+.dm-perfil-avatar__editar:active {
+  background: var(--dm-laranja-escuro);
+}
+
 .dm-perfil-avatar__editar:hover {
-  background: var(--dm-laranja);
   transform: translateY(-1px);
 }
 
@@ -209,7 +215,19 @@
 .dm-perfil-acoes {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 12px;
+}
+
+/* Botão quadrado só com ícone (excluir conta), ao lado de Configurações. */
+.dm-perfil-acoes__icone-perigo {
+  width: 46px;
+  min-width: 46px;
+  height: 46px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 :root[data-tema="escuro"] .dm-perfil-info__linha {
@@ -578,6 +596,12 @@
 @media (max-width: 480px) {
   .dm-perfil-acoes .dm-btn {
     flex: 1 1 100%;
+  }
+  .dm-perfil-acoes .dm-perfil-acoes__icone-perigo {
+    flex: 0 0 46px;
+  }
+  .dm-perfil-acoes .dm-btn--ghost {
+    flex: 1 1 0;
   }
   .dm-historico__chips {
     flex-wrap: nowrap;

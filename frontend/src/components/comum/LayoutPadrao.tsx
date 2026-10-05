@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { FiArrowLeft } from 'react-icons/fi';
 import { Navbar } from '../navbar/Navbar';
+import { Rodape } from './Rodape';
 import logo from '../../assets/logo-dangermap.png';
 
 interface LayoutPadraoProps {
@@ -41,6 +42,8 @@ export function LayoutPadrao(props: LayoutPadraoProps) {
         )}
         {props.children}
       </main>
+
+      <Rodape />
     </div>
   );
 }

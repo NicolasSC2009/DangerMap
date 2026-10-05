@@ -5,6 +5,7 @@ import { FiUser } from 'react-icons/fi';
 import { ModalEditarDados } from '../../../components/conta/ModalEditarDados';
 import { ModalAjustarFoto, lerImagemComoDataUrl } from '../../../components/perfil/ModalAjustarFoto';
 import { useAvatarLocal } from '../../../hooks/useAvatarLocal';
+import { Esqueleto } from '../../../components/comum/Esqueleto';
 import { iniciais, removerAvatarLocal } from '../../../services/avatarLocal';
 import type { Usuario } from '@shared/types';
 import { LinhaConfig, SecaoConfig } from './SecaoConfig';
@@ -39,8 +40,18 @@ export function SecaoConta(props: SecaoContaProps) {
   return (
     <SecaoConfig id="conta" icone={FiUser} titulo="Conta" descricao="Seus dados de acesso e sua foto.">
       {!conta ? (
-        <div className="dm-config-carregando" role="status">
-          <span className="dm-spinner dm-spinner--claro" aria-hidden="true" /> Carregando dados da conta…
+        <div className="dm-config-carregando" role="status" aria-busy="true">
+          <span className="dm-visually-hidden">Carregando dados da conta…</span>
+          <div className="dm-config-esqueleto" aria-hidden="true">
+            <Esqueleto largura={72} altura={72} raio="50%" />
+            <div className="dm-config-esqueleto__texto">
+              <Esqueleto largura="40%" altura={16} />
+              <Esqueleto largura="64%" altura={12} />
+              <Esqueleto largura={120} altura={32} raio={10} />
+            </div>
+          </div>
+          <Esqueleto altura={52} raio={12} />
+          <Esqueleto altura={52} raio={12} />
         </div>
       ) : (
         <>
@@ -87,7 +98,7 @@ export function SecaoConta(props: SecaoContaProps) {
             </div>
             <div>
               <dt>Tipo de conta</dt>
-              <dd>{conta.tipo_usuario === 'admin' ? 'Administrador' : 'Cidadão'}</dd>
+              <dd>{conta.tipo_usuario === 'admin' ? 'Administrador' : 'Usuário'}</dd>
             </div>
             <div>
               <dt>Membro desde</dt>

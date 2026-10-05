@@ -1,0 +1,119 @@
+/* =========================================================================
+   Esqueletos de carregamento (components/comum/Esqueleto.tsx)
+   ========================================================================= */
+
+.dm-esqueleto {
+  display: block;
+  min-height: 1px;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    rgba(128, 128, 128, 0.14) 0%,
+    rgba(128, 128, 128, 0.28) 50%,
+    rgba(128, 128, 128, 0.14) 100%
+  );
+  background-size: 200% 100%;
+  animation: dm-esqueleto-brilho 1.3s ease-in-out infinite;
+}
+
+@keyframes dm-esqueleto-brilho {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.dm-esqueleto-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  width: 100%;
+}
+
+.dm-esqueleto-cartao {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px;
+  border: 1px solid var(--dm-linha);
+  border-radius: var(--dm-raio-md);
+  background: var(--dm-card);
+}
+
+.dm-esqueleto-pagina {
+  padding-top: 18px;
+  min-height: 55vh;
+}
+
+.dm-esqueleto-grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.dm-esqueleto-perfil {
+  display: grid;
+  grid-template-columns: minmax(0, 0.4fr) minmax(0, 0.6fr);
+  border-radius: var(--dm-raio-lg);
+  overflow: hidden;
+  border: 1px solid rgba(245, 235, 225, 0.12);
+}
+
+.dm-esqueleto-perfil__lado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 44px 24px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.dm-esqueleto-perfil__corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 32px;
+}
+
+.dm-esqueleto-linha-tres {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 860px) {
+  .dm-esqueleto-perfil {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* mapa */
+
+.dm-esqueleto-mapa {
+  position: fixed;
+  inset: 0;
+  background: var(--dm-verde-garrafa-fundo);
+}
+
+.dm-esqueleto-mapa__botoes {
+  position: absolute;
+  top: calc(18px + var(--dm-safe-t));
+  right: 18px;
+  display: flex;
+  gap: 12px;
+}
+
+.dm-esqueleto-mapa__fab {
+  position: absolute;
+  right: 20px;
+  bottom: calc(24px + var(--dm-safe-b));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dm-esqueleto {
+    animation: none;
+  }
+}

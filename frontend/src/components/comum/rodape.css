@@ -1,0 +1,118 @@
+/* =========================================================================
+   Rodapé (components/comum/Rodape.tsx) — páginas internas
+   ========================================================================= */
+
+.dm-rodape {
+  margin-top: clamp(20px, 2.5vw, 32px);
+  padding: clamp(20px, 2.4vw, 26px) 0 calc(12px + var(--dm-safe-b));
+  border-top: 1px solid var(--dm-linha);
+  font-size: var(--dm-t-sm);
+  color: var(--dm-tinta-suave);
+}
+
+.dm-pagina-escura .dm-rodape {
+  color: rgba(245, 235, 225, 0.62);
+  border-top-color: rgba(245, 235, 225, 0.14);
+}
+
+.dm-rodape__conteudo {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.4fr) repeat(2, minmax(0, 1fr));
+  gap: clamp(20px, 3.5vw, 44px);
+}
+
+/* Coluna com muitos links: duas colunas internas pra não alongar o rodapé. */
+.dm-rodape__coluna--dupla {
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  justify-content: start;
+  column-gap: clamp(18px, 3vw, 36px);
+  row-gap: 4px;
+  align-items: start;
+}
+
+.dm-rodape__coluna--dupla h2 {
+  grid-column: 1 / -1;
+}
+
+.dm-rodape__marca img {
+  display: block;
+  height: 30px;
+  width: auto;
+  margin-bottom: 12px;
+}
+
+.dm-rodape__marca p {
+  max-width: 34ch;
+  line-height: 1.55;
+}
+
+.dm-rodape__coluna {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.dm-rodape__coluna h2 {
+  margin: 0 0 6px;
+  font-family: var(--dm-fonte-mono);
+  font-size: var(--dm-t-xs);
+  font-weight: 500;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--dm-laranja-escuro);
+}
+
+.dm-pagina-escura .dm-rodape__coluna h2 {
+  color: var(--dm-laranja);
+}
+
+.dm-rodape__coluna a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--dm-transicao);
+}
+
+.dm-rodape__coluna a:hover {
+  color: var(--dm-laranja);
+}
+
+.dm-rodape__base {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px 24px;
+  margin-top: clamp(16px, 2vw, 20px);
+  padding-top: 12px;
+  border-top: 1px solid var(--dm-linha);
+  font-size: var(--dm-t-xs);
+}
+
+.dm-pagina-escura .dm-rodape__base {
+  border-top-color: rgba(245, 235, 225, 0.1);
+}
+
+@media (max-width: 860px) {
+  .dm-rodape__conteudo {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .dm-rodape__marca {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 520px) {
+  .dm-rodape__conteudo {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dm-rodape__base {
+    flex-direction: column;
+  }
+}
