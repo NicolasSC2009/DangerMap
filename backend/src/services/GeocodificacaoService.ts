@@ -15,6 +15,7 @@ export interface EnderecoResolvido {
 }
 
 const URL_NOMINATIM = 'https://nominatim.openstreetmap.org/reverse';
+const URL_NOMINATIM_BUSCA = 'https://nominatim.openstreetmap.org/search';
 const USER_AGENT = 'DangerMap/1.0 (projeto academico; mapa colaborativo de perigos urbanos)';
 const INTERVALO_ENTRE_REQUISICOES_MS = 1100;
 const TIMEOUT_MS = 8000;
@@ -57,8 +58,9 @@ function interpretar(json: any): EnderecoResolvido | null {
   return { ...base, texto: montarTexto(base) };
 }
 
-async function consultar(lat: number, lng: number): Promise<EnderecoResolvido | null> {
-  // Fila: garante o espaçamento mínimo mesmo com várias consultas ao mesmo tempo.
+// Fila: garante o espaçamento mínimo mesmo com várias consultas ao mesmo tempo
+// (busca e geocodificação reversa dividem a mesma cota do Nominatim).
+async function aguardarVez(): Promise<void> {
   const minhaVez = filaAteAgora.then(async function () {
     const espera = INTERVALO_ENTRE_REQUISICOES_MS - (Date.now() - ultimaRequisicaoEm);
     if (espera > 0) await esperar(espera);
@@ -66,6 +68,10 @@ async function consultar(lat: number, lng: number): Promise<EnderecoResolvido | 
   });
   filaAteAgora = minhaVez.catch(function () { /* a fila nunca quebra */ });
   await minhaVez;
+}
+
+async function consultar(lat: number, lng: number): Promise<EnderecoResolvido | null> {
+  await aguardarVez();
 
   const controle = new AbortController();
   const timeout = setTimeout(function () { controle.abort(); }, TIMEOUT_MS);
@@ -74,6 +80,52 @@ async function consultar(lat: number, lng: number): Promise<EnderecoResolvido | 
     const resposta = await fetch(url, { headers: { 'User-Agent': USER_AGENT }, signal: controle.signal });
     if (!resposta.ok) return null;
     return interpretar(await resposta.json());
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+export interface ResultadoBusca {
+  /** Nome curto do lugar (ex.: "Avenida Paulista"). */
+  nome: string;
+  /** Endereço completo no formato do Nominatim. */
+  texto: string;
+  latitude: number;
+  longitude: number;
+  /** [sul, norte, oeste, leste] (ordem do Nominatim) — usado pra enquadrar o mapa. */
+  limites: [number, number, number, number] | null;
+}
+
+const cacheBusca = new Map<string, { valor: ResultadoBusca[]; expiraEm: number }>();
+
+async function buscarNoNominatim(termo: string): Promise<ResultadoBusca[] | null> {
+  await aguardarVez();
+
+  const controle = new AbortController();
+  const timeout = setTimeout(function () { controle.abort(); }, TIMEOUT_MS);
+  try {
+    const url = `${URL_NOMINATIM_BUSCA}?format=jsonv2&addressdetails=0&limit=5&countrycodes=br&accept-language=pt-BR&q=${encodeURIComponent(termo)}`;
+    const resposta = await fetch(url, { headers: { 'User-Agent': USER_AGENT }, signal: controle.signal });
+    if (!resposta.ok) return null;
+    const lista = (await resposta.json()) as any[];
+    return lista
+      .map(function (item): ResultadoBusca | null {
+        const latitude = Number(item.lat);
+        const longitude = Number(item.lon);
+        if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+        const bb = Array.isArray(item.boundingbox) ? item.boundingbox.map(Number) : null;
+        const limites = bb && bb.length === 4 && bb.every(Number.isFinite) ? (bb as [number, number, number, number]) : null;
+        return {
+          nome: item.name || String(item.display_name || '').split(',')[0],
+          texto: String(item.display_name || ''),
+          latitude,
+          longitude,
+          limites,
+        };
+      })
+      .filter(function (r): r is ResultadoBusca { return r !== null; });
   } catch {
     return null;
   } finally {
@@ -106,5 +158,23 @@ export class GeocodificacaoService {
 
     emAndamento.set(chave, promessa);
     return promessa;
+  }
+
+  // Busca de endereço/lugar digitado pelo usuário (só no Brasil). Lista vazia
+  // se nada for encontrado; null se o serviço externo falhou.
+  static async buscar(termo: string): Promise<ResultadoBusca[] | null> {
+    const chave = termo.trim().toLowerCase();
+    const guardado = cacheBusca.get(chave);
+    if (guardado && guardado.expiraEm > Date.now()) return guardado.valor;
+
+    const resultado = await buscarNoNominatim(termo.trim());
+    if (resultado) {
+      if (cacheBusca.size >= 500) {
+        const maisAntiga = cacheBusca.keys().next().value;
+        if (maisAntiga) cacheBusca.delete(maisAntiga);
+      }
+      cacheBusca.set(chave, { valor: resultado, expiraEm: Date.now() + 24 * 60 * 60 * 1000 });
+    }
+    return resultado;
   }
 }

@@ -6,6 +6,7 @@ const router = Router();
 const geoController = new GeoController();
 
 router.get('/geo/endereco', geoLimiter, geoController.endereco);
+router.get('/geo/buscar', geoLimiter, geoController.buscar);
 router.get('/geo/dentro-do-brasil', geoLimiter, geoController.dentroDoBrasil);
 
 export default router;

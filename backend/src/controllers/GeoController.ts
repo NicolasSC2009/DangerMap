@@ -21,6 +21,18 @@ export class GeoController {
     return res.status(200).json({ endereco });
   }
 
+  async buscar(req: Request, res: Response): Promise<Response> {
+    const termo = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+    if (termo.length < 3 || termo.length > 120) {
+      return res.status(400).json({ error: 'Digite de 3 a 120 caracteres para buscar.' });
+    }
+    const resultados = await GeocodificacaoService.buscar(termo);
+    if (resultados === null) {
+      return res.status(502).json({ error: 'O serviço de busca está indisponível agora. Tente de novo em instantes.' });
+    }
+    return res.status(200).json({ resultados });
+  }
+
   async dentroDoBrasil(req: Request, res: Response): Promise<Response> {
     const coordenadas = lerCoordenadas(req);
     if (!coordenadas) {
