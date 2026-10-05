@@ -49,7 +49,6 @@ Na pasta do projeto: `powershell -ExecutionPolicy Bypass -File scripts\zipar-dan
 (cria `DangerMap.zip` na Área de Trabalho, sem `node_modules`, sem builds e sem o `.env`).
 
 ## Documentação
-- [Requisitos e regras de negócio](docs/requisitos.md) — lista de RF, RNF e RN com a situação de cada um e as pendências.
 - Documentação da API (com o servidor ligado): http://localhost:3000/api/docs
 
 ## Estrutura
