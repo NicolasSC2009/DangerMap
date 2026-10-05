@@ -1,6 +1,13 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import type L from 'leaflet';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Mapa, lerUltimaVistaMapa } from '../../components/mapa/Mapa';
+import {
+  FerramentasMapa,
+  lerFiltrosSalvos,
+  salvarFiltros,
+  type FiltrosMapa,
+} from '../../components/mapa/FerramentasMapa';
 import { Navbar } from '../../components/navbar/Navbar';
 import { LogoCanto } from '../../components/comum/LogoCanto';
 import { ModalOcorrencia } from '../../components/ocorrencia/ModalOcorrencia';
@@ -10,7 +17,7 @@ import { api } from '../../services/api';
 import { pontoDentroDoBrasil } from '../../services/geo';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'react-toastify';
-import type { ClusterOcorrencia } from '@shared/types';
+import type { Ocorrencia } from '@shared/types';
 
 // Pino de mapa com um "+" dentro: deixa claro que o botão marca um ponto novo.
 function IconePinMais() {
@@ -31,13 +38,8 @@ function IconePinMais() {
 
 const MENSAGEM_FORA_DO_BRASIL = 'O DangerMap só aceita ocorrências dentro do território brasileiro.';
 
-const LATITUDE_REFERENCIA_BRASIL = -15;
-const PIXELS_ALVO_AGRUPAMENTO = 45;
-
-function raioAgrupamentoPorZoom(zoom: number): number {
-  const metrosPorPixel = (156543.03392 * Math.cos((LATITUDE_REFERENCIA_BRASIL * Math.PI) / 180)) / Math.pow(2, zoom);
-  return Math.round(metrosPorPixel * PIXELS_ALVO_AGRUPAMENTO);
-}
+// A cada minuto o mapa confere se há ocorrências novas (se a preferência estiver ligada).
+const INTERVALO_ATUALIZACAO_MS = 60_000;
 
 const RAIO_MAXIMO_CIDADAO_METROS = 1000;
 const RAIO_TERRA_METROS = 6371000;
@@ -62,8 +64,9 @@ export function PaginaMapa() {
   const { preferencias } = usePreferencias();
   // Vista inicial: a última lembrada (se a preferência estiver ligada) ou o padrão do Mapa.
   const [vistaInicial] = useState(() => (preferencias.lembrarPosicaoMapa ? lerUltimaVistaMapa() : null));
-  const [clusters, setClusters] = useState<ClusterOcorrencia[]>([]);
-  const [zoomAtual, setZoomAtual] = useState(vistaInicial?.zoom ?? 5);
+  const [ocorrencias, setOcorrencias] = useState<Ocorrencia[]>([]);
+  const [mapa, setMapa] = useState<L.Map | null>(null);
+  const [filtros, setFiltros] = useState<FiltrosMapa>(lerFiltrosSalvos);
   const [ocorrenciaSelecionadaId, setOcorrenciaSelecionadaId] = useState<number | null>(null);
   const [pontoNovaOcorrencia, setPontoNovaOcorrencia] = useState<{ lat: number; lng: number } | null>(null);
 
@@ -74,11 +77,11 @@ export function PaginaMapa() {
     };
   }, []);
 
-  const buscarClusters = useCallback(function (zoom: number) {
+  const carregarOcorrencias = useCallback(function () {
     api
-      .get<ClusterOcorrencia[]>('/ocorrencias/clusters', { params: { raio: raioAgrupamentoPorZoom(zoom) } })
+      .get<Ocorrencia[]>('/ocorrencias')
       .then(function (resposta) {
-        setClusters(resposta.data);
+        setOcorrencias(resposta.data);
       })
       .catch(function (err) {
         console.error('[ERRO AO BUSCAR OCORRÊNCIAS]:', err);
@@ -87,15 +90,59 @@ export function PaginaMapa() {
 
   useEffect(
     function () {
-      buscarClusters(zoomAtual);
+      carregarOcorrencias();
     },
-    [buscarClusters, zoomAtual]
+    [carregarOcorrencias]
   );
 
-  function aoMudarZoom(zoom: number) {
-    setZoomAtual(zoom);
+  // Atualização automática: a cada minuto e ao voltar para a aba.
+  useEffect(
+    function () {
+      if (!preferencias.atualizarMapaAutomatico) return;
+      const intervalo = window.setInterval(function () {
+        if (document.visibilityState === 'visible') carregarOcorrencias();
+      }, INTERVALO_ATUALIZACAO_MS);
+      function aoVoltarParaAba() {
+        if (document.visibilityState === 'visible') carregarOcorrencias();
+      }
+      document.addEventListener('visibilitychange', aoVoltarParaAba);
+      return function () {
+        window.clearInterval(intervalo);
+        document.removeEventListener('visibilitychange', aoVoltarParaAba);
+      };
+    },
+    [preferencias.atualizarMapaAutomatico, carregarOcorrencias]
+  );
+
+  function mudarFiltros(novos: FiltrosMapa) {
+    setFiltros(novos);
+    salvarFiltros(novos);
   }
 
+  const ocorrenciasFiltradas = useMemo(
+    function () {
+      return ocorrencias.filter(function (o) {
+        if (filtros.gravidades.length > 0 && !filtros.gravidades.includes(o.gravidade)) return false;
+        if (filtros.categorias.length > 0 && (o.categoria_id === null || !filtros.categorias.includes(o.categoria_id))) {
+          return false;
+        }
+        return true;
+      });
+    },
+    [ocorrencias, filtros]
+  );
+
+  // Categorias que existem nas ocorrências carregadas (serve também sem login).
+  const categoriasPresentes = useMemo(
+    function () {
+      const porId = new Map<number, string>();
+      for (const o of ocorrencias) {
+        if (o.categoria_id !== null && o.categorias?.nome) porId.set(o.categoria_id, o.categorias.nome);
+      }
+      return [...porId.entries()].map(([id, nome]) => ({ id, nome })).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+    },
+    [ocorrencias]
+  );
   useEffect(function () {
     const idParam = parametrosBusca.get('ocorrencia');
     if (idParam) {
@@ -173,13 +220,23 @@ export function PaginaMapa() {
       <Navbar aoSelecionarOcorrencia={setOcorrenciaSelecionadaId} />
       <LogoCanto />
       <Mapa
-        clusters={clusters}
+        ocorrencias={ocorrenciasFiltradas}
+        aoPronto={setMapa}
         aoClicarNoMapa={tratarCliqueNoMapa}
         aoClicarOcorrencia={setOcorrenciaSelecionadaId}
-        aoMudarZoom={aoMudarZoom}
         posicaoInicial={vistaInicial ? [vistaInicial.lat, vistaInicial.lng] : undefined}
         zoomInicial={vistaInicial?.zoom}
         lembrarVista
+      />
+
+      <FerramentasMapa
+        mapa={mapa}
+        categorias={categoriasPresentes}
+        filtros={filtros}
+        aoMudarFiltros={mudarFiltros}
+        totalGeral={ocorrencias.length}
+        totalVisivel={ocorrenciasFiltradas.length}
+        mostrarLegenda={preferencias.mostrarLegenda}
       />
 
       <button
@@ -197,7 +254,7 @@ export function PaginaMapa() {
         <ModalOcorrencia
           ocorrenciaId={ocorrenciaSelecionadaId}
           aoFechar={fecharModalOcorrencia}
-          aoMudar={() => buscarClusters(zoomAtual)}
+          aoMudar={carregarOcorrencias}
         />
       )}
 
@@ -208,7 +265,7 @@ export function PaginaMapa() {
           aoFechar={() => setPontoNovaOcorrencia(null)}
           aoCriada={(ocorrencia) => {
             setPontoNovaOcorrencia(null);
-            buscarClusters(zoomAtual);
+            carregarOcorrencias();
             setOcorrenciaSelecionadaId(ocorrencia.id);
           }}
         />

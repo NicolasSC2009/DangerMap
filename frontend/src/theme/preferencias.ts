@@ -5,6 +5,8 @@ export type Tema = 'claro' | 'escuro' | 'sistema';
 export type TamanhoFonte = 'normal' | 'grande';
 export type EstiloMapa = 'padrao' | 'claro' | 'escuro' | 'auto'; // OSM | Carto Voyager | Carto Dark | segue tema
 export type EstiloMapaResolvido = 'padrao' | 'claro' | 'escuro';
+export type TamanhoMarcadores = 'pequeno' | 'normal' | 'grande';
+export type UnidadeTemperatura = 'c' | 'f';
 
 export interface Preferencias {
   tema: Tema;
@@ -13,6 +15,14 @@ export interface Preferencias {
   estiloMapa: EstiloMapa;
   mostrarClima: boolean;
   lembrarPosicaoMapa: boolean;
+  /** Junta ocorrências próximas num único marcador conforme o zoom (estilo Waze). */
+  agruparOcorrencias: boolean;
+  tamanhoMarcadores: TamanhoMarcadores;
+  /** Recarrega as ocorrências do mapa sozinho a cada minuto. */
+  atualizarMapaAutomatico: boolean;
+  /** Mostra a legenda de gravidade no mapa. */
+  mostrarLegenda: boolean;
+  unidadeTemperatura: UnidadeTemperatura;
 }
 
 export const PREFERENCIAS_PADRAO: Preferencias = {
@@ -22,6 +32,11 @@ export const PREFERENCIAS_PADRAO: Preferencias = {
   estiloMapa: 'auto',
   mostrarClima: true,
   lembrarPosicaoMapa: true,
+  agruparOcorrencias: true,
+  tamanhoMarcadores: 'normal',
+  atualizarMapaAutomatico: true,
+  mostrarLegenda: false,
+  unidadeTemperatura: 'c',
 };
 
 export const CHAVE_PREFERENCIAS = '@DangerMap:preferencias';
@@ -31,6 +46,12 @@ export const CHAVE_ULTIMA_VISTA_MAPA = '@DangerMap:mapa:ultimaVista';
 const TEMAS: Tema[] = ['claro', 'escuro', 'sistema'];
 const FONTES: TamanhoFonte[] = ['normal', 'grande'];
 const ESTILOS: EstiloMapa[] = ['padrao', 'claro', 'escuro', 'auto'];
+const TAMANHOS_MARCADOR: TamanhoMarcadores[] = ['pequeno', 'normal', 'grande'];
+const UNIDADES: UnidadeTemperatura[] = ['c', 'f'];
+
+function booleano(valor: unknown, padrao: boolean): boolean {
+  return typeof valor === 'boolean' ? valor : padrao;
+}
 
 function normalizar(bruto: unknown): Preferencias {
   const p = (bruto && typeof bruto === 'object' ? bruto : {}) as Partial<Record<keyof Preferencias, unknown>>;
@@ -42,6 +63,15 @@ function normalizar(bruto: unknown): Preferencias {
     estiloMapa: ESTILOS.includes(p.estiloMapa as EstiloMapa) ? (p.estiloMapa as EstiloMapa) : d.estiloMapa,
     mostrarClima: typeof p.mostrarClima === 'boolean' ? p.mostrarClima : d.mostrarClima,
     lembrarPosicaoMapa: typeof p.lembrarPosicaoMapa === 'boolean' ? p.lembrarPosicaoMapa : d.lembrarPosicaoMapa,
+    agruparOcorrencias: booleano(p.agruparOcorrencias, d.agruparOcorrencias),
+    tamanhoMarcadores: TAMANHOS_MARCADOR.includes(p.tamanhoMarcadores as TamanhoMarcadores)
+      ? (p.tamanhoMarcadores as TamanhoMarcadores)
+      : d.tamanhoMarcadores,
+    atualizarMapaAutomatico: booleano(p.atualizarMapaAutomatico, d.atualizarMapaAutomatico),
+    mostrarLegenda: booleano(p.mostrarLegenda, d.mostrarLegenda),
+    unidadeTemperatura: UNIDADES.includes(p.unidadeTemperatura as UnidadeTemperatura)
+      ? (p.unidadeTemperatura as UnidadeTemperatura)
+      : d.unidadeTemperatura,
   };
 }
 

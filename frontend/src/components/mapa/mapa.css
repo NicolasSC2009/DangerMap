@@ -77,9 +77,26 @@
 
 .dm-marcador-ocorrencia,
 .dm-marcador-cluster,
+.dm-marcador-ponto,
 .dm-marcador-usuario {
   background: none;
   border: none;
+}
+
+/* Entrada suave ao trocar de nível de zoom (só opacidade: o transform é do hover). */
+.dm-marcador-ocorrencia__corpo,
+.dm-marcador-cluster__corpo,
+.dm-marcador-ponto__corpo {
+  animation: dm-marcador-entrada 0.22s ease both;
+}
+
+@keyframes dm-marcador-entrada {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .dm-marcador-ocorrencia__corpo {
@@ -128,6 +145,77 @@
   transform: scale(1.08);
 }
 
+/* Bolinha amarela (zoom médio): marcador discreto, sem ícone. */
+.dm-marcador-ponto__corpo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.45);
+  color: #3a2c00;
+  font-family: var(--dm-fonte-mono);
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.dm-marcador-ponto:hover .dm-marcador-ponto__corpo {
+  transform: scale(1.18);
+}
+
+/* Perna do leque (zoom máximo): liga cada ocorrência ao ponto de origem. */
+.dm-leque-perna {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55));
+}
+
+/* Aviso de zoom longe demais: nenhuma ocorrência é desenhada. */
+.dm-mapa-dica {
+  position: fixed;
+  left: 50%;
+  bottom: calc(22px + var(--dm-safe-b));
+  transform: translateX(-50%);
+  z-index: var(--dm-z-mapa-ui);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 200px);
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(0, 50, 35, 0.92);
+  color: #ece6dc;
+  font-family: var(--dm-fonte-corpo);
+  font-size: var(--dm-t-sm);
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: left;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+  animation: dm-marcador-entrada 0.25s ease both;
+}
+
+.dm-mapa-dica:hover {
+  background: rgba(0, 62, 44, 0.96);
+}
+
+.dm-mapa-dica svg {
+  flex-shrink: 0;
+  color: var(--dm-verde-salada);
+}
+
+@media (max-width: 640px) {
+  .dm-mapa-dica {
+    /* acima do logo/zoom, abaixo do clima: centralizado e sem invadir o FAB */
+    max-width: calc(100% - 152px);
+    bottom: calc(88px + var(--dm-safe-b));
+    font-size: var(--dm-t-xs);
+    padding: 8px 12px;
+  }
+}
 .dm-marcador-usuario__pulso,
 .dm-marcador-usuario__ponto {
   position: absolute;
@@ -231,14 +319,16 @@
 
 .dm-mapa-clima {
   position: fixed;
-  top: calc(20px + var(--dm-safe-t));
+  /* mesma linha e mesma altura dos botões da navbar */
+  top: calc(var(--dm-nav-topo) + var(--dm-safe-t));
   left: 72px;
   z-index: var(--dm-z-mapa-ui);
   display: flex;
   align-items: center;
   gap: 10px;
+  height: var(--dm-nav-botao);
   max-width: calc(100% - 72px - 200px);
-  padding: 9px 16px;
+  padding: 0 16px;
   border-radius: 999px;
   background: rgba(0, 50, 35, 0.9);
   backdrop-filter: blur(8px);
@@ -272,37 +362,50 @@
 
 /* ---------- LogoCanto ---------- */
 
+/* Só o texto da marca, sem caixa/fundo. Um halo claro mantém a leitura sobre
+   áreas escuras do mapa (e o inverso no mapa escuro). */
 .dm-logo-canto {
   position: fixed;
   left: 16px;
-  bottom: calc(16px + var(--dm-safe-b));
+  bottom: calc(14px + var(--dm-safe-b));
   z-index: var(--dm-z-mapa-ui);
   display: flex;
   align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  padding: 10px 14px;
-  border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.07);
-  background: #fff;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+  padding: 6px 4px;
+  border: none;
+  background: none;
+  box-shadow: none;
   user-select: none;
   cursor: pointer;
-  transition: transform var(--dm-transicao), box-shadow var(--dm-transicao);
+  transition: transform var(--dm-transicao), opacity var(--dm-transicao);
 }
 
 .dm-logo-canto:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22);
 }
 
 .dm-logo-canto img {
   display: block;
-  height: 20px;
+  height: 22px;
   width: auto;
   max-width: none;
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 1px rgba(255, 255, 255, 0.9));
 }
 
+.dm-logo-canto--claro img {
+  filter: invert(1) drop-shadow(0 0 3px rgba(0, 0, 0, 0.85)) drop-shadow(0 0 1px rgba(0, 0, 0, 0.8));
+}
+
+@media (min-width: 641px) {
+  .dm-logo-canto {
+    left: 24px;
+    bottom: calc(20px + var(--dm-safe-b));
+  }
+
+  .dm-logo-canto img {
+    height: 28px;
+  }
+}
 /* ---------- FAB "nova ocorrência" ---------- */
 
 .dm-fab {
@@ -385,14 +488,12 @@
     margin: 0 0 0 16px;
   }
 
-  /* clima ao lado do zoom, também acima do LogoCanto */
+  /* clima no canto superior esquerdo, na mesma linha da navbar (sem colidir com o zoom, que desce) */
   .dm-mapa-clima {
-    top: auto;
-    left: 64px;
-    bottom: calc(64px + var(--dm-safe-b));
-    max-width: calc(100% - 64px - 88px);
-    padding: 8px 12px;
+    left: 16px;
     gap: 8px;
+    padding: 0 12px;
+    max-width: calc(100% - 32px - 200px);
   }
 
   /* cartão de permissão abaixo da navbar flutuante */

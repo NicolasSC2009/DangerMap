@@ -3,7 +3,14 @@ import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { FiMap } from 'react-icons/fi';
 import { usePreferencias } from '../../../contexts/PreferenciasContext';
-import { CHAVE_ULTIMA_VISTA_MAPA, TILES, type EstiloMapa, type EstiloMapaResolvido } from '../../../theme/preferencias';
+import {
+  CHAVE_ULTIMA_VISTA_MAPA,
+  TILES,
+  type EstiloMapa,
+  type EstiloMapaResolvido,
+  type TamanhoMarcadores,
+  type UnidadeTemperatura,
+} from '../../../theme/preferencias';
 import { GrupoCartoes, Interruptor, LinhaConfig, SecaoConfig } from './SecaoConfig';
 import { useEscolhaLocalizacao } from './SecaoPrivacidade';
 
@@ -107,6 +114,70 @@ export function SecaoMapa() {
         }
       />
 
+      {preferencias.mostrarClima && (
+        <LinhaConfig titulo="Unidade de temperatura" descricao="Como a temperatura aparece na cápsula do mapa.">
+          <GrupoCartoes<UnidadeTemperatura>
+            rotulo="Unidade de temperatura"
+            variante="segmentado"
+            valor={preferencias.unidadeTemperatura}
+            aoMudar={(unidadeTemperatura) => atualizar({ unidadeTemperatura })}
+            opcoes={[
+              { valor: 'c', rotulo: 'Celsius', preview: <span className="dm-preview-fonte">°C</span> },
+              { valor: 'f', rotulo: 'Fahrenheit', preview: <span className="dm-preview-fonte">°F</span> },
+            ]}
+          />
+        </LinhaConfig>
+      )}
+
+      <LinhaConfig
+        titulo="Agrupar ocorrências próximas"
+        descricao="Como no Waze: de longe aparecem bolinhas, e as ocorrências vizinhas se juntam num marcador com número até você aproximar. Desligado, cada ocorrência aparece sozinha."
+        controle={
+          <Interruptor
+            rotulo="Agrupar ocorrências próximas"
+            marcado={preferencias.agruparOcorrencias}
+            aoMudar={(agruparOcorrencias) => atualizar({ agruparOcorrencias })}
+          />
+        }
+      />
+
+      <LinhaConfig titulo="Tamanho dos marcadores" descricao="Tamanho dos ícones de ocorrência no mapa (ainda variam com o zoom).">
+        <GrupoCartoes<TamanhoMarcadores>
+          rotulo="Tamanho dos marcadores"
+          variante="segmentado"
+          valor={preferencias.tamanhoMarcadores}
+          aoMudar={(tamanhoMarcadores) => atualizar({ tamanhoMarcadores })}
+          opcoes={[
+            { valor: 'pequeno', rotulo: 'Pequeno', preview: <span className="dm-preview-fonte">•</span> },
+            { valor: 'normal', rotulo: 'Normal', preview: <span className="dm-preview-fonte">●</span> },
+            { valor: 'grande', rotulo: 'Grande', preview: <span className="dm-preview-fonte dm-preview-fonte--grande">●</span> },
+          ]}
+        />
+      </LinhaConfig>
+
+      <LinhaConfig
+        titulo="Atualizar o mapa sozinho"
+        descricao="Confere se há ocorrências novas a cada minuto e quando você volta para a aba."
+        controle={
+          <Interruptor
+            rotulo="Atualizar o mapa automaticamente"
+            marcado={preferencias.atualizarMapaAutomatico}
+            aoMudar={(atualizarMapaAutomatico) => atualizar({ atualizarMapaAutomatico })}
+          />
+        }
+      />
+
+      <LinhaConfig
+        titulo="Mostrar legenda no mapa"
+        descricao="Deixa a legenda de cores sempre visível (em telas grandes). Ela também fica no painel de filtros."
+        controle={
+          <Interruptor
+            rotulo="Mostrar legenda no mapa"
+            marcado={preferencias.mostrarLegenda}
+            aoMudar={(mostrarLegenda) => atualizar({ mostrarLegenda })}
+          />
+        }
+      />
       <LinhaConfig
         titulo="Lembrar última posição"
         descricao="Ao voltar, o mapa abre onde você parou (posição e zoom)."

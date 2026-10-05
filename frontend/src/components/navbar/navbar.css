@@ -10,27 +10,15 @@
   z-index: var(--dm-z-navbar);
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--dm-nav-gap);
   font-family: var(--dm-fonte-corpo);
 }
 
-@media (max-width: 480px) {
-  .dm-navbar {
-    gap: 6px;
-  }
-}
-
+/* Mesma posição no mapa e nas demais páginas (tokens em theme/tokens.css). */
 .dm-navbar--flutuante {
   position: fixed;
-  top: calc(16px + var(--dm-safe-t));
-  right: 16px;
-}
-
-@media (min-width: 641px) {
-  .dm-navbar--flutuante {
-    top: calc(20px + var(--dm-safe-t));
-    right: 20px;
-  }
+  top: calc(var(--dm-nav-topo) + var(--dm-safe-t));
+  right: var(--dm-nav-lateral);
 }
 
 /* ---------- botões redondos ---------- */
@@ -38,8 +26,8 @@
 .dm-navbar-botao {
   position: relative;
   flex-shrink: 0;
-  width: 44px;
-  height: 44px;
+  width: var(--dm-nav-botao);
+  height: var(--dm-nav-botao);
   padding: 0;
   border-radius: 50%;
   border: 1px solid var(--dm-linha);
@@ -59,29 +47,8 @@
   border-color: var(--dm-linha-forte);
 }
 
-@media (max-width: 480px) {
-  .dm-navbar-botao {
-    width: 36px;
-    height: 36px;
-  }
-}
-
 /* Desktop: ícones um pouco maiores que no mobile, sem exagero. */
 @media (min-width: 1025px) {
-  .dm-navbar {
-    gap: 12px;
-  }
-
-  .dm-navbar--flutuante {
-    top: calc(22px + var(--dm-safe-t));
-    right: 24px;
-  }
-
-  .dm-navbar-botao {
-    width: 48px;
-    height: 48px;
-  }
-
   .dm-navbar-botao svg {
     width: 22px;
     height: 22px;
@@ -92,7 +59,7 @@
   }
 
   .dm-navbar-entrar {
-    min-height: 48px;
+    min-height: var(--dm-nav-botao);
     padding: 12px 26px;
     font-size: calc(14px * var(--dm-escala));
   }
@@ -177,8 +144,9 @@
 /* ---------- botão Entrar ---------- */
 
 .dm-navbar-entrar {
+  min-height: var(--dm-nav-botao);
   border-radius: 999px;
-  padding: 11px 22px;
+  padding: 0 22px;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
 }
 
@@ -257,6 +225,12 @@
 
 .dm-navbar-dropdown__lista {
   padding: 6px 0;
+}
+
+.dm-navbar-dropdown__grupo + .dm-navbar-dropdown__grupo {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--dm-linha);
 }
 
 .dm-navbar-dropdown__rodape {

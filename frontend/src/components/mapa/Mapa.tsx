@@ -7,12 +7,11 @@ import iconeMarcadorPadrao from 'leaflet/dist/images/marker-icon.png';
 import iconeMarcadorPadrao2x from 'leaflet/dist/images/marker-icon-2x.png';
 import sombraMarcadorPadrao from 'leaflet/dist/images/marker-shadow.png';
 import { FiMapPin, FiThermometer, FiDroplet } from 'react-icons/fi';
-import { CORES } from '../../theme/cores';
-import { COR_GRAVIDADE } from '../../theme/rotulos';
-import { obterIconeCategoria } from '../../theme/iconesCategorias';
-import { CHAVE_ULTIMA_VISTA_MAPA, TILES } from '../../theme/preferencias';
+import { CHAVE_ULTIMA_VISTA_MAPA, TILES, type UnidadeTemperatura } from '../../theme/preferencias';
 import { usePreferencias } from '../../contexts/PreferenciasContext';
-import type { ClusterOcorrencia, Gravidade } from '@shared/types';
+import { CamadaOcorrencias } from './CamadaOcorrencias';
+import { ZOOM_MAXIMO } from './agrupamento';
+import type { Ocorrencia } from '@shared/types';
 
 // Ícone padrão do Leaflet servido pelo próprio bundle (antes vinha do unpkg).
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl;
@@ -29,43 +28,6 @@ const iconePosicaoUsuario = L.divIcon({
   iconSize: [20, 20],
   iconAnchor: [10, 10],
 });
-
-function fatorPorZoom(zoom: number): number {
-  return Math.min(1.15, Math.max(0.42, (zoom - 3) / 11));
-}
-
-// Tamanhos dependem do zoom → ficam no HTML do divIcon; o resto está em mapa.css.
-function iconeOcorrencia(gravidade: Gravidade | null | undefined, nomeCategoria: string | null | undefined, zoom: number) {
-  const cor = (gravidade && COR_GRAVIDADE[gravidade]) || CORES.laranja;
-  const icone = obterIconeCategoria(nomeCategoria);
-  const fator = fatorPorZoom(zoom);
-  const largura = Math.round(56 * fator);
-  const altura = Math.round(58 * fator);
-  const badge = Math.max(9, Math.round(15 * fator));
-  return L.divIcon({
-    className: 'dm-marcador-ocorrencia',
-    html: `
-      <div class="dm-marcador-ocorrencia__corpo" style="width:${largura}px;height:${altura}px;">
-        <img src="${icone}" alt="" />
-        <span class="dm-marcador-ocorrencia__badge" style="width:${badge}px;height:${badge}px;background:${cor};"></span>
-      </div>`,
-    iconSize: [largura, altura],
-    iconAnchor: [largura / 2, Math.round(altura * 0.95)],
-  });
-}
-
-function iconeCluster(quantidade: number, gravidade: Gravidade | null | undefined, zoom: number) {
-  const cor = (gravidade && COR_GRAVIDADE[gravidade]) || CORES.verdeGarrafa;
-  const fator = fatorPorZoom(zoom);
-  const tamanho = Math.round((quantidade >= 10 ? 44 : 36) * fator);
-  const fonte = Math.max(10, Math.round((quantidade >= 10 ? 14 : 13) * fator));
-  return L.divIcon({
-    className: 'dm-marcador-cluster',
-    html: `<div class="dm-marcador-cluster__corpo" style="width:${tamanho}px;height:${tamanho}px;background:${cor};font-size:${fonte}px;">${quantidade}</div>`,
-    iconSize: [tamanho, tamanho],
-    iconAnchor: [tamanho / 2, tamanho / 2],
-  });
-}
 
 export interface VistaMapa {
   lat: number;
@@ -97,7 +59,8 @@ function salvarUltimaVistaMapa(vista: VistaMapa) {
 }
 
 interface MapaProps {
-  clusters?: ClusterOcorrencia[];
+  ocorrencias?: Ocorrencia[];
+  aoPronto?: (mapa: L.Map) => void;
   aoClicarNoMapa?: (lat: number, lng: number) => void;
   aoClicarOcorrencia?: (ocorrenciaId: number) => void;
   aoMudarZoom?: (zoom: number) => void;
@@ -172,9 +135,20 @@ function CartaoPermissaoLocalizacao(props: { aoPermitir: () => void; aoRecusar: 
   );
 }
 
-function CapsulaCoordenadaClima(props: { lat: number; lng: number; clima: ClimaAtual | null; carregando: boolean }) {
+function CapsulaCoordenadaClima(props: {
+  lat: number;
+  lng: number;
+  clima: ClimaAtual | null;
+  carregando: boolean;
+  unidade: UnidadeTemperatura;
+}) {
   const ref = useIsolarDoMapa<HTMLDivElement>();
-  const coordenadas = `${props.lat.toFixed(4)}, ${props.lng.toFixed(4)}`;
+  const temperatura = props.clima
+    ? props.unidade === 'f'
+      ? Math.round((props.clima.temperatura * 9) / 5 + 32)
+      : props.clima.temperatura
+    : 0;
+  const coordenadas =`${props.lat.toFixed(4)}, ${props.lng.toFixed(4)}`;
 
   return (
     <div ref={ref} className="dm-mapa-clima" aria-live="polite" title={`Sua posição: ${coordenadas}`}>
@@ -189,9 +163,9 @@ function CapsulaCoordenadaClima(props: { lat: number; lng: number; clima: ClimaA
         <span className="dm-mapa-clima__suave">Carregando clima…</span>
       ) : props.clima ? (
         <>
-          <span className="dm-mapa-clima__item" aria-label={`Temperatura ${props.clima.temperatura} graus`}>
+          <span className="dm-mapa-clima__item" aria-label={`Temperatura ${temperatura} graus`}>
             <FiThermometer size={13} aria-hidden="true" />
-            {props.clima.temperatura}°C
+            {temperatura}°{props.unidade === 'f' ? 'F' : 'C'}
           </span>
           <span className="dm-mapa-clima__item" aria-label={`Umidade ${props.clima.umidade}%`}>
             <FiDroplet size={13} aria-hidden="true" />
@@ -210,7 +184,7 @@ function CapsulaCoordenadaClima(props: { lat: number; lng: number; clima: ClimaA
 
 const CHAVE_ESCOLHA_LOCALIZACAO = '@DangerMap:escolhaLocalizacao';
 
-function LocalizadorUsuario(props: { mostrarClima: boolean; voarAoIniciar: boolean }) {
+function LocalizadorUsuario(props: { mostrarClima: boolean; voarAoIniciar: boolean; unidade: UnidadeTemperatura }) {
   const mapa = useMap();
   const [status, setStatus] = useState<StatusPermissaoLocalizacao>('perguntando');
   const [posicaoAtual, setPosicaoAtual] = useState<[number, number] | null>(null);
@@ -301,6 +275,7 @@ function LocalizadorUsuario(props: { mostrarClima: boolean; voarAoIniciar: boole
               lng={posicaoAtual[1]}
               clima={clima}
               carregando={carregandoClima}
+              unidade={props.unidade}
             />
           )}
         </>
@@ -335,61 +310,18 @@ function SalvadorDeVista() {
   return null;
 }
 
-function CamadaOcorrencias(props: {
-  clusters?: ClusterOcorrencia[];
-  aoClicarOcorrencia?: (ocorrenciaId: number) => void;
-  aoMudarZoom?: (zoom: number) => void;
-}) {
+// Entrega a instância do Leaflet para fora do <MapContainer> (botões de busca, filtros etc.).
+function EntregarMapa(props: { aoPronto?: (mapa: L.Map) => void }) {
   const mapa = useMap();
-  const [zoom, setZoom] = useState(mapa.getZoom());
-
-  useMapEvents({
-    zoomend: function () {
-      const novoZoom = mapa.getZoom();
-      setZoom(novoZoom);
-      if (props.aoMudarZoom) props.aoMudarZoom(novoZoom);
+  useEffect(
+    function () {
+      props.aoPronto?.(mapa);
     },
-  });
-
-  return (
-    <>
-      {props.clusters &&
-        props.clusters.map(function (cluster, indice) {
-          if (cluster.quantidade === 1 && cluster.ocorrencia) {
-            const ocorrencia = cluster.ocorrencia;
-            return (
-              <Marker
-                key={`oc-${ocorrencia.id}`}
-                position={[cluster.latitude, cluster.longitude]}
-                icon={iconeOcorrencia(ocorrencia.gravidade, ocorrencia.categorias?.nome, zoom)}
-                title={ocorrencia.categorias?.nome || 'Ocorrência'}
-                eventHandlers={{
-                  click: function () {
-                    if (props.aoClicarOcorrencia) props.aoClicarOcorrencia(ocorrencia.id);
-                  },
-                }}
-              />
-            );
-          }
-
-          return (
-            <Marker
-              key={`cluster-${indice}-${cluster.latitude}-${cluster.longitude}`}
-              position={[cluster.latitude, cluster.longitude]}
-              icon={iconeCluster(cluster.quantidade, cluster.gravidadeMaisAlta, zoom)}
-              title={`${cluster.quantidade} ocorrências — clique para aproximar`}
-              eventHandlers={{
-                click: function () {
-                  mapa.flyTo([cluster.latitude, cluster.longitude], Math.min(18, zoom + 3), { animate: true });
-                },
-              }}
-            />
-          );
-        })}
-    </>
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [mapa]
   );
+  return null;
 }
-
 export function Mapa(props: MapaProps) {
   const { preferencias, estiloMapaEfetivo } = usePreferencias();
   const centroPadrao: [number, number] = props.posicaoInicial || [-28.6775, -49.3703];
@@ -406,6 +338,7 @@ export function Mapa(props: MapaProps) {
         center={centroPadrao}
         zoom={props.zoomInicial ?? 5}
         minZoom={3}
+        maxZoom={ZOOM_MAXIMO}
         maxBounds={LIMITES_SUPER_EXPANDIDOS}
         maxBoundsViscosity={0.2}
         className="dm-mapa__leaflet"
@@ -422,16 +355,23 @@ export function Mapa(props: MapaProps) {
             }
           : {})}
       >
-        {!decorativo && <LocalizadorUsuario mostrarClima={preferencias.mostrarClima} voarAoIniciar={voarAoIniciar} />}
+        {!decorativo && <LocalizadorUsuario
+            mostrarClima={preferencias.mostrarClima}
+            voarAoIniciar={voarAoIniciar}
+            unidade={preferencias.unidadeTemperatura}
+          />}
 
-        <TileLayer key={estiloMapaEfetivo} attribution={tiles.attribution} url={tiles.url} noWrap={true} />
+        <TileLayer key={estiloMapaEfetivo} attribution={tiles.attribution} url={tiles.url} noWrap={true} maxZoom={ZOOM_MAXIMO} maxNativeZoom={19} />
+        <EntregarMapa aoPronto={props.aoPronto} />
 
         {!decorativo && <EscutadorDeCliques aoClicar={props.aoClicarNoMapa} />}
         {!decorativo && lembrar && <SalvadorDeVista />}
 
         {!decorativo && (
           <CamadaOcorrencias
-            clusters={props.clusters}
+            ocorrencias={props.ocorrencias}
+            agrupar={preferencias.agruparOcorrencias}
+            tamanho={preferencias.tamanhoMarcadores}
             aoClicarOcorrencia={props.aoClicarOcorrencia}
             aoMudarZoom={props.aoMudarZoom}
           />

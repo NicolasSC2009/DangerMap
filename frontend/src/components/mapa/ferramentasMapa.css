@@ -1,0 +1,387 @@
+/* =========================================================================
+   Ferramentas do mapa (busca de endereço, filtros e "minha localização")
+   — coluna de botões logo abaixo da navbar, no canto direito.
+   ========================================================================= */
+
+.dm-ferramentas {
+  position: fixed;
+  top: calc(var(--dm-nav-topo) + var(--dm-nav-botao) + 12px + var(--dm-safe-t));
+  right: var(--dm-nav-lateral);
+  z-index: 1040; /* acima do mapa (1000); abaixo do cartão de permissão (1050) e da navbar (1100) */
+  width: var(--dm-nav-botao);
+}
+
+.dm-ferramentas__botoes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dm-ferramenta {
+  position: relative;
+  width: var(--dm-nav-botao);
+  height: var(--dm-nav-botao);
+  padding: 0;
+  border: 1px solid var(--dm-linha);
+  border-radius: 50%;
+  background: var(--dm-card);
+  color: var(--dm-titulo);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+  transition: background-color var(--dm-transicao), color var(--dm-transicao), border-color var(--dm-transicao),
+    transform 0.12s ease;
+}
+
+.dm-ferramenta svg {
+  width: 20px;
+  height: 20px;
+}
+
+.dm-ferramenta:hover:not(:disabled) {
+  border-color: var(--dm-laranja);
+  color: var(--dm-laranja-escuro);
+}
+
+.dm-ferramenta:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.dm-ferramenta:disabled {
+  cursor: progress;
+}
+
+.dm-ferramenta:focus-visible {
+  outline: 3px solid var(--dm-verde-salada);
+  outline-offset: 2px;
+}
+
+.dm-ferramenta--ativa,
+.dm-ferramenta--ativa:hover:not(:disabled) {
+  background: var(--dm-laranja);
+  border-color: var(--dm-laranja);
+  color: #fff;
+}
+
+.dm-ferramenta__selo {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--dm-laranja-escuro);
+  color: #fff;
+  font-family: var(--dm-fonte-mono);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--dm-card);
+}
+
+.dm-ferramenta__girando {
+  animation: dm-girar 1s linear infinite;
+}
+
+@keyframes dm-girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- painéis (saem à esquerda dos botões) ---------- */
+
+.dm-ferramentas__painel {
+  position: absolute;
+  top: 0;
+  right: calc(100% + 12px);
+  width: min(340px, calc(100vw - var(--dm-nav-lateral) - var(--dm-nav-botao) - 28px));
+  max-height: calc(100dvh - var(--dm-nav-topo) - var(--dm-nav-botao) * 2 - 48px);
+  overflow-y: auto;
+  padding: 16px;
+  border: 1px solid var(--dm-linha);
+  border-radius: var(--dm-raio-md);
+  background: var(--dm-card);
+  color: var(--dm-tinta);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.32);
+  animation: dm-fade-slide-up 0.22s ease both;
+}
+
+.dm-ferramentas__vazio {
+  margin: 12px 0 0;
+  font-size: var(--dm-t-sm);
+  line-height: 1.5;
+  color: var(--dm-tinta-suave);
+}
+
+/* busca */
+
+.dm-busca {
+  display: flex;
+  gap: 8px;
+}
+
+.dm-busca__campo {
+  flex: 1;
+  min-width: 0;
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1.5px solid var(--dm-linha-forte);
+  border-radius: 12px;
+  background: var(--dm-campo-fundo, var(--dm-superficie));
+  color: var(--dm-tinta);
+  font-family: var(--dm-fonte-corpo);
+  font-size: 16px; /* evita o zoom automático do iOS ao focar */
+}
+
+.dm-busca__campo:focus {
+  outline: none;
+  border-color: var(--dm-laranja);
+  box-shadow: 0 0 0 3px rgba(255, 100, 0, 0.18);
+}
+
+.dm-busca__lista {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dm-busca__item {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  transition: background var(--dm-transicao);
+}
+
+.dm-busca__item:hover,
+.dm-busca__item:focus-visible {
+  background: rgba(255, 100, 0, 0.1);
+  outline: none;
+}
+
+.dm-busca__item strong {
+  font-size: var(--dm-t-sm);
+  color: var(--dm-titulo);
+}
+
+.dm-busca__item span {
+  font-size: var(--dm-t-xs);
+  line-height: 1.4;
+  color: var(--dm-tinta-suave);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* marcador temporário do resultado da busca */
+
+.dm-marcador-busca {
+  background: none;
+  border: none;
+}
+
+.dm-marcador-busca__pino {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--dm-laranja);
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 0 rgba(255, 100, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.45);
+  animation: dm-busca-pulso 1.6s ease-out infinite;
+}
+
+@keyframes dm-busca-pulso {
+  to {
+    box-shadow: 0 0 0 18px rgba(255, 100, 0, 0), 0 2px 8px rgba(0, 0, 0, 0.45);
+  }
+}
+
+/* filtros */
+
+.dm-filtros__topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--dm-titulo);
+}
+
+.dm-filtros__fechar {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--dm-tinta-suave);
+  cursor: pointer;
+}
+
+.dm-filtros__fechar:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--dm-titulo);
+}
+
+.dm-filtros__resumo {
+  margin: 2px 0 0;
+  font-size: var(--dm-t-xs);
+  color: var(--dm-tinta-suave);
+}
+
+.dm-filtros__titulo {
+  margin: 16px 0 8px;
+  font-family: var(--dm-fonte-mono);
+  font-size: var(--dm-t-xs);
+  font-weight: 500;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--dm-laranja-escuro);
+}
+
+:root[data-tema='escuro'] .dm-filtros__titulo {
+  color: var(--dm-laranja);
+}
+
+.dm-filtros__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dm-filtro-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1.5px solid var(--dm-linha-forte);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--dm-tinta);
+  font-family: var(--dm-fonte-corpo);
+  font-size: var(--dm-t-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--dm-transicao), border-color var(--dm-transicao), color var(--dm-transicao);
+}
+
+.dm-filtro-chip img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.dm-filtro-chip:hover {
+  border-color: var(--dm-laranja);
+}
+
+.dm-filtro-chip--marcado {
+  background: var(--dm-laranja-escuro);
+  border-color: var(--dm-laranja-escuro);
+  color: #fff;
+}
+
+.dm-filtro-chip__ponto {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px #fff;
+}
+
+.dm-filtros__rodape {
+  margin-top: 16px;
+}
+
+/* legenda */
+
+.dm-legenda {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: var(--dm-t-xs);
+  color: var(--dm-tinta-suave);
+}
+
+.dm-legenda li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dm-legenda__ponto {
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+  margin: 0 3px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+
+.dm-legenda__balao {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--dm-verde-garrafa);
+  border: 2px solid #fff;
+  color: #fff;
+  font-family: var(--dm-fonte-mono);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 14px;
+  text-align: center;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+
+/* legenda fixa (preferência "Mostrar legenda") — só em telas grandes */
+.dm-legenda-fixa {
+  display: none;
+}
+
+@media (min-width: 1025px) {
+  .dm-legenda-fixa {
+    position: fixed;
+    left: 24px;
+    bottom: calc(66px + var(--dm-safe-b));
+    display: block;
+    padding: 12px 14px;
+    border: 1px solid var(--dm-linha);
+    border-radius: var(--dm-raio-md);
+    background: var(--dm-card);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  }
+}
+
+@media (max-width: 480px) {
+  .dm-ferramenta svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .dm-ferramentas__botoes {
+    gap: 8px;
+  }
+}

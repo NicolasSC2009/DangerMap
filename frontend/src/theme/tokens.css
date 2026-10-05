@@ -93,6 +93,38 @@
   color-scheme: dark;
 }
 
+/* Posição padrão da navbar (botões do canto superior direito). A mesma medida vale
+   no mapa (flutuante) e nas outras páginas (topbar), então ela fica no mesmo lugar
+   da tela em todo o site. --dm-nav-botao é o diâmetro dos botões redondos. */
+:root {
+  --dm-nav-topo: 16px;
+  --dm-nav-lateral: 16px;
+  --dm-nav-botao: 44px;
+  --dm-nav-gap: 10px;
+}
+
+@media (max-width: 480px) {
+  :root {
+    --dm-nav-botao: 36px;
+    --dm-nav-gap: 6px;
+  }
+}
+
+@media (min-width: 641px) {
+  :root {
+    --dm-nav-topo: 20px;
+    --dm-nav-lateral: 24px;
+  }
+}
+
+@media (min-width: 1025px) {
+  :root {
+    --dm-nav-topo: 22px;
+    --dm-nav-lateral: 28px;
+    --dm-nav-botao: 48px;
+    --dm-nav-gap: 12px;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   :root {
     --dm-transicao: 0s;

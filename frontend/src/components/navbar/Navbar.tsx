@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+  FiMap,
   FiMapPin,
   FiFolder,
   FiSettings,
@@ -84,16 +85,23 @@ export function Navbar(props: NavbarProps) {
     };
   }, []);
 
-  const itensMenu: ItemMenu[] = [
-    { Icone: FiMapPin, rotulo: 'Minhas ocorrências', aoClicar: () => navegar('/perfil') },
-    { Icone: FiFolder, rotulo: 'Categorias de perigo', aoClicar: () => setModalCategoriasAberto(true) },
-    { Icone: FiSettings, rotulo: 'Configurações', aoClicar: () => navegar('/configuracoes') },
-    { Icone: FiHelpCircle, rotulo: 'Ajuda', aoClicar: () => navegar('/ajuda') },
-    { Icone: FiInfo, rotulo: 'Sobre o DangerMap', aoClicar: () => navegar('/sobre') },
-    ...(ehAdmin ? [{ Icone: FiShield, rotulo: 'Painel administrativo', aoClicar: () => navegar('/admin') }] : []),
-    { Icone: FiSmartphone, rotulo: 'Baixar o app', aoClicar: () => navegar('/baixar-app') },
+  // Mesma ordem em todas as páginas, em três blocos: navegar, conta e sobre o app.
+  const gruposMenu: ItemMenu[][] = [
+    [
+      { Icone: FiMap, rotulo: 'Mapa', aoClicar: () => navegar('/') },
+      { Icone: FiMapPin, rotulo: 'Minhas ocorrências', aoClicar: () => navegar('/perfil') },
+      { Icone: FiFolder, rotulo: 'Categorias de perigo', aoClicar: () => setModalCategoriasAberto(true) },
+    ],
+    [
+      { Icone: FiSettings, rotulo: 'Configurações', aoClicar: () => navegar('/configuracoes') },
+      ...(ehAdmin ? [{ Icone: FiShield, rotulo: 'Painel administrativo', aoClicar: () => navegar('/admin') }] : []),
+    ],
+    [
+      { Icone: FiHelpCircle, rotulo: 'Ajuda', aoClicar: () => navegar('/ajuda') },
+      { Icone: FiInfo, rotulo: 'Sobre o DangerMap', aoClicar: () => navegar('/sobre') },
+      { Icone: FiSmartphone, rotulo: 'Baixar o app', aoClicar: () => navegar('/baixar-app') },
+    ],
   ];
-
   function clicarItemMenu(aoClicar: () => void) {
     setPainel(null);
     aoClicar();
@@ -190,20 +198,23 @@ export function Navbar(props: NavbarProps) {
           </div>
 
           <div className="dm-navbar-dropdown__lista">
-            {itensMenu.map((item) => (
-              <button
-                key={item.rotulo}
-                type="button"
-                role="menuitem"
-                className="dm-navbar-item"
-                onClick={() => clicarItemMenu(item.aoClicar)}
-              >
-                <item.Icone size={16} aria-hidden="true" />
-                <span>{item.rotulo}</span>
-              </button>
+            {gruposMenu.map((grupo, indice) => (
+              <div key={indice} className="dm-navbar-dropdown__grupo" role="group">
+                {grupo.map((item) => (
+                  <button
+                    key={item.rotulo}
+                    type="button"
+                    role="menuitem"
+                    className="dm-navbar-item"
+                    onClick={() => clicarItemMenu(item.aoClicar)}
+                  >
+                    <item.Icone size={16} aria-hidden="true" />
+                    <span>{item.rotulo}</span>
+                  </button>
+                ))}
+              </div>
             ))}
           </div>
-
           <div className="dm-navbar-dropdown__rodape">
             {autenticado ? (
               <button

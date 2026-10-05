@@ -27,7 +27,7 @@ export function LayoutPadrao(props: LayoutPadraoProps) {
       className={`dm-layout ${variante === 'escura' ? 'dm-pagina-escura' : 'dm-pagina-clara'} ${props.className || ''}`}
       data-variante={variante}
     >
-      <header className="dm-container dm-layout-topbar" style={estiloLargura}>
+      <header className="dm-layout-topbar">
         <Link to="/" className="dm-layout-marca" aria-label="DangerMap — voltar para o mapa">
           <img src={logo} alt="DangerMap" />
         </Link>

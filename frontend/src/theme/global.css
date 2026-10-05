@@ -134,8 +134,9 @@ body.dm-tela-mapa #root {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding-top: calc(clamp(14px, 2.2vw, 22px) + var(--dm-safe-t));
-  padding-bottom: 8px;
+  width: 100%;
+  /* largura total (não a do conteúdo): a navbar fica no mesmo canto da tela que no mapa */
+  padding: calc(var(--dm-nav-topo) + var(--dm-safe-t)) var(--dm-nav-lateral) 8px;
 }
 
 .dm-layout-marca {
