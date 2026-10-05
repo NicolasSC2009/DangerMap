@@ -1,5 +1,6 @@
 -- ============================================================================
 -- Script de referência do schema do DangerMap
+-- Os códigos RFxx/RNxx dos comentários seguem o documento docs/requisitos.md
 -- Reflete o estado real do banco (confirmado via `prisma db pull` em 2026-09-09,
 -- já com as correções da revisão de backend aplicadas). Uso: documentação /
 -- recriação do zero. O Prisma (schema.prisma) é a fonte de verdade em runtime;
@@ -17,7 +18,7 @@ CREATE TYPE tipo_notificacao_enum AS ENUM ('proximidade', 'validacao_campo', 'co
 -- ============================================================================
 -- 2. TABELA DE CATEGORIAS
 -- ============================================================================
--- "ativo" (RF19) permite desativar uma categoria sem apagar o histórico de
+-- "ativo" (RF32) permite desativar uma categoria sem apagar o histórico de
 -- ocorrências que já a usam (a FK em ocorrencias é ON DELETE RESTRICT).
 CREATE TABLE categorias (
     id SERIAL PRIMARY KEY,
@@ -30,7 +31,7 @@ CREATE TABLE categorias (
 -- ============================================================================
 -- 3. TABELA DE USUÁRIOS
 -- ============================================================================
--- "qtd_denuncias_recebidas" (RN14/RF16.2) alimenta a fila de perfis
+-- "qtd_denuncias_recebidas" (RN14/RF25) alimenta a fila de perfis
 -- denunciados no painel admin - incrementado a cada denúncia de usuário.
 CREATE TABLE usuarios (
     id SERIAL PRIMARY KEY,
@@ -56,7 +57,7 @@ CREATE INDEX idx_usuarios_qtd_denuncias_recebidas ON usuarios(qtd_denuncias_rece
 -- "data_resolucao" foi incorporada aqui (antes era um ALTER separado) e é
 -- preenchida pelo backend quando uma ocorrência é marcada como "resolvido",
 -- usada pelo job de arquivamento automático (24h após a resolução).
--- "qtd_denuncias" (RN13/RF17.1) segue o mesmo padrão de qtd_confirmacoes:
+-- "qtd_denuncias" (RN13/RF27) segue o mesmo padrão de qtd_confirmacoes:
 -- incrementado a cada denúncia e usado para ocultar a ocorrência do mapa
 -- público automaticamente (shadowban) quando atinge o limite configurado
 -- em parametros_sistema.
@@ -190,11 +191,11 @@ CREATE TABLE blacklist_tokens (
 CREATE INDEX idx_blacklist_token ON blacklist_tokens(token);
 
 -- ============================================================================
--- 13. TABELA DE PARÂMETROS GLOBAIS DO SISTEMA (RF19)
+-- 13. TABELA DE PARÂMETROS GLOBAIS DO SISTEMA (RF32/RN44)
 -- ============================================================================
 -- Configurações que o admin pode ajustar em runtime sem precisar de deploy:
 -- limites de denúncia (RN13/RN14), janela de arquivamento (RN21) e raios de
--- geofencing (RF12). O backend cacheia esses valores por 60s em memória.
+-- validação em campo e avisos de proximidade (RF18/RF44). O backend cacheia esses valores por 60s em memória.
 CREATE TABLE parametros_sistema (
     chave VARCHAR(100) PRIMARY KEY,
     valor VARCHAR(255) NOT NULL,
