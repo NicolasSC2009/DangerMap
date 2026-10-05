@@ -47,7 +47,7 @@ function contemAlgum(textoNormalizado: string, termos: string[]): boolean {
   });
 }
 
-function gravidadeBase(nomeCategoria: string, descricaoCategoria?: string | null): GravidadeOcorrencia {
+export function gravidadeBase(nomeCategoria: string, descricaoCategoria?: string | null): GravidadeOcorrencia {
   const nome = normalizar(nomeCategoria);
   if (BASE_POR_CATEGORIA[nome]) {
     return BASE_POR_CATEGORIA[nome];

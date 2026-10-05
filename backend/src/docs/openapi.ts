@@ -439,9 +439,8 @@ export const openApiSpec = {
       },
       get: {
         tags: ['Categorias'],
-        summary: 'Lista categorias ativas (para o formulário de ocorrência)',
-        security: [{ bearerAuth: [] }],
-        responses: { '200': { description: 'Lista de categorias ativas' } },
+        summary: 'Lista categorias ativas, com a gravidade típica de cada uma (pública)',
+        responses: { '200': { description: 'Lista de categorias ativas (inclui gravidade_tipica)' } },
       },
     },
     '/categorias/admin': {

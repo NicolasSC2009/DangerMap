@@ -31,6 +31,8 @@ export interface Categoria {
   descricao: string | null;
   icone_url: string | null;
   ativo: boolean;
+  /** Gravidade que as ocorrências dessa categoria costumam ter (vem da lista pública). */
+  gravidade_tipica?: Gravidade;
 }
 
 export interface Ocorrencia {

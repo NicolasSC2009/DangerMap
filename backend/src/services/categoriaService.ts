@@ -1,4 +1,5 @@
 import { CategoriaRepository } from '../repositories/CategoriaRepository.js';
+import { gravidadeBase } from './GravidadeAutomaticaService.js';
 
 const categoriaRepository = new CategoriaRepository();
 
@@ -16,8 +17,13 @@ export class CategoriaService {
     return categoriaRepository.criar(dados);
   }
 
+  // Cada categoria sai com a gravidade que costuma ter (a mesma regra usada para
+  // definir a gravidade das ocorrências), pra tela Categorias de perigo.
   async listar() {
-    return categoriaRepository.listarTodas();
+    const categorias = await categoriaRepository.listarTodas();
+    return categorias.map(function (categoria) {
+      return { ...categoria, gravidade_tipica: gravidadeBase(categoria.nome, categoria.descricao) };
+    });
   }
 
   async listarAdmin() {
