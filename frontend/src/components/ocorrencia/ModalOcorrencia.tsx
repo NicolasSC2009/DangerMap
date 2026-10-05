@@ -265,15 +265,10 @@ export function ModalOcorrencia(props: ModalOcorrenciaProps) {
             <dt>Local</dt>
             <dd>
               {endereco?.texto ? (
-                <>
-                  <span className="dm-ocorrencia__endereco">{endereco.texto}</span>
-                  <span className="dm-mono dm-ocorrencia__coordenadas">
-                    {latitude.toFixed(4)}, {longitude.toFixed(4)}
-                  </span>
-                </>
+                <span className="dm-ocorrencia__endereco">{endereco.texto}</span>
               ) : (
-                <span className="dm-mono">
-                  {latitude.toFixed(4)}, {longitude.toFixed(4)}
+                <span className="dm-ocorrencia__endereco" title={`${latitude.toFixed(5)}, ${longitude.toFixed(5)}`}>
+                  Endereço não encontrado
                 </span>
               )}
             </dd>

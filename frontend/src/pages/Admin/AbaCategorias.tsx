@@ -215,7 +215,7 @@ export function AbaCategorias() {
             </div>
             <div className="dm-campo-grupo">
               <label className="dm-rotulo" htmlFor="cat-icone">
-                URL do ícone (opcional)
+                Endereço da imagem do ícone (opcional)
               </label>
               <input id="cat-icone" className="dm-campo" inputMode="url" {...register('icone_url')} />
               <span className="dm-dica">O app escolhe o ícone exibido pelo nome da categoria; este campo fica salvo para uso futuro.</span>

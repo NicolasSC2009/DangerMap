@@ -2,12 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type L from 'leaflet';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Mapa, lerUltimaVistaMapa } from '../../components/mapa/Mapa';
-import {
-  FerramentasMapa,
-  lerFiltrosSalvos,
-  salvarFiltros,
-  type FiltrosMapa,
-} from '../../components/mapa/FerramentasMapa';
+import { FerramentasMapa } from '../../components/mapa/FerramentasMapa';
+import { lerFiltrosSalvos, salvarFiltros, type FiltrosMapa } from '../../services/filtrosMapa';
 import { Navbar } from '../../components/navbar/Navbar';
 import { LogoCanto } from '../../components/comum/LogoCanto';
 import { ModalOcorrencia } from '../../components/ocorrencia/ModalOcorrencia';

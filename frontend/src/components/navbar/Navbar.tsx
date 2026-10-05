@@ -16,12 +16,9 @@ import {
 import type { IconType } from 'react-icons';
 import './navbar.css';
 import { SininhoNotificacoes } from '../notificacoes/SininhoNotificacoes';
-import { Modal } from '../comum/Modal';
 import { useAuth } from '../../contexts/AuthContext';
-import { useCategorias } from '../../hooks/useCategorias';
 import { useAvatarLocal } from '../../hooks/useAvatarLocal';
 import { iniciais as calcularIniciais } from '../../services/avatarLocal';
-import { obterIconeCategoria } from '../../theme/iconesCategorias';
 
 interface NavbarProps {
   aoSelecionarOcorrencia?: (ocorrenciaId: number) => void;
@@ -56,7 +53,6 @@ function AvatarUsuario(props: { avatar: string | null; nome: string | undefined;
 
 export function Navbar(props: NavbarProps) {
   const { usuario, autenticado, ehAdmin, sair } = useAuth();
-  const { categorias } = useCategorias(autenticado);
   const avatar = useAvatarLocal(usuario?.id);
   const navegar = useNavigate();
   // Só um painel (menu ou notificações) aberto por vez.
@@ -64,7 +60,6 @@ export function Navbar(props: NavbarProps) {
   const menuAberto = painel === 'menu';
   const fecharPainel = useCallback(() => setPainel(null), []);
   const alternarSino = useCallback(() => setPainel((p) => (p === 'sino' ? null : 'sino')), []);
-  const [modalCategoriasAberto, setModalCategoriasAberto] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const variante = props.variante || 'flutuante';
 
@@ -90,7 +85,7 @@ export function Navbar(props: NavbarProps) {
     [
       { Icone: FiMap, rotulo: 'Mapa', aoClicar: () => navegar('/') },
       { Icone: FiMapPin, rotulo: 'Minhas ocorrências', aoClicar: () => navegar('/perfil') },
-      { Icone: FiFolder, rotulo: 'Categorias de perigo', aoClicar: () => setModalCategoriasAberto(true) },
+      { Icone: FiFolder, rotulo: 'Categorias de perigo', aoClicar: () => navegar('/categorias') },
     ],
     [
       { Icone: FiSettings, rotulo: 'Configurações', aoClicar: () => navegar('/configuracoes') },
@@ -256,43 +251,6 @@ export function Navbar(props: NavbarProps) {
         </div>
       )}
 
-      {modalCategoriasAberto && (
-        <Modal
-          eyebrow="Guia rápido"
-          titulo="Categorias de perigo"
-          subtitulo="Tipos de ocorrência que você pode registrar no mapa."
-          largura={600}
-          aoFechar={() => setModalCategoriasAberto(false)}
-        >
-          {!autenticado ? (
-            <div className="dm-navbar-categorias__vazio">
-              <p>Entre na sua conta para ver as categorias disponíveis.</p>
-              <button
-                type="button"
-                className="dm-btn dm-btn--primario"
-                onClick={() => {
-                  setModalCategoriasAberto(false);
-                  navegar('/entrar');
-                }}
-              >
-                <span>Entrar</span>
-              </button>
-            </div>
-          ) : categorias.length === 0 ? (
-            <p className="dm-navbar-categorias__vazio">Nenhuma categoria cadastrada ainda.</p>
-          ) : (
-            <ul className="dm-navbar-categorias">
-              {categorias.map((c) => (
-                <li key={c.id} className="dm-navbar-categoria">
-                  <img src={obterIconeCategoria(c.nome)} alt="" />
-                  <strong>{c.nome}</strong>
-                  {c.descricao && <span>{c.descricao}</span>}
-                </li>
-              ))}
-            </ul>
-          )}
-        </Modal>
-      )}
     </div>
   );
 }

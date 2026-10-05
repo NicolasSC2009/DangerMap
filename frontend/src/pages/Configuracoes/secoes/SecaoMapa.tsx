@@ -84,9 +84,9 @@ export function SecaoMapa() {
           valor={preferencias.estiloMapa}
           aoMudar={(estiloMapa) => atualizar({ estiloMapa })}
           opcoes={[
-            { valor: 'padrao', rotulo: 'Padrão', descricao: 'OpenStreetMap', preview: <PreviewMapa estilo="padrao" /> },
-            { valor: 'claro', rotulo: 'Claro', descricao: 'Carto Voyager', preview: <PreviewMapa estilo="claro" /> },
-            { valor: 'escuro', rotulo: 'Escuro', descricao: 'Carto Dark', preview: <PreviewMapa estilo="escuro" /> },
+            { valor: 'padrao', rotulo: 'Padrão', descricao: 'Cores clássicas', preview: <PreviewMapa estilo="padrao" /> },
+            { valor: 'claro', rotulo: 'Claro', descricao: 'Mais suave', preview: <PreviewMapa estilo="claro" /> },
+            { valor: 'escuro', rotulo: 'Escuro', descricao: 'Para a noite', preview: <PreviewMapa estilo="escuro" /> },
             {
               valor: 'auto',
               rotulo: 'Automático',
@@ -103,11 +103,11 @@ export function SecaoMapa() {
       </LinhaConfig>
 
       <LinhaConfig
-        titulo="Mostrar clima e coordenadas"
-        descricao="Exibe a cápsula com a temperatura e a coordenada da sua posição."
+        titulo="Mostrar clima e localização"
+        descricao="Exibe no mapa a temperatura e a cidade onde você está."
         controle={
           <Interruptor
-            rotulo="Mostrar clima e coordenadas"
+            rotulo="Mostrar clima e localização"
             marcado={preferencias.mostrarClima}
             aoMudar={(mostrarClima) => atualizar({ mostrarClima })}
           />

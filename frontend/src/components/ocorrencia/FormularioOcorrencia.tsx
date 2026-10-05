@@ -25,7 +25,7 @@ interface CamposFormulario {
 }
 
 export function FormularioOcorrencia(props: FormularioOcorrenciaProps) {
-  const { categorias } = useCategorias(true);
+  const { categorias } = useCategorias();
   const {
     register,
     handleSubmit,
@@ -217,9 +217,7 @@ export function FormularioOcorrencia(props: FormularioOcorrenciaProps) {
           <strong>
             {endereco?.texto || (buscandoEndereco ? 'Buscando endereço…' : 'Endereço não encontrado')}
           </strong>
-          <span className="dm-mono">
-            {props.latitude.toFixed(5)}, {props.longitude.toFixed(5)}
-          </span>
+          <span>Ponto escolhido no mapa</span>
         </div>
       </div>
 

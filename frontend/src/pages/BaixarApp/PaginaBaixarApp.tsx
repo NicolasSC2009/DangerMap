@@ -8,7 +8,6 @@ import './baixarApp.css';
 interface Plataforma {
   Icone: IconType;
   titulo: string;
-  tecnologia: string;
   descricao: string;
   recursos: string[];
   /** Quando presente, a plataforma já tem um download real (link direto pro arquivo). */
@@ -20,16 +19,14 @@ const PLATAFORMAS: Plataforma[] = [
   {
     Icone: FiSmartphone,
     titulo: 'Android',
-    tecnologia: 'Capacitor',
     descricao: 'Aplicativo nativo para o seu celular, com notificações de perigo por perto mesmo com o app fechado.',
     recursos: ['Notificações nativas', 'Câmera integrada ao registro'],
   },
   {
     Icone: FiMonitor,
     titulo: 'Windows',
-    tecnologia: 'Electron',
     descricao: 'Aplicativo de desktop pra acompanhar o mapa fora do navegador, numa janela própria.',
-    recursos: ['Instalador com atalho automático', 'Requer o backend do DangerMap rodando na mesma rede'],
+    recursos: ['Instalador com atalho automático', 'Precisa estar na mesma rede do servidor do DangerMap'],
     urlDownload: '/downloads/DangerMap-Setup-Windows.exe',
     rotuloDownload: 'Baixar para Windows (.exe)',
   },
@@ -100,7 +97,6 @@ export function PaginaBaixarApp() {
                 )}
               </div>
               <h2>{p.titulo}</h2>
-              <span className="dm-baixar-card__tec">Feito com {p.tecnologia}</span>
               <p>{p.descricao}</p>
               <span className="dm-baixar-card__planejado">{p.urlDownload ? 'Inclui' : 'Planejado'}</span>
               <ul className="dm-baixar-card__recursos">
@@ -156,7 +152,7 @@ export function PaginaBaixarApp() {
         </ul>
 
         <p className="dm-baixar-nota">
-          O app de desktop precisa que o backend do DangerMap esteja rodando na sua rede pra funcionar. Dúvidas?{' '}
+          O app para Windows precisa estar na mesma rede em que o DangerMap está funcionando. Dúvidas?{' '}
           <Link to="/ajuda#faq">
             Veja a central de ajuda <FiArrowRight size={12} aria-hidden="true" />
           </Link>

@@ -171,7 +171,7 @@ export function SecaoPrivacidade(props: { usuarioId: number }) {
 
       <LinhaConfig
         titulo="Baixar meus dados"
-        descricao="Um arquivo JSON com sua conta, suas ocorrências, notificações e preferências."
+        descricao="Um arquivo com os dados da sua conta, suas ocorrências, notificações e preferências."
         controle={
           <button
             type="button"
@@ -180,7 +180,7 @@ export function SecaoPrivacidade(props: { usuarioId: number }) {
             disabled={baixando}
           >
             <FiDownload size={13} aria-hidden="true" />
-            {baixando ? 'Preparando…' : 'Baixar JSON'}
+            {baixando ? 'Preparando…' : 'Baixar meus dados'}
           </button>
         }
       />

@@ -16,7 +16,7 @@ export function CartaoExtracao(props: { aoAbrirRapido?: () => void }) {
         </span>
         <h3>Extração regional por raio</h3>
         <p>
-          Defina um ponto e um raio no mapa para listar as ocorrências contidas na área e exportar a tabela em CSV ou PDF.
+          Defina um ponto e um raio no mapa para listar as ocorrências contidas na área e baixar a lista em planilha ou PDF.
         </p>
       </div>
       <div className="dm-admin-extracao__acoes">

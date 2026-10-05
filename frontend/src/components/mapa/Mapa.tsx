@@ -10,6 +10,7 @@ import { FiMapPin, FiThermometer, FiDroplet } from 'react-icons/fi';
 import { CHAVE_ULTIMA_VISTA_MAPA, TILES, type UnidadeTemperatura } from '../../theme/preferencias';
 import { usePreferencias } from '../../contexts/PreferenciasContext';
 import { CamadaOcorrencias } from './CamadaOcorrencias';
+import { buscarEndereco } from '../../services/geo';
 import { ZOOM_MAXIMO } from './agrupamento';
 import type { Ocorrencia } from '@shared/types';
 
@@ -143,20 +144,35 @@ function CapsulaCoordenadaClima(props: {
   unidade: UnidadeTemperatura;
 }) {
   const ref = useIsolarDoMapa<HTMLDivElement>();
+  const [lugar, setLugar] = useState<string | null>(null);
   const temperatura = props.clima
     ? props.unidade === 'f'
       ? Math.round((props.clima.temperatura * 9) / 5 + 32)
       : props.clima.temperatura
     : 0;
-  const coordenadas =`${props.lat.toFixed(4)}, ${props.lng.toFixed(4)}`;
+
+  // Mostra a cidade (ex.: "Criciúma - SC") em vez de números de coordenada.
+  useEffect(
+    function () {
+      let ativo = true;
+      buscarEndereco(props.lat, props.lng).then(function (endereco) {
+        if (!ativo) return;
+        const cidade = [endereco?.cidade, endereco?.uf].filter(Boolean).join(' - ');
+        setLugar(cidade || null);
+      });
+      return function () {
+        ativo = false;
+      };
+    },
+    [props.lat, props.lng]
+  );
 
   return (
-    <div ref={ref} className="dm-mapa-clima" aria-live="polite" title={`Sua posição: ${coordenadas}`}>
+    <div ref={ref} className="dm-mapa-clima" aria-live="polite" title={lugar ? `Você está em ${lugar}` : 'Sua posição'}>
       <span className="dm-mapa-clima__item dm-mapa-clima__coord">
         <FiMapPin size={13} aria-hidden="true" />
-        <span className="dm-mapa-clima__texto-coord">{coordenadas}</span>
+        {lugar && <span className="dm-mapa-clima__texto-coord">{lugar}</span>}
       </span>
-
       <span className="dm-mapa-clima__sep" aria-hidden="true" />
 
       {props.carregando ? (
@@ -315,6 +331,7 @@ function EntregarMapa(props: { aoPronto?: (mapa: L.Map) => void }) {
   const mapa = useMap();
   useEffect(
     function () {
+      mapa.attributionControl?.setPrefix(false);
       props.aoPronto?.(mapa);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps

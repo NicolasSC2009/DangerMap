@@ -2,8 +2,6 @@ import { Link } from 'react-router-dom';
 import {
   FiArrowRight,
   FiCheckCircle,
-  FiCode,
-  FiGithub,
   FiMapPin,
   FiMonitor,
   FiPlusCircle,
@@ -14,7 +12,7 @@ import {
 } from 'react-icons/fi';
 import type { IconType } from 'react-icons';
 import { LayoutPadrao } from '../../components/comum/LayoutPadrao';
-import { URL_ISSUES, URL_REPOSITORIO } from '../Ajuda/conteudoAjuda';
+import { URL_ISSUES } from '../Ajuda/conteudoAjuda';
 import '../Ajuda/ajuda.css';
 import './sobre.css';
 
@@ -48,9 +46,9 @@ const PILARES: Array<{ Icone: IconType; titulo: string; texto: string }> = [
 ];
 
 const PLATAFORMAS: Array<{ Icone: IconType; titulo: string; texto: string }> = [
-  { Icone: FiGlobe, titulo: 'Web', texto: 'Direto no navegador, no computador ou no celular, e dá para instalar como app (PWA).' },
-  { Icone: FiMonitor, titulo: 'Windows', texto: 'Aplicativo de desktop feito com Electron, numa janela própria.' },
-  { Icone: FiSmartphone, titulo: 'Android', texto: 'Aplicativo nativo feito com Capacitor (em desenvolvimento).' },
+  { Icone: FiGlobe, titulo: 'Internet', texto: 'Direto no navegador, no computador ou no celular — e dá para instalar como se fosse um aplicativo.' },
+  { Icone: FiMonitor, titulo: 'Windows', texto: 'Aplicativo para o computador, numa janela só dele.' },
+  { Icone: FiSmartphone, titulo: 'Android', texto: 'Aplicativo para o celular (em desenvolvimento).' },
 ];
 
 export function PaginaSobre() {
@@ -73,8 +71,8 @@ export function PaginaSobre() {
           </div>
           <h1 id="dm-sobre-titulo">Sobre o DangerMap</h1>
           <p className="dm-ajuda-hero__sub">
-            Um sistema multiplataforma de mapeamento colaborativo de riscos urbanos, onde cidadãos registram e validam
-            ocorrências e administradores moderam e extraem relatórios geográficos.
+            Um mapa colaborativo de riscos urbanos: moradores registram e confirmam ocorrências, e a administração
+            modera e gera relatórios por região.
           </p>
         </div>
       </section>
@@ -92,8 +90,7 @@ export function PaginaSobre() {
             <div className="dm-ajuda-sobre__texto">
               <p>{TEXTO_SOBRE}</p>
               <p>
-                O projeto é de código aberto: o mapa, a moderação e os alertas são construídos em público e qualquer
-                pessoa pode sugerir melhorias.
+                O DangerMap é feito por estudantes e está aberto a sugestões: qualquer pessoa pode ajudar a melhorá-lo.
               </p>
             </div>
             <aside className="dm-ajuda-cartao-verde">
@@ -139,7 +136,7 @@ export function PaginaSobre() {
             <div>
               <span className="dm-ajuda-secao__numero">03</span>
               <h2 id="sobre-plataformas">Em todas as telas</h2>
-              <p>Uma só base de código e uma só API atendendo todas as plataformas.</p>
+              <p>O mesmo mapa e as mesmas ocorrências, não importa onde você abra.</p>
             </div>
           </header>
           <ul className="dm-sobre-grade dm-sobre-grade--tres">
@@ -163,22 +160,14 @@ export function PaginaSobre() {
 
         <section className="dm-ajuda-secao" aria-labelledby="sobre-projeto">
           <header className="dm-ajuda-secao__cabecalho">
-            <span className="dm-ajuda-secao__icone" aria-hidden="true"><FiGithub size={18} /></span>
+            <span className="dm-ajuda-secao__icone" aria-hidden="true"><FiUsers size={18} /></span>
             <div>
               <span className="dm-ajuda-secao__numero">04</span>
               <h2 id="sobre-projeto">O projeto</h2>
-              <p>Código aberto, feito por estudantes. Contribuições são bem-vindas.</p>
+              <p>Feito por estudantes, com a ajuda de quem usa. Sua opinião é bem-vinda.</p>
             </div>
           </header>
           <ul className="dm-ajuda-contatos">
-            <li>
-              <a className="dm-ajuda-contato" href={URL_REPOSITORIO} target="_blank" rel="noreferrer">
-                <span className="dm-ajuda-contato__icone" aria-hidden="true"><FiCode size={18} /></span>
-                <strong>Código-fonte</strong>
-                <span>Veja como o DangerMap funciona por dentro e contribua com o projeto.</span>
-                <span className="dm-ajuda-contato__cta">Abrir repositório <FiArrowRight size={13} aria-hidden="true" /></span>
-              </a>
-            </li>
             <li>
               <a className="dm-ajuda-contato" href={URL_ISSUES} target="_blank" rel="noreferrer">
                 <span className="dm-ajuda-contato__icone" aria-hidden="true"><FiPlusCircle size={18} /></span>

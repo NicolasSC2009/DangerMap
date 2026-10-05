@@ -301,67 +301,6 @@
   color: var(--dm-laranja);
 }
 
-/* ---------- modal Categorias de perigo ---------- */
-
-.dm-navbar-categorias {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 10px;
-}
-
-.dm-navbar-categoria {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 14px 10px 12px;
-  border: 1.5px solid var(--dm-linha);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.4);
-  text-align: center;
-  min-width: 0;
-}
-
-:root[data-tema='escuro'] .dm-navbar-categoria {
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.dm-navbar-categoria img {
-  width: 48px;
-  height: 48px;
-  object-fit: contain;
-}
-
-.dm-navbar-categoria strong {
-  font-size: var(--dm-t-sm);
-  color: var(--dm-titulo);
-  line-height: 1.25;
-}
-
-.dm-navbar-categoria span {
-  font-size: calc(11.5px * var(--dm-escala));
-  color: var(--dm-tinta-suave);
-  line-height: 1.4;
-}
-
-.dm-navbar-categorias__vazio {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 16px;
-  font-size: var(--dm-t-sm);
-  color: var(--dm-tinta-suave);
-}
-
-@media (max-width: 480px) {
-  .dm-navbar-categorias {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .dm-navbar-dropdown,
   .dm-navbar-botao,

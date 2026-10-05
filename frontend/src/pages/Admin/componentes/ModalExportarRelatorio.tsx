@@ -9,8 +9,8 @@ import { baixarArquivo, baixarCsv, carimboData, csvEstatisticas } from '../utils
 type Formato = 'pdf' | 'csv';
 
 const FORMATOS: Array<{ chave: Formato; rotulo: string; descricao: string; Icone: typeof FiFileText }> = [
-  { chave: 'pdf', rotulo: 'PDF', descricao: 'Relatório executivo gerado pelo servidor', Icone: FiFileText },
-  { chave: 'csv', rotulo: 'CSV', descricao: 'Planilha com totais, distribuições e série diária', Icone: FiGrid },
+  { chave: 'pdf', rotulo: 'PDF', descricao: 'Relatório resumido, pronto para imprimir ou enviar', Icone: FiFileText },
+  { chave: 'csv', rotulo: 'Planilha (CSV)', descricao: 'Abre no Excel, com os totais e o dia a dia', Icone: FiGrid },
 ];
 
 interface ModalExportarRelatorioProps {
@@ -47,7 +47,7 @@ export function ModalExportarRelatorio(props: ModalExportarRelatorioProps) {
       largura={520}
       eyebrow="Relatórios"
       titulo="Exportar relatório"
-      subtitulo="Relatório consolidado com os totais gerais e as ocorrências por status, gravidade e categoria. O CSV inclui também a série diária dos últimos 30 dias."
+      subtitulo="Relatório consolidado com os totais gerais e as ocorrências por status, gravidade e categoria. A planilha inclui também o dia a dia dos últimos 30 dias."
       aoFechar={props.aoFechar}
       bloquearFechamento={exportando}
       acoes={

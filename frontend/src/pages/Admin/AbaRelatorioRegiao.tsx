@@ -146,10 +146,10 @@ export function AbaRelatorioRegiao() {
         acoes={
           <>
             <button type="button" className="dm-btn dm-btn--ghost dm-btn--pequeno" onClick={exportarCsv} disabled={!temResultado || totalFiltrado === 0}>
-              <FiDownload aria-hidden="true" /> Baixar CSV
+              <FiDownload aria-hidden="true" /> Baixar planilha
             </button>
             <button type="button" className="dm-btn dm-btn--primario dm-btn--pequeno" onClick={() => window.print()} disabled={!temResultado}>
-              <FiPrinter aria-hidden="true" /> Imprimir / PDF
+              <FiPrinter aria-hidden="true" /> Imprimir / salvar em PDF
             </button>
           </>
         }

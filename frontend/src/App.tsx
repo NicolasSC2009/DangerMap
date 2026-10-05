@@ -14,6 +14,7 @@ const PaginaConfiguracoes = lazy(() => import('./pages/Configuracoes/PaginaConfi
 const PaginaAdmin = lazy(() => import('./pages/Admin/PaginaAdmin').then((m) => ({ default: m.PaginaAdmin })));
 const PaginaBaixarApp = lazy(() => import('./pages/BaixarApp/PaginaBaixarApp').then((m) => ({ default: m.PaginaBaixarApp })));
 const PaginaAjuda = lazy(() => import('./pages/Ajuda/PaginaAjuda').then((m) => ({ default: m.PaginaAjuda })));
+const PaginaCategorias = lazy(() => import('./pages/Categorias/PaginaCategorias').then((m) => ({ default: m.PaginaCategorias })));
 const PaginaSobre = lazy(() => import('./pages/Sobre/PaginaSobre').then((m) => ({ default: m.PaginaSobre })));
 const PaginaNaoEncontrada = lazy(() => import('./pages/NaoEncontrada/PaginaNaoEncontrada').then((m) => ({ default: m.PaginaNaoEncontrada })));
 
@@ -77,6 +78,14 @@ export function App() {
         element={
           <Suspense fallback={<EsqueletoPagina variante="ajuda" rotulo="Carregando ajuda…" />}>
             <PaginaAjuda />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/categorias"
+        element={
+          <Suspense fallback={<EsqueletoPagina variante="ajuda" rotulo="Carregando categorias…" />}>
+            <PaginaCategorias />
           </Suspense>
         }
       />

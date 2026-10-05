@@ -2,37 +2,31 @@ import { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import type { Categoria } from '@shared/types';
 
-// Categorias ativas (para formulários/filtros). GET /categorias exige
-// autenticação no backend - então só busca quando há sessão, evitando um
-// 401 desnecessário (e ruidoso no console) toda vez que um visitante não
-// logado carrega uma página com a Navbar.
-export function useCategorias(autenticado: boolean) {
+// Categorias ativas, com a gravidade típica de cada uma. A lista é pública,
+// então funciona também para quem ainda não entrou na conta.
+export function useCategorias() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
-  const [carregando, setCarregando] = useState(autenticado);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState(false);
 
-  useEffect(
-    function () {
-      if (!autenticado) {
-        setCategorias([]);
-        setCarregando(false);
-        return;
-      }
+  useEffect(function () {
+    let ativo = true;
+    api
+      .get<Categoria[]>('/categorias')
+      .then(function (resposta) {
+        if (ativo) setCategorias(resposta.data);
+      })
+      .catch(function (e) {
+        console.error('[ERRO AO BUSCAR CATEGORIAS]:', e);
+        if (ativo) setErro(true);
+      })
+      .finally(function () {
+        if (ativo) setCarregando(false);
+      });
+    return function () {
+      ativo = false;
+    };
+  }, []);
 
-      setCarregando(true);
-      api
-        .get<Categoria[]>('/categorias')
-        .then(function (resposta) {
-          setCategorias(resposta.data);
-        })
-        .catch(function (erro) {
-          console.error('[ERRO AO BUSCAR CATEGORIAS]:', erro);
-        })
-        .finally(function () {
-          setCarregando(false);
-        });
-    },
-    [autenticado]
-  );
-
-  return { categorias, carregando };
+  return { categorias, carregando, erro };
 }

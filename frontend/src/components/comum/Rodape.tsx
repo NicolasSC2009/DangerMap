@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom';
-import { FiGithub } from 'react-icons/fi';
 import logo from '../../assets/logo-dangermap.png';
 import { useAuth } from '../../contexts/AuthContext';
-import { URL_ISSUES, URL_REPOSITORIO } from '../../pages/Ajuda/conteudoAjuda';
+import { URL_ISSUES } from '../../pages/Ajuda/conteudoAjuda';
 import './rodape.css';
 
 // Rodapé das páginas internas (usado pelo LayoutPadrao).
@@ -23,6 +22,7 @@ export function Rodape() {
         <nav className="dm-rodape__coluna dm-rodape__coluna--dupla" aria-label="Navegação do rodapé">
           <h2>Navegar</h2>
           <Link to="/">Mapa</Link>
+          <Link to="/categorias">Categorias</Link>
           <Link to="/ajuda">Ajuda</Link>
           <Link to="/sobre">Sobre</Link>
           <Link to="/baixar-app">Baixar o app</Link>
@@ -45,11 +45,11 @@ export function Rodape() {
 
         <nav className="dm-rodape__coluna" aria-label="Projeto">
           <h2>Projeto</h2>
-          <a href={URL_REPOSITORIO} target="_blank" rel="noreferrer">
-            <FiGithub size={14} aria-hidden="true" /> Código-fonte
-          </a>
           <a href={URL_ISSUES} target="_blank" rel="noreferrer">
             Relatar um problema
+          </a>
+          <a href={URL_ISSUES} target="_blank" rel="noreferrer">
+            Enviar uma sugestão
           </a>
         </nav>
       </div>

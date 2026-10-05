@@ -7,9 +7,8 @@ import {
   FiCheck,
   FiCheckCircle,
   FiChevronDown,
-  FiCode,
-  FiFlag,
-  FiGithub,
+ FiFlag,
+  FiMessageCircle,
   FiMapPin,
   FiPlusCircle,
   FiSearch,
@@ -33,8 +32,7 @@ import {
   REGRAS_CONVIVENCIA,
   SECOES_AJUDA,
   URL_ISSUES,
-  URL_REPOSITORIO,
-  type IdSecaoAjuda,
+ type IdSecaoAjuda,
   type PerguntaFaq,
 } from './conteudoAjuda';
 import './ajuda.css';
@@ -102,7 +100,7 @@ function CabecalhoSecao(props: { numero: string; titulo: string; descricao?: Rea
 
 export function PaginaAjuda() {
   const { autenticado } = useAuth();
-  const { categorias, carregando: carregandoCategorias } = useCategorias(autenticado);
+  const { categorias, carregando: carregandoCategorias } = useCategorias();
   const local = useLocation();
   const navegar = useNavigate();
   const [busca, setBusca] = useState('');
@@ -537,16 +535,16 @@ export function PaginaAjuda() {
           <section id="contato" className="dm-ajuda-secao">
             <CabecalhoSecao
               numero="06"
-              Icone={FiGithub}
+              Icone={FiMessageCircle}
               titulo="Contato"
-              descricao="Não achou sua resposta? Fale com quem mantém o projeto."
+              descricao="Não achou sua resposta? Fale com a gente."
             />
             <ul className="dm-ajuda-contatos">
               <li>
                 <a className="dm-ajuda-contato" href={URL_ISSUES} target="_blank" rel="noreferrer">
                   <span className="dm-ajuda-contato__icone" aria-hidden="true"><FiAlertTriangle size={18} /></span>
                   <strong>Encontrou um erro?</strong>
-                  <span>Descreva o que aconteceu, em qual tela e, se puder, com um print. Abra uma issue no GitHub.</span>
+                  <span>Descreva o que aconteceu, em qual tela e, se puder, com um print.</span>
                   <span className="dm-ajuda-contato__cta">Relatar problema <FiArrowRight size={13} aria-hidden="true" /></span>
                 </a>
               </li>
@@ -558,15 +556,7 @@ export function PaginaAjuda() {
                   <span className="dm-ajuda-contato__cta">Enviar sugestão <FiArrowRight size={13} aria-hidden="true" /></span>
                 </a>
               </li>
-              <li>
-                <a className="dm-ajuda-contato" href={URL_REPOSITORIO} target="_blank" rel="noreferrer">
-                  <span className="dm-ajuda-contato__icone" aria-hidden="true"><FiCode size={18} /></span>
-                  <strong>Código-fonte</strong>
-                  <span>Veja como o DangerMap funciona por dentro e contribua com o projeto.</span>
-                  <span className="dm-ajuda-contato__cta">Abrir repositório <FiArrowRight size={13} aria-hidden="true" /></span>
-                </a>
-              </li>
-            </ul>
+           </ul>
             <p className="dm-ajuda-nota">
               Problema com uma ocorrência ou um perfil específico? Use a <strong>denúncia</strong> dentro do próprio app
               — ela chega direto na moderação.

@@ -235,7 +235,7 @@ export function FerramentaRaio(props: FerramentaRaioProps) {
     const partes = textoCoordenada.split(/[,;\s]+/).filter(Boolean).map((p) => Number(p.replace(',', '.')));
     const [lat, lng] = partes;
     if (partes.length !== 2 || !Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
-      setErroCoordenada('Use o formato "latitude, longitude" — ex.: -27.5954, -48.5480');
+      setErroCoordenada('Digite as coordenadas separadas por vírgula — ex.: -27.5954, -48.5480');
       return;
     }
     setErroCoordenada(null);
