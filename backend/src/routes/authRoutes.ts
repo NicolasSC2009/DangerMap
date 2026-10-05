@@ -4,6 +4,7 @@ import { LoginController } from '../controllers/LoginController.js';
 import { RecuperacaoSenhaController } from '../controllers/RecuperacaoSenhaController.js';
 import { autenticarToken, RequisicaoAutenticada } from '../middlewares/authMiddleware.js';
 import { validarRecaptcha } from '../middlewares/recaptchaMiddleware.js';
+import { recuperacaoSenhaLimiter } from '../middlewares/rateLimiter.js';
 import { BlacklistRepository } from '../repositories/BlacklistRepository.js';
 import jwt from 'jsonwebtoken';
 import { UsuarioController } from '../controllers/UsuarioController.js';
@@ -19,8 +20,9 @@ const blacklistRepository = new BlacklistRepository();
 authRoutes.delete('/usuarios/excluir', autenticarToken, usuarioController.excluirMinhaConta);
 authRoutes.post('/cadastro', validarRecaptcha, cadastroController.lidar);
 authRoutes.post('/login', loginController.lidar);
-authRoutes.post('/esqueci-senha', recuperacaoSenhaController.solicitar);
-authRoutes.post('/resetar-senha', recuperacaoSenhaController.resetar);
+authRoutes.post('/esqueci-senha', recuperacaoSenhaLimiter, recuperacaoSenhaController.solicitar);
+authRoutes.post('/verificar-codigo', recuperacaoSenhaLimiter, recuperacaoSenhaController.verificarCodigo);
+authRoutes.post('/resetar-senha', recuperacaoSenhaLimiter, recuperacaoSenhaController.resetar);
 
 authRoutes.post('/refresh', async function (req: Request, res: Response) {
   const refreshToken = req.cookies?.refreshToken;

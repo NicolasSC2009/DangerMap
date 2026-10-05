@@ -6,19 +6,43 @@ const categoriaRepository = new CategoriaRepository();
 const TIMEOUT_MS = 10000;
 const SEM_CATEGORIA = 'nenhuma';
 
-function montarPrompt(nomesCategorias: string[]): string {
+// Abaixo disso a IA "chutou": melhor não sugerir nada do que sugerir errado.
+const CONFIANCA_MINIMA = 0.55;
+
+function montarPrompt(categorias: Array<{ nome: string; descricao?: string | null }>, descricaoUsuario?: string): string {
+  const lista = categorias
+    .map(function (c) { return `- ${c.nome}${c.descricao ? `: ${c.descricao}` : ''}`; })
+    .join('\n');
+
+  const contexto = descricaoUsuario && descricaoUsuario.trim()
+    ? `\nO autor do relato escreveu: "${descricaoUsuario.trim().slice(0, 500)}". Use como contexto, ` +
+      'mas a imagem manda se os dois discordarem.\n'
+    : '';
+
   return (
-    'Você é um classificador de fotos de problemas de infraestrutura urbana ' +
+    'Você é um classificador de fotos de problemas de infraestrutura urbana e segurança ' +
     'reportados por cidadãos em um aplicativo de mapa de perigos (DangerMap).\n' +
-    `Categorias disponíveis: ${nomesCategorias.join(', ')}.\n` +
-    `Analise a imagem anexada e responda com a categoria que melhor descreve o ` +
-    `problema visível nela. Se a imagem não mostrar claramente nenhum desses ` +
-    `problemas, responda "${SEM_CATEGORIA}". Responda sempre em JSON.`
+    `Categorias disponíveis:\n${lista}\n\n` +
+    'Regras para decidir:\n' +
+    '- Escolha a categoria mais ESPECÍFICA para o problema principal em destaque na foto.\n' +
+    '- Animal vivo na via = "Animal na Pista"; animal sem vida = "Animal Morto na Via".\n' +
+    '- Água cobrindo a rua = "Alagamento"; piso apenas molhado, com óleo, lama ou areia = "Pista Escorregadia".\n' +
+    '- Buraco/cratera na rua = "Buraco na Via"; calçada ou piso irregular onde uma pessoa pode cair = "Risco de Queda".\n' +
+    '- Fogo ou fumaça = "Foco de Incêndio". Veículos batidos = "Acidente de Trânsito".\n' +
+    '- Se a foto não for de rua/via pública, estiver ilegível, ou não mostrar claramente nenhum dos problemas, ' +
+    `responda "${SEM_CATEGORIA}" com confiança baixa. Nunca invente.\n` +
+    'A confiança vai de 0 a 1 e deve refletir sua certeza real.' +
+    contexto +
+    '\nResponda sempre em JSON.'
   );
 }
 
 export class SugestaoCategoriaIAService {
-  static async sugerirPorImagem(bufferImagem: Buffer, mimeType: string): Promise<SugestaoCategoria> {
+  static async sugerirPorImagem(
+    bufferImagem: Buffer,
+    mimeType: string,
+    descricaoUsuario?: string
+  ): Promise<SugestaoCategoria> {
     if (!GEMINI_API_KEY) {
       throw new Error('Sugestão por imagem indisponível: GEMINI_API_KEY não configurada.');
     }
@@ -35,7 +59,7 @@ export class SugestaoCategoriaIAService {
       contents: [
         {
           parts: [
-            { text: montarPrompt(nomesCategorias) },
+            { text: montarPrompt(categorias, descricaoUsuario) },
             { inlineData: { mimeType, data: bufferImagem.toString('base64') } },
           ],
         },
@@ -89,6 +113,9 @@ export class SugestaoCategoriaIAService {
       }
 
       const confianca = Math.max(0, Math.min(1, Number(resultado.confianca) || 0));
+      if (confianca < CONFIANCA_MINIMA) {
+        return { categoriaId: null, categoriaNome: null, confianca: 0 };
+      }
 
       return {
         categoriaId: categoriaEncontrada.id,

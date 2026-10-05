@@ -1,5 +1,5 @@
 import { Response, Request } from 'express';
-import { OcorrenciaService } from '../services/OcorrenciaService.js';
+import { OcorrenciaService, ErroDadosOcorrencia } from '../services/OcorrenciaService.js';
 import { NotificacaoService } from '../services/NotificacaoService.js';
 import { LogAtividadeService } from '../services/LogAtividadeService.js';
 import { ParametroService } from '../services/ParametroService.js';
@@ -43,7 +43,27 @@ export class OcorrenciaController {
         const errosFormatados = error.issues.map(function(issue) { return issue.message; });
         return res.status(400).json({ erros: errosFormatados });
       }
+      if (error instanceof ErroDadosOcorrencia) {
+        return res.status(400).json({ erros: [error.message] });
+      }
       return res.status(500).json({ error: 'Erro interno ao registrar ocorrência.' });
+    }
+  }
+
+  async estimarGravidade(req: Request, res: Response): Promise<Response> {
+    try {
+      const categoriaId = Number(req.body?.categoriaId);
+      if (!Number.isInteger(categoriaId) || categoriaId <= 0) {
+        return res.status(400).json({ error: 'Informe a categoria.' });
+      }
+      const descricao = typeof req.body?.descricao === 'string' ? req.body.descricao : undefined;
+      const gravidade = await ocorrenciaService.estimarGravidade(categoriaId, descricao);
+      return res.status(200).json({ gravidade });
+    } catch (error: unknown) {
+      if (error instanceof ErroDadosOcorrencia) {
+        return res.status(404).json({ error: error.message });
+      }
+      return res.status(500).json({ error: 'Erro ao estimar a gravidade.' });
     }
   }
 
@@ -167,7 +187,8 @@ export class OcorrenciaController {
         return res.status(400).json({ error: 'Nenhuma imagem enviada. Use o campo "imagem".' });
       }
 
-      const sugestao = await SugestaoCategoriaIAService.sugerirPorImagem(req.file.buffer, req.file.mimetype);
+      const descricao = typeof req.body?.descricao === 'string' ? req.body.descricao : undefined;
+      const sugestao = await SugestaoCategoriaIAService.sugerirPorImagem(req.file.buffer, req.file.mimetype, descricao);
       return res.status(200).json({ ...sugestao, origem: 'imagem-ia' });
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : 'Erro ao sugerir categoria pela imagem.';

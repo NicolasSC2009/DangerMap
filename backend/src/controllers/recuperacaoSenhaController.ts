@@ -19,14 +19,29 @@ export class RecuperacaoSenhaController {
     }
   }
   
-  async resetar(req: Request, res: Response): Promise<Response> {
+  async verificarCodigo(req: Request, res: Response): Promise<Response> {
     try {
-      const { token, novaSenha } = req.body;
-      if (!token || !novaSenha) {
-        return res.status(400).json({ error: 'Código (token) e nova senha são obrigatórios' });
+      const { email, token } = req.body;
+      if (!email || !token) {
+        return res.status(400).json({ error: 'E-mail e código são obrigatórios' });
       }
 
-      const resultado = await recuperacaoSenhaService.resetarSenha(token, novaSenha);
+      const resultado = await recuperacaoSenhaService.verificarCodigo(String(email), String(token).trim());
+      return res.status(200).json(resultado);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao confirmar o código';
+      return res.status(400).json({ error: errorMessage });
+    }
+  }
+
+  async resetar(req: Request, res: Response): Promise<Response> {
+    try {
+      const { email, token, novaSenha } = req.body;
+      if (!email || !token || !novaSenha) {
+        return res.status(400).json({ error: 'E-mail, código e nova senha são obrigatórios' });
+      }
+
+      const resultado = await recuperacaoSenhaService.resetarSenha(String(email), String(token).trim(), novaSenha);
       return res.status(200).json(resultado);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro ao resetar senha';

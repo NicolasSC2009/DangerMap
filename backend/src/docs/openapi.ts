@@ -173,11 +173,19 @@ export const openApiSpec = {
         responses: { '200': { description: 'Se o e-mail existir, o código foi enviado' } },
       },
     },
+    '/auth/verificar-codigo': {
+      post: {
+        tags: ['Autenticação'],
+        summary: 'Confirma o código de recuperação recebido por e-mail (etapa antes de definir a nova senha)',
+        requestBody: jsonBody({ type: 'object', required: ['email', 'token'], properties: { email: { type: 'string' }, token: { type: 'string' } } }),
+        responses: { '200': { description: 'Código confirmado' }, '400': respostaErro('Código inválido ou expirado') },
+      },
+    },
     '/auth/resetar-senha': {
       post: {
         tags: ['Autenticação'],
-        summary: 'Redefine a senha usando o código recebido por e-mail',
-        requestBody: jsonBody({ type: 'object', required: ['token', 'novaSenha'], properties: { token: { type: 'string' }, novaSenha: { type: 'string' } } }),
+        summary: 'Redefine a senha usando o e-mail e o código recebido por e-mail',
+        requestBody: jsonBody({ type: 'object', required: ['email', 'token', 'novaSenha'], properties: { email: { type: 'string' }, token: { type: 'string' }, novaSenha: { type: 'string' } } }),
         responses: { '200': { description: 'Senha alterada' }, '400': respostaErro('Código inválido ou expirado') },
       },
     },

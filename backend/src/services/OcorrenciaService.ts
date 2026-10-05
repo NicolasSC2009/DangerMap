@@ -3,15 +3,38 @@ import { criarOcorrenciaSchema, FiltrosOcorrencia } from '../schemas/OcorrenciaS
 import { ParametroService } from './ParametroService.js';
 import { removerArquivoUpload } from '../utils/arquivoUpload.js';
 import { agruparPorProximidade, RAIO_CLUSTER_PADRAO_METROS } from './ClusterizacaoService.js';
+import { CategoriaRepository } from '../repositories/CategoriaRepository.js';
+import { calcularGravidadeAutomatica, GravidadeOcorrencia } from './GravidadeAutomaticaService.js';
+import { pontoDentroDoBrasil } from './MalhaGeograficaService.js';
 
 const ocorrenciaRepository = new OcorrenciaRepository();
+const categoriaRepository = new CategoriaRepository();
+
+export class ErroDadosOcorrencia extends Error {}
 
 export class OcorrenciaService {
+  // A gravidade nunca vem do cliente: é calculada a partir da categoria e da
+  // descrição (qualquer valor enviado em "gravidade" é ignorado).
+  async estimarGravidade(categoriaId: number, descricao?: string | null): Promise<GravidadeOcorrencia> {
+    const categoria = await categoriaRepository.buscarPorId(categoriaId);
+    if (!categoria) {
+      throw new ErroDadosOcorrencia('Categoria não encontrada.');
+    }
+    return calcularGravidadeAutomatica(categoria.nome, descricao, categoria.descricao);
+  }
+
   async registrar(dadosBrutos: any, usuarioId: number) {
     const dadosValidados = criarOcorrenciaSchema.parse(dadosBrutos);
 
+    if (!(await pontoDentroDoBrasil(dadosValidados.latitude, dadosValidados.longitude))) {
+      throw new ErroDadosOcorrencia('O DangerMap só aceita ocorrências dentro do território brasileiro.');
+    }
+
+    const gravidade = await this.estimarGravidade(dadosValidados.categoriaId, dadosValidados.descricao);
+
     const novaOcorrencia = await ocorrenciaRepository.criar({
       ...dadosValidados,
+      gravidade,
       usuarioId
     });
 

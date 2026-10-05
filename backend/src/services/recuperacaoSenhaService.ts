@@ -18,7 +18,7 @@ export class RecuperacaoSenhaService {
       return mensagemGenerica;
     }
 
-    const token = crypto.randomInt(100000, 999999).toString();
+    const token = crypto.randomInt(100000, 1000000).toString();
 
     const expiracao = new Date(Date.now() + 15 * 60 * 1000);
 
@@ -41,16 +41,35 @@ export class RecuperacaoSenhaService {
     return mensagemGenerica;
   }
 
-  async resetarSenha(token: string, novaSenha: any) {
-    const usuario = await usuarioRepository.buscarPorTokenReset(token);
-    
-    if (!usuario) {
-      throw new Error('Código de recuperação inválido ou expirado');
+  // Confere se o código enviado por e-mail pertence a ESSE e-mail e ainda vale.
+  // Serve tanto pra etapa "confirmar código" quanto pra trava final da troca.
+  private async validarCodigo(email: string, token: string) {
+    const usuario = await usuarioRepository.buscarPorEmail(email);
+    const esperado = usuario?.senha_reset_token;
+
+    const iguais =
+      !!esperado &&
+      esperado.length === token.length &&
+      crypto.timingSafeEqual(Buffer.from(esperado), Buffer.from(token));
+
+    if (!usuario || !iguais) {
+      throw new Error('Código de recuperação inválido ou expirado.');
     }
 
     if (usuario.senha_reset_expira && new Date() > usuario.senha_reset_expira) {
       throw new Error('Código de recuperação inválido ou expirado.');
     }
+
+    return usuario;
+  }
+
+  async verificarCodigo(email: string, token: string) {
+    await this.validarCodigo(email, token);
+    return { mensagem: 'Código confirmado.' };
+  }
+
+  async resetarSenha(email: string, token: string, novaSenha: any) {
+    const usuario = await this.validarCodigo(email, token);
 
     const novaSenhaCriptografada = await bcrypt.hash(novaSenha, 10);
 

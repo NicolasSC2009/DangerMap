@@ -13,6 +13,7 @@ router.post('/ocorrencias', autenticarToken, criarOcorrenciaLimiter, validarReca
 router.get('/ocorrencias', ocorrenciaController.listar);
 router.get('/ocorrencias/clusters', ocorrenciaController.listarClusters);
 router.post('/ocorrencias/sugerir-categoria', autenticarToken, ocorrenciaController.sugerirCategoria);
+router.post('/ocorrencias/estimar-gravidade', autenticarToken, ocorrenciaController.estimarGravidade);
 router.post('/ocorrencias/sugerir-categoria-imagem', autenticarToken, processarUploadImagemAnalise, ocorrenciaController.sugerirCategoriaPorImagem);
 router.post('/ocorrencias/:id/foto', autenticarToken, processarUploadFotoOcorrencia, ocorrenciaController.uploadFoto);
 router.delete('/ocorrencias/:id/foto', autenticarToken, autorizarAdmin, ocorrenciaController.removerFoto);

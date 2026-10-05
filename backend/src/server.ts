@@ -15,6 +15,7 @@ import usuarioRoutes from './routes/usuarioRoutes.js';
 import notificacaoRoutes from './routes/notificacaoRoutes.js';
 import climaRoutes from './routes/climaRoutes.js';
 import interacaoRoutes from './routes/interacaoRoutes.js';
+import geoRoutes from './routes/geoRoutes.js';
 import { iniciarJobLimpeza } from './utils/LimpezaOcorrencias.js';
 import { DIRETORIO_UPLOADS } from './utils/arquivoUpload.js';
 
@@ -37,6 +38,7 @@ app.use('/api', adminRoutes);
 app.use('/api', usuarioRoutes);
 app.use('/api', climaRoutes);
 app.use('/api', interacaoRoutes);
+app.use('/api', geoRoutes);
 
 app.get('/api/status', async function (req: Request, res: Response) {
   try {
