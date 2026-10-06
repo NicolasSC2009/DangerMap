@@ -10,7 +10,7 @@ import { CampoSenha } from '../../components/comum/CampoSenha';
 import { RegrasSenha } from '../../components/comum/RegrasSenha';
 import { REGEX_EMAIL, validarSenhaForte } from '../../theme/validacoes';
 import { Mapa } from '../../components/mapa/Mapa';
-import logo from '../../assets/logo.png';
+import logo from '../../assets/logo-auth.png';
 import type { RespostaLogin } from '@shared/types';
 
 interface CamposLogin {

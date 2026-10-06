@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import type { IconType } from 'react-icons';
-import { FiAlertTriangle, FiBell, FiCloud, FiEye, FiMap, FiMapPin, FiShield, FiUser } from 'react-icons/fi';
+import { FiAlertTriangle, FiArrowLeft, FiBell, FiCloud, FiEye, FiMap, FiMapPin, FiShield, FiUser } from 'react-icons/fi';
 import { LayoutPadrao } from '../../components/comum/LayoutPadrao';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePerfil } from '../../hooks/usePerfil';
@@ -127,6 +127,10 @@ export function PaginaConfiguracoes() {
 
       <div className="dm-config-grade">
         <nav className="dm-config-indice" aria-label="Seções das configurações">
+          <Link to="/" className="dm-config-indice__voltar">
+            <FiArrowLeft size={16} aria-hidden="true" />
+            <span>Voltar para o mapa</span>
+          </Link>
           <ul className="dm-config-indice__lista">
             {INDICE.map((item) => {
               const Icone = item.icone;
@@ -158,6 +162,9 @@ export function PaginaConfiguracoes() {
         </nav>
 
         <div className="dm-config-indice-mobile" ref={indiceMobileRef} role="navigation" aria-label="Seções">
+          <Link to="/" className="dm-chip dm-chip--claro dm-chip--voltar">
+            <FiArrowLeft size={13} aria-hidden="true" /> Mapa
+          </Link>
           {INDICE.map((item) => (
             <Link
               key={item.id}

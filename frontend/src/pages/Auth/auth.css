@@ -399,14 +399,14 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  animation: dm-auth-drift-contour 7s ease-in-out infinite alternate;
+  animation: dm-auth-drift-contour 22s ease-in-out infinite alternate;
 }
 
 .dm-auth-deco-contour path {
   fill: none;
   stroke-width: 2.5;
   stroke-dasharray: 16 12;
-  animation: dm-auth-flow-dash 8.4s linear infinite;
+  animation: dm-auth-flow-dash 42s linear infinite;
 }
 
 .dm-auth-deco-contour path:nth-child(1) {
@@ -506,9 +506,9 @@
 }
 
 .dm-auth-logo {
-  width: clamp(160px, 22vw, 260px);
+  width: clamp(230px, 34vw, 400px);
   height: auto;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .dm-auth-accent-title {

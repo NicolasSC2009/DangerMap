@@ -39,6 +39,26 @@
   gap: 18px;
 }
 
+.dm-config-indice__voltar {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--dm-card);
+  border: 1px solid var(--dm-linha);
+  color: var(--dm-titulo);
+  font-weight: 700;
+  text-decoration: none;
+  transition: color var(--dm-transicao), border-color var(--dm-transicao);
+}
+
+.dm-config-indice__voltar:hover {
+  color: var(--dm-laranja-escuro);
+  border-color: var(--dm-laranja);
+}
+
 .dm-config-indice__lista {
   list-style: none;
   margin: 0;
@@ -744,6 +764,13 @@
   .dm-config-indice-mobile .dm-chip {
     flex-shrink: 0;
     text-decoration: none;
+  }
+
+  .dm-chip--voltar {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
   }
 
   .dm-config-secao {
