@@ -145,7 +145,8 @@ export function Navbar(props: NavbarProps) {
         <IconeGradeNovePontos />
       </button>
 
-      {ehAdmin && (
+      {/* No mapa, o atalho do painel fica na barra lateral esquerda. */}
+      {ehAdmin && variante === 'embutida' && (
         <button
           type="button"
           className="dm-navbar-botao"

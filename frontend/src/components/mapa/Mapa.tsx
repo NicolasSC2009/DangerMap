@@ -413,10 +413,10 @@ export function Mapa(props: MapaProps) {
         maxZoom={ZOOM_MAXIMO}
         maxBounds={LIMITES_SUPER_EXPANDIDOS}
         maxBoundsViscosity={0.2}
+        zoomControl={false}
         className="dm-mapa__leaflet"
         {...(decorativo
           ? {
-              zoomControl: false,
               attributionControl: false,
               dragging: false,
               scrollWheelZoom: false,

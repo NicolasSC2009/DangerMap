@@ -37,27 +37,6 @@
   filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.9) saturate(0.7);
 }
 
-.dm-mapa .leaflet-control-zoom {
-  border: 1px solid var(--dm-linha) !important;
-  border-radius: 12px !important;
-  overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18) !important;
-}
-
-.dm-mapa .leaflet-control-zoom a {
-  width: 36px;
-  height: 36px;
-  line-height: 34px;
-  background: var(--dm-card);
-  color: var(--dm-titulo);
-  border-bottom-color: var(--dm-linha);
-}
-
-.dm-mapa .leaflet-control-zoom a:hover {
-  background: var(--dm-eggshell);
-  color: var(--dm-laranja-escuro);
-}
-
 .dm-mapa .leaflet-control-attribution {
   font-family: var(--dm-fonte-corpo);
   font-size: 10px;
@@ -321,13 +300,13 @@
   position: fixed;
   /* mesma linha e mesma altura dos botões da navbar */
   top: calc(var(--dm-nav-topo) + var(--dm-safe-t));
-  left: 72px;
+  left: var(--dm-nav-lateral);
   z-index: var(--dm-z-mapa-ui);
   display: flex;
   align-items: center;
   gap: 10px;
   height: var(--dm-nav-botao);
-  max-width: calc(100% - 72px - 200px);
+  max-width: calc(100% - var(--dm-nav-lateral) * 2 - var(--dm-nav-botao) * 3 - var(--dm-nav-gap) * 3);
   padding: 0 16px;
   border-radius: 999px;
   background: rgba(0, 50, 35, 0.9);
@@ -485,21 +464,10 @@
 /* ---------- celular ---------- */
 
 @media (max-width: 640px) {
-  /* zoom do Leaflet desce para o canto inferior esquerdo, acima do LogoCanto */
-  .dm-mapa .leaflet-top.leaflet-left {
-    top: auto;
-    bottom: calc(64px + var(--dm-safe-b));
-  }
-  .dm-mapa .leaflet-top.leaflet-left .leaflet-control {
-    margin: 0 0 0 16px;
-  }
-
-  /* clima no canto superior esquerdo, na mesma linha da navbar (sem colidir com o zoom, que desce) */
+  /* clima no canto superior esquerdo, na mesma linha da navbar */
   .dm-mapa-clima {
-    left: 16px;
     gap: 8px;
     padding: 0 12px;
-    max-width: calc(100% - 32px - 200px);
   }
 
   /* cartão de permissão abaixo da navbar flutuante */

@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import { toast } from 'react-toastify';
-import { FiCrosshair, FiSearch, FiSliders, FiX } from 'react-icons/fi';
+import { FiBarChart2, FiCrosshair, FiMinus, FiPlus, FiSearch, FiSliders, FiX } from 'react-icons/fi';
 import { api } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 import { COR_GRAVIDADE, ROTULO_GRAVIDADE } from '../../theme/rotulos';
 import { obterIconeCategoria } from '../../theme/iconesCategorias';
 import type { Gravidade } from '@shared/types';
@@ -41,6 +43,9 @@ function alternar<T>(lista: T[], item: T): T[] {
 
 export function FerramentasMapa(props: Props) {
   const { mapa } = props;
+  const { ehAdmin } = useAuth();
+  const navegar = useNavigate();
+  const [zoom, setZoom] = useState<number | null>(null);
   const [painel, setPainel] = useState<Painel>(null);
   const [termo, setTermo] = useState('');
   const [buscando, setBuscando] = useState(false);
@@ -58,6 +63,20 @@ export function FerramentasMapa(props: Props) {
       L.DomEvent.disableScrollPropagation(raizRef.current);
     }
   }, []);
+
+  // Mantém os botões de zoom (+ e −) em sintonia com o mapa: desligam no limite.
+  useEffect(
+    function () {
+      if (!mapa) return;
+      const atualizar = () => setZoom(mapa.getZoom());
+      atualizar();
+      mapa.on('zoomend', atualizar);
+      return function () {
+        mapa.off('zoomend', atualizar);
+      };
+    },
+    [mapa]
+  );
 
   useEffect(
     function () {
@@ -159,42 +178,80 @@ export function FerramentasMapa(props: Props) {
 
   return (
     <div ref={raizRef} className="dm-ferramentas">
-      <div className="dm-ferramentas__botoes">
-        <button
-          type="button"
-          className={`dm-ferramenta${painel === 'busca' ? ' dm-ferramenta--ativa' : ''}`}
-          onClick={() => setPainel((p) => (p === 'busca' ? null : 'busca'))}
-          aria-label="Buscar endereço"
-          aria-expanded={painel === 'busca'}
-          title="Buscar endereço"
-        >
-          <FiSearch aria-hidden="true" />
-        </button>
+      <div className="dm-barra" role="toolbar" aria-orientation="vertical" aria-label="Ferramentas do mapa">
+        <div className="dm-barra__grupo">
+          <button
+            type="button"
+            className="dm-barra__botao"
+            onClick={() => mapa?.zoomIn()}
+            disabled={!mapa || (zoom !== null && mapa.getMaxZoom() <= zoom)}
+            aria-label="Aproximar o mapa"
+            title="Aproximar"
+          >
+            <FiPlus aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="dm-barra__botao"
+            onClick={() => mapa?.zoomOut()}
+            disabled={!mapa || (zoom !== null && mapa.getMinZoom() >= zoom)}
+            aria-label="Afastar o mapa"
+            title="Afastar"
+          >
+            <FiMinus aria-hidden="true" />
+          </button>
+        </div>
 
-        <button
-          type="button"
-          className={`dm-ferramenta${painel === 'filtros' ? ' dm-ferramenta--ativa' : ''}`}
-          onClick={() => setPainel((p) => (p === 'filtros' ? null : 'filtros'))}
-          aria-label={ativos ? `Filtros (${ativos} ativos)` : 'Filtros'}
-          aria-expanded={painel === 'filtros'}
-          title="Filtrar ocorrências"
-        >
-          <FiSliders aria-hidden="true" />
-          {ativos > 0 && <span className="dm-ferramenta__selo">{ativos}</span>}
-        </button>
+        <div className="dm-barra__grupo">
+          <button
+            type="button"
+            className={`dm-barra__botao${painel === 'busca' ? ' dm-barra__botao--ativo' : ''}`}
+            onClick={() => setPainel((p) => (p === 'busca' ? null : 'busca'))}
+            aria-label="Buscar endereço"
+            aria-expanded={painel === 'busca'}
+            title="Buscar endereço"
+          >
+            <FiSearch aria-hidden="true" />
+          </button>
 
-        <button
-          type="button"
-          className="dm-ferramenta"
-          onClick={localizar}
-          disabled={localizando}
-          aria-label="Ir para a minha localização"
-          title="Minha localização"
-        >
-          <FiCrosshair aria-hidden="true" className={localizando ? 'dm-ferramenta__girando' : undefined} />
-        </button>
+          <button
+            type="button"
+            className={`dm-barra__botao${painel === 'filtros' ? ' dm-barra__botao--ativo' : ''}`}
+            onClick={() => setPainel((p) => (p === 'filtros' ? null : 'filtros'))}
+            aria-label={ativos ? `Filtros (${ativos} ativos)` : 'Filtros'}
+            aria-expanded={painel === 'filtros'}
+            title="Filtrar ocorrências"
+          >
+            <FiSliders aria-hidden="true" />
+            {ativos > 0 && <span className="dm-barra__selo">{ativos}</span>}
+          </button>
+
+          <button
+            type="button"
+            className="dm-barra__botao"
+            onClick={localizar}
+            disabled={localizando}
+            aria-label="Ir para a minha localização"
+            title="Minha localização"
+          >
+            <FiCrosshair aria-hidden="true" className={localizando ? 'dm-barra__girando' : undefined} />
+          </button>
+        </div>
+
+        {ehAdmin && (
+          <div className="dm-barra__grupo">
+            <button
+              type="button"
+              className="dm-barra__botao"
+              onClick={() => navegar('/admin')}
+              aria-label="Painel do administrador"
+              title="Painel do administrador"
+            >
+              <FiBarChart2 aria-hidden="true" />
+            </button>
+          </div>
+        )}
       </div>
-
       {painel === 'busca' && (
         <div className="dm-ferramentas__painel" role="dialog" aria-label="Buscar endereço">
           <form className="dm-busca" onSubmit={buscar}>
