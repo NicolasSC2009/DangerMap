@@ -205,7 +205,7 @@ export function FormularioOcorrencia(props: FormularioOcorrenciaProps) {
   return (
     <Modal
       aoFechar={props.aoFechar}
-      largura={880}
+      largura={980}
       eyebrow="Novo reporte"
       titulo="O que está acontecendo aqui?"
       bloquearFechamento={enviando}

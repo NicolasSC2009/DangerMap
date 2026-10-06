@@ -194,22 +194,15 @@ export function ModalOcorrencia(props: ModalOcorrenciaProps) {
 
   if (carregando || !ocorrencia) {
     return (
-      <Modal aoFechar={props.aoFechar} largura={800} ariaLabel="Carregando ocorrência" className="dm-ocorrencia-modal">
-        <div className="dm-ocorrencia__layout" role="status" aria-busy="true">
-          <div className="dm-ocorrencia__col" aria-hidden="true">
-            <Esqueleto altura={150} raio={14} />
-            <Esqueleto largura="55%" altura={26} />
-            <Esqueleto altura={14} />
-            <Esqueleto largura="70%" altura={14} />
-          </div>
-          <div className="dm-ocorrencia__col" aria-hidden="true">
-            <Esqueleto altura={16} />
-            <Esqueleto altura={16} />
-            <Esqueleto altura={16} />
-            <Esqueleto altura={16} />
-            <Esqueleto altura={48} raio={12} style={{ marginTop: 6 }} />
-          </div>
+      <Modal aoFechar={props.aoFechar} largura={440} ariaLabel="Carregando ocorrência" className="dm-ocorrencia-modal">
+        <div className="dm-ocorrencia__esqueleto" role="status" aria-busy="true">
           <span className="dm-visually-hidden">Carregando ocorrência…</span>
+          <Esqueleto altura={150} raio={14} />
+          <Esqueleto largura="55%" altura={26} />
+          <Esqueleto altura={14} />
+          <Esqueleto altura={14} />
+          <Esqueleto largura="70%" altura={14} />
+          <Esqueleto altura={48} raio={12} style={{ marginTop: 6 }} />
         </div>
       </Modal>
     );
@@ -222,12 +215,10 @@ export function ModalOcorrencia(props: ModalOcorrenciaProps) {
   return (
     <Modal
       aoFechar={props.aoFechar}
-      largura={800}
+      largura={440}
       ariaLabel={`Ocorrência: ${nomeCategoria}`}
       className="dm-ocorrencia-modal"
     >
-      <div className="dm-ocorrencia__layout">
-      <div className="dm-ocorrencia__col">
       {ocorrencia.imagem_url ? (
         <a
           href={resolverUrlUpload(ocorrencia.imagem_url) ?? undefined}
@@ -255,12 +246,6 @@ export function ModalOcorrencia(props: ModalOcorrenciaProps) {
         <h2 className="dm-ocorrencia__titulo">{nomeCategoria}</h2>
       </div>
 
-      <p className={`dm-ocorrencia__descricao${ocorrencia.descricao ? '' : ' dm-ocorrencia__descricao--vazia'}`}>
-        {ocorrencia.descricao || 'Sem descrição informada.'}
-      </p>
-      </div>
-
-      <div className="dm-ocorrencia__col">
       <dl className="dm-ocorrencia__detalhes">
         <div className="dm-ocorrencia__linha">
           <dt>Data</dt>
@@ -311,6 +296,10 @@ export function ModalOcorrencia(props: ModalOcorrenciaProps) {
           </dd>
         </div>
       </dl>
+
+      <p className={`dm-ocorrencia__descricao${ocorrencia.descricao ? '' : ' dm-ocorrencia__descricao--vazia'}`}>
+        {ocorrencia.descricao || 'Sem descrição informada.'}
+      </p>
 
       <div className="dm-ocorrencia__acoes">
         <button
@@ -394,8 +383,6 @@ export function ModalOcorrencia(props: ModalOcorrenciaProps) {
           </div>
         </div>
       )}
-      </div>
-      </div>
     </Modal>
   );
 }
