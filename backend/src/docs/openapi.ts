@@ -126,7 +126,7 @@ export const openApiSpec = {
       post: {
         tags: ['Autenticação'],
         summary: 'Cria uma nova conta (RF01)',
-        description: 'Protegido por reCAPTCHA em produção. A conta nasce ativa e com tipo "usuario".',
+        description: 'Protegido por reCAPTCHA (v3) em produção: envie recaptchaToken. A conta nasce ativa e com tipo "usuario".',
         requestBody: jsonBody(
           { type: 'object', required: ['nome', 'email', 'senha'], properties: { nome: { type: 'string' }, email: { type: 'string' }, senha: { type: 'string', description: 'Mín. 8 caracteres, com maiúscula, minúscula, número e caractere especial' } } },
           { nome: 'Maria Silva', email: 'maria@exemplo.com', senha: 'SenhaForte@123' }

@@ -11,6 +11,8 @@ import { RegrasSenha } from '../../components/comum/RegrasSenha';
 import { REGEX_EMAIL, validarSenhaForte } from '../../theme/validacoes';
 import { Mapa } from '../../components/mapa/Mapa';
 import logo from '../../assets/logo-auth.png';
+import { obterTokenRecaptcha } from '../../services/recaptcha';
+import { AvisoRecaptcha } from '../../components/comum/AvisoRecaptcha';
 import type { RespostaLogin } from '@shared/types';
 
 interface CamposLogin {
@@ -144,14 +146,15 @@ export function PaginaAuth() {
   async function aoSubmeterCadastro(campos: CamposCadastro) {
     setEnviandoCadastro(true);
     try {
-      await api.post('/auth/cadastro', campos);
+      const recaptchaToken = await obterTokenRecaptcha('cadastro');
+      await api.post('/auth/cadastro', { ...campos, recaptchaToken });
       toast.success('Conta criada! Faça login para continuar.');
       formLogin.setValue('email', campos.email);
       irPara('login');
       formCadastro.reset();
     } catch (erro: any) {
       const mensagem =
-        erro?.response?.data?.erros?.[0] || erro?.response?.data?.error || 'Não foi possível criar a conta.';
+        erro?.response?.data?.erros?.[0] || erro?.response?.data?.error || erro?.message || 'Não foi possível criar a conta.';
       toast.error(mensagem);
     } finally {
       setEnviandoCadastro(false);
@@ -304,6 +307,7 @@ export function PaginaAuth() {
                   <button type="submit" disabled={enviandoCadastro} className="dm-btn dm-btn--primario dm-btn--bloco">
                     <span>{enviandoCadastro ? 'Criando conta…' : 'Cadastrar'}</span>
                   </button>
+                  <AvisoRecaptcha />
                 </form>
 
                 <div className="dm-auth-form-footer">

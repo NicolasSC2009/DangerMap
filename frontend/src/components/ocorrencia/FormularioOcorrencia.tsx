@@ -10,6 +10,8 @@ import { ROTULO_GRAVIDADE } from '../../theme/rotulos';
 import { useCategorias } from '../../hooks/useCategorias';
 import { obterIconeCategoria } from '../../theme/iconesCategorias';
 import type { Gravidade, Ocorrencia } from '@shared/types';
+import { obterTokenRecaptcha } from '../../services/recaptcha';
+import { AvisoRecaptcha } from '../comum/AvisoRecaptcha';
 
 interface FormularioOcorrenciaProps {
   latitude: number;
@@ -169,7 +171,9 @@ export function FormularioOcorrencia(props: FormularioOcorrenciaProps) {
   async function enviar(campos: CamposFormulario) {
     setEnviando(true);
     try {
+      const recaptchaToken = await obterTokenRecaptcha('registrar_ocorrencia');
       const resposta = await api.post<{ mensagem: string; ocorrencia: Ocorrencia }>('/ocorrencias', {
+        recaptchaToken,
         categoriaId: Number(campos.categoriaId),
         descricao: campos.descricao?.trim() || undefined,
         latitude: props.latitude,
@@ -195,7 +199,7 @@ export function FormularioOcorrencia(props: FormularioOcorrenciaProps) {
       toast.success('Ocorrência registrada! Obrigado por contribuir.');
       props.aoCriada(ocorrenciaFinal);
     } catch (erro: any) {
-      const mensagem = erro?.response?.data?.erros?.[0] || erro?.response?.data?.error || 'Não foi possível registrar a ocorrência.';
+      const mensagem = erro?.response?.data?.erros?.[0] || erro?.response?.data?.error || erro?.message || 'Não foi possível registrar a ocorrência.';
       toast.error(mensagem);
     } finally {
       setEnviando(false);
@@ -346,6 +350,8 @@ export function FormularioOcorrencia(props: FormularioOcorrenciaProps) {
             <span>{enviando ? 'Enviando…' : 'Registrar ocorrência'}</span>
           </button>
         </div>
-      </form>    </Modal>
+      </form>
+      <AvisoRecaptcha />
+    </Modal>
   );
 }

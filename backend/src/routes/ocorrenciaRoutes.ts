@@ -9,7 +9,7 @@ import { processarUploadFotoOcorrencia, processarUploadImagemAnalise } from '../
 const router = Router();
 const ocorrenciaController = new OcorrenciaController();
 
-router.post('/ocorrencias', autenticarToken, criarOcorrenciaLimiter, validarRecaptcha, ocorrenciaController.cadastrar);
+router.post('/ocorrencias', autenticarToken, criarOcorrenciaLimiter, validarRecaptcha('registrar_ocorrencia'), ocorrenciaController.cadastrar);
 router.get('/ocorrencias', ocorrenciaController.listar);
 router.get('/ocorrencias/clusters', ocorrenciaController.listarClusters);
 router.post('/ocorrencias/sugerir-categoria', autenticarToken, ocorrenciaController.sugerirCategoria);

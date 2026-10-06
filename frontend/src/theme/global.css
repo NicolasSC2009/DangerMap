@@ -1129,3 +1129,23 @@ textarea.dm-campo {
     animation: none;
   }
 }
+
+/* ---------- reCAPTCHA v3 ---------- */
+
+/* O selo flutuante cobriria o botão de registrar; no lugar dele vai o aviso exigido pelo Google. */
+.grecaptcha-badge {
+  visibility: hidden;
+}
+
+.dm-recaptcha-aviso {
+  margin: 10px 0 0;
+  font-size: var(--dm-t-xs);
+  line-height: 1.5;
+  text-align: center;
+  color: var(--dm-tinta-suave);
+}
+
+.dm-recaptcha-aviso a {
+  color: inherit;
+  text-decoration: underline;
+}

@@ -18,7 +18,7 @@ const recuperacaoSenhaController = new RecuperacaoSenhaController();
 const blacklistRepository = new BlacklistRepository();
 
 authRoutes.delete('/usuarios/excluir', autenticarToken, usuarioController.excluirMinhaConta);
-authRoutes.post('/cadastro', validarRecaptcha, cadastroController.lidar);
+authRoutes.post('/cadastro', validarRecaptcha('cadastro'), cadastroController.lidar);
 authRoutes.post('/login', loginController.lidar);
 authRoutes.post('/esqueci-senha', recuperacaoSenhaLimiter, recuperacaoSenhaController.solicitar);
 authRoutes.post('/verificar-codigo', recuperacaoSenhaLimiter, recuperacaoSenhaController.verificarCodigo);
