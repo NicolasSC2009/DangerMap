@@ -609,6 +609,78 @@
   }
 }
 
+/* Desktop: o cartão tem altura fixa, então o cadastro (que tem mais campos) precisa caber
+   sem barra de rolagem. Quanto mais baixa a tela, mais apertado o espaçamento. */
+@media (min-width: 901px) {
+  .dm-auth-panel {
+    padding-top: 34px;
+    padding-bottom: 34px;
+  }
+
+  .dm-auth-subtitle {
+    margin-bottom: 20px;
+  }
+
+  .dm-auth-form {
+    gap: 13px;
+  }
+
+  .dm-auth-form-footer {
+    margin-top: 18px;
+  }
+}
+
+@media (min-width: 901px) and (max-height: 760px) {
+  .dm-auth-panel {
+    padding-top: 22px;
+    padding-bottom: 22px;
+  }
+
+  .dm-auth-panel-inner .dm-eyebrow {
+    margin-bottom: 6px;
+  }
+
+  .dm-auth-subtitle {
+    margin: 4px 0 14px;
+  }
+
+  .dm-auth-form {
+    gap: 10px;
+  }
+
+  .dm-auth-form .dm-campo {
+    min-height: 44px;
+    padding: 11px 16px;
+  }
+
+  .dm-auth-form .dm-btn {
+    margin-top: 2px;
+    padding: 13px 22px;
+  }
+
+  .dm-auth-form-footer {
+    margin-top: 12px;
+  }
+
+  .dm-recaptcha-aviso {
+    margin-top: 6px;
+  }
+}
+@media (min-width: 901px) and (max-height: 660px) {
+  .dm-auth-panel {
+    padding-top: 16px;
+    padding-bottom: 16px;
+  }
+
+  .dm-auth-subtitle {
+    display: none;
+  }
+
+  .dm-auth-panel-inner h1 {
+    margin-bottom: 12px;
+  }
+}
+
 @media (max-width: 900px) {
   .dm-auth-pagina {
     align-items: flex-start;
