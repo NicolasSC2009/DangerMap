@@ -7,7 +7,7 @@ const regexSenhaForte = new RegExp(
 
 export const cadastroSchema = z.object({
   nome: z.string().min(3, { message: 'O nome deve ter pelo menos 3 caracteres.' }),
-  email: z.string().email({ message: 'Formato de e-mail inválido.' }),
+  email: z.string().trim().toLowerCase().email({ message: 'Formato de e-mail inválido.' }),
   senha: z.string().refine(function (valor) {
     return regexSenhaForte.test(valor);
   }, {

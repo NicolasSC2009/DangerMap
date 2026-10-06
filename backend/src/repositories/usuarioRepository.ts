@@ -3,9 +3,10 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export class UsuarioRepository {
+  // E-mail não diferencia maiúsculas de minúsculas: Maria@Email.com e maria@email.com são a mesma conta.
   async buscarPorEmail(email: string) {
-    return prisma.usuario.findUnique({
-      where: { email },
+    return prisma.usuario.findFirst({
+      where: { email: { equals: email.trim(), mode: 'insensitive' } },
     });
   }
 
@@ -13,15 +14,15 @@ export class UsuarioRepository {
     return prisma.usuario.create({
       data: {
         nome: dados.nome,
-        email: dados.email,
+        email: String(dados.email).trim().toLowerCase(),
         senha: dados.senha,
       },
     });
   }
 
   async salvarTokenReset(email: string, token: string, expiracao: Date) {
-    return prisma.usuario.update({
-      where: { email },
+    return prisma.usuario.updateMany({
+      where: { email: { equals: email.trim(), mode: 'insensitive' } },
       data: {
         senha_reset_token: token,
         senha_reset_expira: expiracao,

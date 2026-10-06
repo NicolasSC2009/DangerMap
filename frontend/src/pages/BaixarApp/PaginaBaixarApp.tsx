@@ -41,7 +41,7 @@ const PASSOS_INSTALACAO = [
 ];
 export function PaginaBaixarApp() {
   return (
-    <LayoutPadrao variante="clara" mostrarVoltar={false}>
+    <LayoutPadrao variante="clara">
       <div className="dm-baixar">
         <header className="dm-baixar-hero dm-entrada">
           <div className="dm-eyebrow">
