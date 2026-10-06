@@ -227,7 +227,7 @@ export function PaginaMapa() {
         className="dm-fab"
       >
         <span className="dm-fab__mais" aria-hidden="true">
-          <FiPlus size={22} strokeWidth={2.6} />
+          <FiPlus size={22} strokeWidth={2.8} />
         </span>
         <span className="dm-fab__rotulo">Registrar ocorrência</span>
       </button>

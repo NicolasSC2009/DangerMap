@@ -471,7 +471,7 @@
 }
 /* ---------- botão "Registrar ocorrência" ---------- */
 
-/* Mesmo verde escuro da barra e da cápsula de clima, com o "+" em laranja como destaque. */
+/* Mesmo estilo do botão "Entrar" do topo: laranja liso, texto em maiúsculas. */
 .dm-fab {
   position: fixed;
   right: 16px;
@@ -479,22 +479,27 @@
   z-index: 1050; /* acima do mapa (1000), abaixo da navbar (1100) */
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 6px;
-  border: 1px solid rgba(245, 235, 225, 0.16);
+  justify-content: center;
+  gap: 10px;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 1.5px solid var(--dm-laranja-escuro);
   border-radius: 999px;
-  background: linear-gradient(135deg, #004531, #002a1d);
-  color: #f5ebe1;
+  background: var(--dm-laranja-escuro);
+  color: #fefcfc;
   font-family: var(--dm-fonte-corpo);
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  transition: transform 0.15s ease, box-shadow var(--dm-transicao), border-color var(--dm-transicao);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.38);
+  transition: transform 0.15s ease, background var(--dm-transicao), border-color var(--dm-transicao),
+    box-shadow var(--dm-transicao);
 }
 
 .dm-fab:hover {
+  background: var(--dm-laranja);
+  border-color: var(--dm-laranja);
   transform: translateY(-2px);
-  border-color: rgba(255, 100, 0, 0.7);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.46);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.42);
 }
 
 .dm-fab:active {
@@ -507,16 +512,9 @@
 }
 
 .dm-fab__mais {
-  flex-shrink: 0;
-  width: 48px;
-  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  background: linear-gradient(155deg, var(--dm-laranja) 0%, var(--dm-laranja-escuro) 100%);
-  color: #fff;
-  box-shadow: 0 3px 10px rgba(255, 100, 0, 0.45);
   transition: transform 0.25s ease;
 }
 
@@ -537,12 +535,18 @@
 
 /* Desktop: pílula com texto, bem mais fácil de achar que um "+" solto. */
 @media (min-width: 1025px) {
+  .dm-fab {
+    width: auto;
+    height: var(--dm-nav-botao);
+    padding: 0 26px 0 18px;
+  }
+
   .dm-fab__rotulo {
     display: inline;
-    padding-right: 18px;
-    font-size: calc(15px * var(--dm-escala));
+    font-size: calc(12.5px * var(--dm-escala));
     font-weight: 700;
-    letter-spacing: 0.2px;
+    letter-spacing: 1.3px;
+    text-transform: uppercase;
     white-space: nowrap;
   }
 }
