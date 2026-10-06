@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
@@ -11,8 +11,8 @@ import { RegrasSenha } from '../../components/comum/RegrasSenha';
 import { REGEX_EMAIL, validarSenhaForte } from '../../theme/validacoes';
 import { Mapa } from '../../components/mapa/Mapa';
 import logo from '../../assets/logo-auth.png';
-import { obterTokenRecaptcha } from '../../services/recaptcha';
-import { AvisoRecaptcha } from '../../components/comum/AvisoRecaptcha';
+import { recaptchaAtivo } from '../../services/recaptcha';
+import { CaixaRecaptcha, type CaixaRecaptchaRef } from '../../components/comum/CaixaRecaptcha';
 import type { RespostaLogin } from '@shared/types';
 
 interface CamposLogin {
@@ -105,6 +105,8 @@ export function PaginaAuth() {
   const navegar = useNavigate();
   const [enviandoLogin, setEnviandoLogin] = useState(false);
   const [enviandoCadastro, setEnviandoCadastro] = useState(false);
+  const [tokenRecaptcha, setTokenRecaptcha] = useState<string | null>(null);
+  const caixaRecaptchaRef = useRef<CaixaRecaptchaRef>(null);
   const [emailLembrado] = useState(lerUltimoEmail);
   const [lembrar, setLembrar] = useState(!!emailLembrado);
 
@@ -144,19 +146,23 @@ export function PaginaAuth() {
   }
 
   async function aoSubmeterCadastro(campos: CamposCadastro) {
+    if (recaptchaAtivo && !tokenRecaptcha) {
+      toast.info('Marque a caixa "Não sou um robô" para continuar.');
+      return;
+    }
     setEnviandoCadastro(true);
     try {
-      const recaptchaToken = await obterTokenRecaptcha('cadastro');
-      await api.post('/auth/cadastro', { ...campos, recaptchaToken });
+      await api.post('/auth/cadastro', { ...campos, recaptchaToken: tokenRecaptcha ?? undefined });
       toast.success('Conta criada! Faça login para continuar.');
       formLogin.setValue('email', campos.email);
       irPara('login');
       formCadastro.reset();
     } catch (erro: any) {
       const mensagem =
-        erro?.response?.data?.erros?.[0] || erro?.response?.data?.error || erro?.message || 'Não foi possível criar a conta.';
+        erro?.response?.data?.erros?.[0] || erro?.response?.data?.error || 'Não foi possível criar a conta.';
       toast.error(mensagem);
     } finally {
+      caixaRecaptchaRef.current?.reiniciar(); // o código vale uma vez só
       setEnviandoCadastro(false);
     }
   }
@@ -307,7 +313,7 @@ export function PaginaAuth() {
                   <button type="submit" disabled={enviandoCadastro} className="dm-btn dm-btn--primario dm-btn--bloco">
                     <span>{enviandoCadastro ? 'Criando conta…' : 'Cadastrar'}</span>
                   </button>
-                  <AvisoRecaptcha />
+                  <CaixaRecaptcha ref={caixaRecaptchaRef} aoMudar={setTokenRecaptcha} />
                 </form>
 
                 <div className="dm-auth-form-footer">

@@ -3,13 +3,12 @@ import { OcorrenciaController } from '../controllers/OcorrenciaController.js';
 import { autenticarToken } from '../middlewares/authMiddleware.js';
 import { autorizarAdmin } from '../middlewares/autorizarAdmin.js';
 import { criarOcorrenciaLimiter } from '../middlewares/rateLimiter.js';
-import { validarRecaptcha } from '../middlewares/recaptchaMiddleware.js';
 import { processarUploadFotoOcorrencia, processarUploadImagemAnalise } from '../middlewares/uploadMiddleware.js';
 
 const router = Router();
 const ocorrenciaController = new OcorrenciaController();
 
-router.post('/ocorrencias', autenticarToken, criarOcorrenciaLimiter, validarRecaptcha('registrar_ocorrencia'), ocorrenciaController.cadastrar);
+router.post('/ocorrencias', autenticarToken, criarOcorrenciaLimiter, ocorrenciaController.cadastrar);
 router.get('/ocorrencias', ocorrenciaController.listar);
 router.get('/ocorrencias/clusters', ocorrenciaController.listarClusters);
 router.post('/ocorrencias/sugerir-categoria', autenticarToken, ocorrenciaController.sugerirCategoria);

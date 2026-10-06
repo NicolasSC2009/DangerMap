@@ -658,7 +658,24 @@
   }
 
   .dm-auth-panel-inner h1 {
-    margin-bottom: 12px;
+    margin-bottom: 10px;
+  }
+
+  .dm-auth-panel-inner .dm-eyebrow {
+    display: none;
+  }
+
+  .dm-auth-form {
+    gap: 8px;
+  }
+
+  .dm-auth-form .dm-campo {
+    min-height: 40px;
+    padding: 9px 16px;
+  }
+
+  .dm-auth-form-footer {
+    margin-top: 8px;
   }
 }
 

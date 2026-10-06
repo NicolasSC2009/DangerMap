@@ -1130,22 +1130,18 @@ textarea.dm-campo {
   }
 }
 
-/* ---------- reCAPTCHA v3 ---------- */
+/* ---------- reCAPTCHA (caixa "Não sou um robô") ---------- */
 
-/* O selo flutuante cobriria o botão de registrar; no lugar dele vai o aviso exigido pelo Google. */
-.grecaptcha-badge {
-  visibility: hidden;
+.dm-recaptcha {
+  display: flex;
+  justify-content: center;
+  margin-top: 2px;
 }
 
-.dm-recaptcha-aviso {
-  margin: 10px 0 0;
-  font-size: var(--dm-t-xs);
-  line-height: 1.5;
-  text-align: center;
-  color: var(--dm-tinta-suave);
-}
-
-.dm-recaptcha-aviso a {
-  color: inherit;
-  text-decoration: underline;
+/* o widget tem largura fixa de 304px; reduz um pouco em telas muito estreitas */
+@media (max-width: 360px) {
+  .dm-recaptcha > div {
+    transform: scale(0.88);
+    transform-origin: center top;
+  }
 }
