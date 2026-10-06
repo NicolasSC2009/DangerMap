@@ -62,6 +62,15 @@
   height: 20px;
 }
 
+.dm-barra__botao:hover:not(:disabled):not(.dm-barra__botao--ativo) {
+  background: rgba(255, 100, 0, 0.14);
+  color: var(--dm-laranja-escuro);
+}
+
+:root[data-tema='escuro'] .dm-barra__botao:hover:not(:disabled):not(.dm-barra__botao--ativo) {
+  color: var(--dm-laranja);
+}
+
 .dm-barra__botao:active:not(:disabled) {
   transform: scale(0.92);
 }
