@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import { toast } from 'react-toastify';
-import { FiBarChart2, FiCrosshair, FiMinus, FiPlus, FiSearch, FiSliders, FiX } from 'react-icons/fi';
+import { FiBarChart2, FiClock, FiCrosshair, FiMapPin, FiMinus, FiPlus, FiSearch, FiSliders, FiX } from 'react-icons/fi';
 import { api } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { COR_GRAVIDADE, ROTULO_GRAVIDADE } from '../../theme/rotulos';
@@ -37,6 +37,39 @@ interface Props {
 
 type Painel = 'busca' | 'filtros' | null;
 
+const CHAVE_BUSCAS_RECENTES = '@DangerMap:mapa:buscasRecentes';
+const MAXIMO_RECENTES = 5;
+const MINIMO_LETRAS = 3;
+const ESPERA_DIGITACAO_MS = 450;
+
+function lerRecentes(): ResultadoBusca[] {
+  try {
+    const lista = JSON.parse(localStorage.getItem(CHAVE_BUSCAS_RECENTES) || '[]');
+    return Array.isArray(lista)
+      ? lista.filter((r) => r && typeof r.nome === 'string' && typeof r.latitude === 'number').slice(0, MAXIMO_RECENTES)
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function guardarRecentes(lista: ResultadoBusca[]) {
+  try {
+    localStorage.setItem(CHAVE_BUSCAS_RECENTES, JSON.stringify(lista));
+  } catch {
+    // sem armazenamento: só não lembra
+  }
+}
+
+// Endereço sem o que já aparece no título, sem "Brasil" e sem CEP.
+function complemento(r: ResultadoBusca): string {
+  const partes = r.texto.split(', ').map((p) => p.trim());
+  if (partes[0] === r.nome) partes.shift();
+  return partes
+    .filter((p) => p && p !== 'Brasil' && !/^\d{5}-?\d{3}$/.test(p) && !p.startsWith('Região '))
+    .slice(0, 4)
+    .join(', ');
+}
 function alternar<T>(lista: T[], item: T): T[] {
   return lista.includes(item) ? lista.filter((x) => x !== item) : [...lista, item];
 }
@@ -50,6 +83,9 @@ export function FerramentasMapa(props: Props) {
   const [termo, setTermo] = useState('');
   const [buscando, setBuscando] = useState(false);
   const [resultados, setResultados] = useState<ResultadoBusca[] | null>(null);
+  const [falhou, setFalhou] = useState(false);
+  const [ativo, setAtivo] = useState(-1);
+  const [recentes, setRecentes] = useState<ResultadoBusca[]>(lerRecentes);
   const [localizando, setLocalizando] = useState(false);
   const raizRef = useRef<HTMLDivElement>(null);
   const campoRef = useRef<HTMLInputElement>(null);
@@ -101,27 +137,75 @@ export function FerramentasMapa(props: Props) {
     };
   }, []);
 
-  async function buscar(evento: React.FormEvent) {
-    evento.preventDefault();
-    const texto = termo.trim();
-    if (texto.length < 3) {
-      toast.info('Digite pelo menos 3 letras do endereço ou lugar.');
-      return;
-    }
-    setBuscando(true);
-    try {
-      const resposta = await api.get<{ resultados: ResultadoBusca[] }>('/geo/buscar', { params: { q: texto } });
-      setResultados(resposta.data.resultados);
-    } catch {
-      setResultados(null);
-      toast.error('Não foi possível buscar agora. Tente de novo em instantes.');
-    } finally {
-      setBuscando(false);
+  // Sugestões enquanto digita: espera uma pausa na digitação e ignora respostas antigas.
+  useEffect(
+    function () {
+      const texto = termo.trim();
+      setAtivo(-1);
+      setFalhou(false);
+      if (texto.length < MINIMO_LETRAS) {
+        setResultados(null);
+        setBuscando(false);
+        return;
+      }
+      setBuscando(true);
+      const controle = new AbortController();
+      const espera = window.setTimeout(function () {
+        api
+          .get<{ resultados: ResultadoBusca[] }>('/geo/buscar', { params: { q: texto }, signal: controle.signal })
+          .then(function (resposta) {
+            // O mesmo trecho de rua costuma vir repetido: mostra só um de cada.
+            const vistos = new Set<string>();
+            setResultados(
+              resposta.data.resultados.filter(function (r) {
+                const chave = r.nome + '|' + complemento(r);
+                if (vistos.has(chave)) return false;
+                vistos.add(chave);
+                return true;
+              })
+            );
+            setBuscando(false);
+          })
+          .catch(function (erro) {
+            if (controle.signal.aborted || erro?.code === 'ERR_CANCELED') return;
+            setResultados(null);
+            setFalhou(true);
+            setBuscando(false);
+          });
+      }, ESPERA_DIGITACAO_MS);
+      return function () {
+        window.clearTimeout(espera);
+        controle.abort();
+      };
+    },
+    [termo]
+  );
+
+  const mostrandoRecentes = termo.trim().length < MINIMO_LETRAS;
+  const opcoes = mostrandoRecentes ? recentes : resultados ?? [];
+
+  function aoDigitarTecla(evento: React.KeyboardEvent<HTMLInputElement>) {
+    if (evento.key === 'ArrowDown' || evento.key === 'ArrowUp') {
+      if (opcoes.length === 0) return;
+      evento.preventDefault();
+      const passo = evento.key === 'ArrowDown' ? 1 : -1;
+      setAtivo((i) => (i + passo + opcoes.length) % opcoes.length);
+    } else if (evento.key === 'Enter') {
+      evento.preventDefault();
+      const escolhida = opcoes[ativo >= 0 ? ativo : 0];
+      if (escolhida) irPara(escolhida);
     }
   }
 
+  function limparRecentes() {
+    setRecentes([]);
+    guardarRecentes([]);
+  }
   function irPara(r: ResultadoBusca) {
     if (!mapa) return;
+    const novas = [r, ...recentes.filter((x) => !(x.latitude === r.latitude && x.longitude === r.longitude))].slice(0, MAXIMO_RECENTES);
+    setRecentes(novas);
+    guardarRecentes(novas);
     if (r.limites) {
       const [sul, norte, oeste, leste] = r.limites; // o Nominatim manda [sul, norte, oeste, leste]
       mapa.flyToBounds(
@@ -253,42 +337,95 @@ export function FerramentasMapa(props: Props) {
         )}
       </div>
       {painel === 'busca' && (
-        <div className="dm-ferramentas__painel" role="dialog" aria-label="Buscar endereço">
-          <form className="dm-busca" onSubmit={buscar}>
+        <div className="dm-ferramentas__painel dm-ferramentas__painel--busca" role="dialog" aria-label="Buscar endereço">
+          <div className="dm-busca">
+            <FiSearch className="dm-busca__lupa" aria-hidden="true" />
             <input
               ref={campoRef}
-              type="search"
+              type="text"
+              role="combobox"
+              aria-expanded={opcoes.length > 0}
+              aria-controls="dm-busca-lista"
+              aria-activedescendant={ativo >= 0 ? `dm-busca-opcao-${ativo}` : undefined}
+              aria-autocomplete="list"
               className="dm-busca__campo"
               value={termo}
               onChange={(e) => setTermo(e.target.value)}
-              placeholder="Rua, bairro ou cidade"
+              onKeyDown={aoDigitarTecla}
+              placeholder="Buscar rua, bairro ou cidade"
               maxLength={120}
+              autoComplete="off"
+              spellCheck={false}
               aria-label="Endereço, bairro ou cidade"
               enterKeyHint="search"
             />
-            <button type="submit" className="dm-btn dm-btn--primario dm-btn--pequeno" disabled={buscando}>
-              {buscando ? 'Buscando…' : 'Buscar'}
-            </button>
-          </form>
+            {buscando ? (
+              <span className="dm-busca__girando" role="status" aria-label="Buscando" />
+            ) : (
+              termo && (
+                <button
+                  type="button"
+                  className="dm-busca__limpar"
+                  onClick={() => {
+                    setTermo('');
+                    campoRef.current?.focus();
+                  }}
+                  aria-label="Limpar busca"
+                >
+                  <FiX aria-hidden="true" />
+                </button>
+              )
+            )}
+          </div>
 
-          {resultados && resultados.length === 0 && (
-            <p className="dm-ferramentas__vazio">Nada encontrado. Tente com a cidade, por exemplo “Rua X, Criciúma”.</p>
+          {mostrandoRecentes && recentes.length > 0 && (
+            <div className="dm-busca__cabeca">
+              <span>Buscas recentes</span>
+              <button type="button" onClick={limparRecentes}>
+                Limpar
+              </button>
+            </div>
           )}
-          {resultados && resultados.length > 0 && (
-            <ul className="dm-busca__lista">
-              {resultados.map((r, i) => (
-                <li key={`${r.latitude}-${r.longitude}-${i}`}>
-                  <button type="button" className="dm-busca__item" onClick={() => irPara(r)}>
-                    <strong>{r.nome}</strong>
-                    <span>{r.texto}</span>
+
+          {opcoes.length > 0 && (
+            <ul className="dm-busca__lista" id="dm-busca-lista" role="listbox">
+              {opcoes.map((r, i) => (
+                <li
+                  key={`${r.latitude}-${r.longitude}-${i}`}
+                  id={`dm-busca-opcao-${i}`}
+                  role="option"
+                  aria-selected={i === ativo}
+                >
+                  <button
+                    type="button"
+                    className={`dm-busca__item${i === ativo ? ' dm-busca__item--ativo' : ''}`}
+                    onClick={() => irPara(r)}
+                    onMouseEnter={() => setAtivo(i)}
+                  >
+                    <span className="dm-busca__icone" aria-hidden="true">
+                      {mostrandoRecentes ? <FiClock /> : <FiMapPin />}
+                    </span>
+                    <span className="dm-busca__textos">
+                      <strong>{r.nome}</strong>
+                      {complemento(r) && <span>{complemento(r)}</span>}
+                    </span>
                   </button>
                 </li>
               ))}
             </ul>
           )}
+
+          {!mostrandoRecentes && !buscando && !falhou && resultados && resultados.length === 0 && (
+            <p className="dm-ferramentas__vazio">Nada encontrado. Tente incluir a cidade, por exemplo “Rua X, Criciúma”.</p>
+          )}
+          {!mostrandoRecentes && falhou && (
+            <p className="dm-ferramentas__vazio">Não foi possível buscar agora. Tente de novo em instantes.</p>
+          )}
+          {mostrandoRecentes && recentes.length === 0 && (
+            <p className="dm-ferramentas__vazio">Digite pelo menos {MINIMO_LETRAS} letras: as sugestões aparecem enquanto você escreve.</p>
+          )}
         </div>
       )}
-
       {painel === 'filtros' && (
         <div className="dm-ferramentas__painel" role="dialog" aria-label="Filtrar ocorrências">
           <div className="dm-filtros__topo">

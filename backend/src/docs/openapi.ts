@@ -484,6 +484,18 @@ export const openApiSpec = {
         responses: { '200': { description: '{ regiao, temperatura, umidade, condicao_tempo, data_leitura, origem }' } },
       },
     },
+    '/clima/previsao': {
+      get: {
+        tags: ['Clima'],
+        summary: 'Previsão do tempo: agora, próximas 12 horas e próximos 7 dias',
+        description: 'Pública. Usa o Open-Meteo e, se ele estiver fora do ar, o MET Norway. Cada região (~5 km) fica em cache por 30 minutos.',
+        parameters: [
+          { name: 'lat', in: 'query', required: true, schema: { type: 'number' } },
+          { name: 'lng', in: 'query', required: true, schema: { type: 'number' } },
+        ],
+        responses: { '200': { description: '{ fonte, atualizadoEm, atual, horas, dias }' }, '503': { description: 'Nenhuma fonte de clima respondeu' } },
+      },
+    },
 
     '/admin/ocorrencias/{ocorrenciaId}/moderar': {
       patch: {

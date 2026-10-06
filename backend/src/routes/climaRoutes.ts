@@ -5,5 +5,6 @@ const router = Router();
 const climaController = new ClimaController();
 
 router.get('/clima', climaController.obterAtual);
+router.get('/clima/previsao', climaController.obterPrevisao);
 
 export default router;

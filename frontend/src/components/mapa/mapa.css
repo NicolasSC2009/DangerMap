@@ -294,7 +294,7 @@
   min-height: 40px;
 }
 
-/* ---------- cápsula de coordenada + clima ---------- */
+/* ---------- cápsula de clima (abre o modal de previsão) ---------- */
 
 .dm-mapa-clima {
   position: fixed;
@@ -307,44 +307,122 @@
   gap: 10px;
   height: var(--dm-nav-botao);
   max-width: calc(100% - var(--dm-nav-lateral) * 2 - var(--dm-nav-botao) * 3 - var(--dm-nav-gap) * 3);
-  padding: 0 16px;
+  padding: 0 12px 0 10px;
+  border: 1px solid rgba(245, 235, 225, 0.14);
   border-radius: 999px;
-  background: rgba(0, 50, 35, 0.9);
+  background: linear-gradient(135deg, rgba(0, 62, 44, 0.94), rgba(0, 38, 27, 0.94));
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
-  color: #ece6dc;
-  font-family: var(--dm-fonte-mono);
-  font-size: var(--dm-t-xs);
-  letter-spacing: 0.3px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  color: #f5ebe1;
+  font-family: var(--dm-fonte-corpo);
+  text-align: left;
   white-space: nowrap;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow var(--dm-transicao), border-color var(--dm-transicao);
 }
 
-.dm-mapa-clima__item {
-  display: inline-flex;
+.dm-mapa-clima:hover:not(:disabled) {
+  border-color: rgba(140, 200, 80, 0.55);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.42);
+}
+
+.dm-mapa-clima:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.dm-mapa-clima:disabled {
+  cursor: default;
+}
+
+.dm-mapa-clima:focus-visible {
+  outline: 3px solid var(--dm-verde-salada);
+  outline-offset: 2px;
+}
+
+.dm-mapa-clima__icone {
+  flex-shrink: 0;
+  width: calc(var(--dm-nav-botao) - 10px);
+  height: auto;
+  aspect-ratio: 4 / 3;
+  overflow: visible;
+}
+
+.dm-mapa-clima__temp {
+  font-size: calc(17px * var(--dm-escala));
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  font-variant-numeric: tabular-nums;
+}
+
+.dm-mapa-clima__textos {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding-left: 10px;
+  border-left: 1px solid rgba(245, 235, 225, 0.2);
+}
+
+.dm-mapa-clima__condicao {
+  font-size: var(--dm-t-sm);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.dm-mapa-clima__detalhe {
+  display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
+  min-width: 0;
+  font-size: var(--dm-t-xs);
+  line-height: 1.1;
+  opacity: 0.75;
 }
 
-.dm-mapa-clima__sep {
-  width: 1px;
-  height: 14px;
-  background: rgba(236, 230, 220, 0.25);
+.dm-mapa-clima__detalhe svg {
+  flex-shrink: 0;
 }
 
-.dm-mapa-clima__carregando {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.dm-mapa-clima__suave {
-  opacity: 0.7;
+.dm-mapa-clima__lugar {
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
 }
 
+.dm-mapa-clima__umidade {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 6px;
+  flex-shrink: 0;
+}
+
+.dm-mapa-clima__seta {
+  flex-shrink: 0;
+  opacity: 0.55;
+  transition: transform var(--dm-transicao), opacity var(--dm-transicao);
+}
+
+.dm-mapa-clima:hover:not(:disabled) .dm-mapa-clima__seta {
+  opacity: 1;
+  transform: translateX(2px);
+}
+
+.dm-mapa-clima__carregando {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dm-mapa-clima__suave {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px;
+  font-size: var(--dm-t-sm);
+  opacity: 0.8;
+}
 /* ---------- LogoCanto ---------- */
 
 /* Só o texto da marca, sem caixa/fundo. Um halo claro mantém a leitura sobre
@@ -464,10 +542,8 @@
 /* ---------- celular ---------- */
 
 @media (max-width: 640px) {
-  /* clima no canto superior esquerdo, na mesma linha da navbar */
-  .dm-mapa-clima {
-    gap: 8px;
-    padding: 0 12px;
+  .dm-mapa-clima__umidade {
+    display: none;
   }
 
   /* cartão de permissão abaixo da navbar flutuante */
@@ -477,10 +553,13 @@
 }
 
 @media (max-width: 480px) {
-  /* cápsula colapsa para só ícones + números */
-  .dm-mapa-clima__texto-coord,
-  .dm-mapa-clima__condicao,
-  .dm-mapa-clima__sep {
+  /* cápsula colapsa para só ícone + temperatura */
+  .dm-mapa-clima__textos,
+  .dm-mapa-clima__seta {
+    display: none;
+  }
+
+  .dm-mapa-clima__carregando .dm-mapa-clima__textos {
     display: none;
   }
 }

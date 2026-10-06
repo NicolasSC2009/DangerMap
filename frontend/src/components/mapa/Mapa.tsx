@@ -7,13 +7,15 @@ import '../comum/esqueleto.css';
 import iconeMarcadorPadrao from 'leaflet/dist/images/marker-icon.png';
 import iconeMarcadorPadrao2x from 'leaflet/dist/images/marker-icon-2x.png';
 import sombraMarcadorPadrao from 'leaflet/dist/images/marker-shadow.png';
-import { FiMapPin, FiThermometer, FiDroplet } from 'react-icons/fi';
+import { FiChevronRight, FiDroplet, FiMapPin } from 'react-icons/fi';
 import { CHAVE_ULTIMA_VISTA_MAPA, TILES, type ClimaOrigem, type UnidadeTemperatura } from '../../theme/preferencias';
 import { api } from '../../services/api';
 import { usePreferencias } from '../../contexts/PreferenciasContext';
 import { CamadaOcorrencias } from './CamadaOcorrencias';
 import { buscarEndereco } from '../../services/geo';
 import { ZOOM_MAXIMO } from './agrupamento';
+import { IconeClima, ModalClima } from '../clima/ModalClima';
+import { NOME_CLIMA, type PrevisaoClima } from '../clima/clima';
 import type { Ocorrencia } from '@shared/types';
 
 // Ícone padrão do Leaflet servido pelo próprio bundle (antes vinha do unpkg).
@@ -80,12 +82,6 @@ const LIMITES_SUPER_EXPANDIDOS: L.LatLngBoundsExpression = [
   [20.0, -10.0],
 ];
 
-interface ClimaAtual {
-  temperatura: number;
-  umidade: number;
-  condicao: string | null;
-}
-
 type StatusPermissaoLocalizacao = 'perguntando' | 'solicitando' | 'concedida' | 'negada';
 
 // Impede que cliques/scroll em elementos sobre o mapa cheguem ao Leaflet.
@@ -141,17 +137,19 @@ function CartaoPermissaoLocalizacao(props: { aoPermitir: () => void; aoRecusar: 
 function CapsulaClima(props: {
   lat: number;
   lng: number;
-  clima: ClimaAtual | null;
+  previsao: PrevisaoClima | null;
   carregando: boolean;
   unidade: UnidadeTemperatura;
   daMinhaPosicao: boolean;
 }) {
   const ref = useIsolarDoMapa<HTMLDivElement>();
   const [lugar, setLugar] = useState<string | null>(null);
-  const temperatura = props.clima
+  const [aberto, setAberto] = useState(false);
+  const atual = props.previsao?.atual ?? null;
+  const temperatura = atual
     ? props.unidade === 'f'
-      ? Math.round((props.clima.temperatura * 9) / 5 + 32)
-      : props.clima.temperatura
+      ? Math.round((atual.temperatura * 9) / 5 + 32)
+      : atual.temperatura
     : 0;
 
   // Mostra a cidade (ex.: "Criciúma - SC") em vez de números de coordenada.
@@ -170,38 +168,64 @@ function CapsulaClima(props: {
     [props.lat, props.lng]
   );
 
-  const dica = lugar ? (props.daMinhaPosicao ? `Clima onde você está (${lugar})` : `Clima em ${lugar}`) : 'Clima do local';
+  const nomeLugar = lugar ?? 'Local no mapa';
+  const dica = props.daMinhaPosicao ? `Clima onde você está (${nomeLugar})` : `Clima em ${nomeLugar}`;
+  const abrivel = Boolean(props.previsao) && !props.carregando;
 
   return (
-    <div ref={ref} className="dm-mapa-clima" aria-live="polite" title={dica}>
-      <span className="dm-mapa-clima__item dm-mapa-clima__coord">
-        <FiMapPin size={13} aria-hidden="true" />
-        {lugar && <span className="dm-mapa-clima__texto-coord">{lugar}</span>}
-      </span>
-      <span className="dm-mapa-clima__sep" aria-hidden="true" />
+    <div ref={ref} className="dm-mapa-clima-raiz">
+      <button
+        type="button"
+        className="dm-mapa-clima"
+        onClick={() => setAberto(true)}
+        disabled={!abrivel}
+        aria-label={atual ? `${dica}: ${temperatura} graus, ${NOME_CLIMA[atual.clima]}. Ver previsão` : dica}
+        title={abrivel ? 'Ver a previsão completa' : dica}
+      >
+        {props.carregando ? (
+          <span className="dm-mapa-clima__carregando" role="status">
+            <span className="dm-visually-hidden">Carregando clima…</span>
+            <span className="dm-esqueleto" style={{ width: 32, height: 32, borderRadius: '50%' }} aria-hidden="true" />
+            <span className="dm-mapa-clima__textos" aria-hidden="true">
+              <span className="dm-esqueleto" style={{ width: 92, height: 11, borderRadius: 6 }} />
+              <span className="dm-esqueleto" style={{ width: 64, height: 9, borderRadius: 5 }} />
+            </span>
+          </span>
+        ) : atual ? (
+          <>
+            <IconeClima tipo={atual.clima} className="dm-mapa-clima__icone" />
+            <span className="dm-mapa-clima__temp">
+              {temperatura}°{props.unidade === 'f' ? 'F' : 'C'}
+            </span>
+            <span className="dm-mapa-clima__textos">
+              <span className="dm-mapa-clima__condicao">{NOME_CLIMA[atual.clima]}</span>
+              <span className="dm-mapa-clima__detalhe">
+                <FiMapPin size={11} aria-hidden="true" />
+                <span className="dm-mapa-clima__lugar">{nomeLugar}</span>
+                {atual.umidade !== null && (
+                  <span className="dm-mapa-clima__umidade">
+                    <FiDroplet size={11} aria-hidden="true" />
+                    {atual.umidade}%
+                  </span>
+                )}
+              </span>
+            </span>
+            <FiChevronRight className="dm-mapa-clima__seta" size={16} aria-hidden="true" />
+          </>
+        ) : (
+          <span className="dm-mapa-clima__suave">
+            <FiMapPin size={13} aria-hidden="true" /> Clima indisponível
+          </span>
+        )}
+      </button>
 
-      {props.carregando ? (
-        <span className="dm-mapa-clima__carregando" role="status">
-          <span className="dm-visually-hidden">Carregando clima…</span>
-          <span className="dm-esqueleto" style={{ width: 54, height: 12, borderRadius: 6 }} aria-hidden="true" />
-          <span className="dm-esqueleto" style={{ width: 40, height: 12, borderRadius: 6 }} aria-hidden="true" />
-        </span>
-      ) : props.clima ? (
-        <>
-          <span className="dm-mapa-clima__item" aria-label={`Temperatura ${temperatura} graus`}>
-            <FiThermometer size={13} aria-hidden="true" />
-            {temperatura}°{props.unidade === 'f' ? 'F' : 'C'}
-          </span>
-          <span className="dm-mapa-clima__item" aria-label={`Umidade ${props.clima.umidade}%`}>
-            <FiDroplet size={13} aria-hidden="true" />
-            {props.clima.umidade}%
-          </span>
-          {props.clima.condicao && (
-            <span className="dm-mapa-clima__suave dm-mapa-clima__condicao">{props.clima.condicao}</span>
-          )}
-        </>
-      ) : (
-        <span className="dm-mapa-clima__suave">Clima indisponível</span>
+      {aberto && props.previsao && (
+        <ModalClima
+          previsao={props.previsao}
+          lugar={lugar}
+          unidade={props.unidade}
+          aoFechar={() => setAberto(false)}
+        />
       )}
     </div>
   );
@@ -215,7 +239,7 @@ function ClimaNoMapa(props: { unidade: UnidadeTemperatura; origem: ClimaOrigem; 
     const c = mapa.getCenter();
     return [c.lat, c.lng];
   });
-  const [clima, setClima] = useState<ClimaAtual | null>(null);
+  const [previsao, setPrevisao] = useState<PrevisaoClima | null>(null);
   const [carregando, setCarregando] = useState(true);
 
   useMapEvents({
@@ -237,22 +261,12 @@ function ClimaNoMapa(props: { unidade: UnidadeTemperatura; origem: ClimaOrigem; 
       setCarregando(true);
       const espera = setTimeout(function () {
         api
-          .get('/clima', { params: { lat, lng } })
+          .get<PrevisaoClima>('/clima/previsao', { params: { lat, lng } })
           .then(function (resposta) {
-            const dados = resposta.data;
-            if (!ativo) return;
-            if (dados && typeof dados.temperatura === 'number') {
-              setClima({
-                temperatura: Math.round(dados.temperatura),
-                umidade: dados.umidade ?? 0,
-                condicao: dados.condicao_tempo ?? null,
-              });
-            } else {
-              setClima(null);
-            }
+            if (ativo) setPrevisao(resposta.data?.atual ? resposta.data : null);
           })
           .catch(function () {
-            if (ativo) setClima(null);
+            if (ativo) setPrevisao(null);
           })
           .finally(function () {
             if (ativo) setCarregando(false);
@@ -270,14 +284,13 @@ function ClimaNoMapa(props: { unidade: UnidadeTemperatura; origem: ClimaOrigem; 
     <CapsulaClima
       lat={lat}
       lng={lng}
-      clima={clima}
+      previsao={previsao}
       carregando={carregando}
       unidade={props.unidade}
       daMinhaPosicao={daMinhaPosicao}
     />
   );
 }
-
 const CHAVE_ESCOLHA_LOCALIZACAO = '@DangerMap:escolhaLocalizacao';
 
 function LocalizadorUsuario(props: {
