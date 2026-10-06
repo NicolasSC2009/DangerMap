@@ -8,6 +8,7 @@ const VALORES_PADRAO: Record<string, string> = {
   horas_arquivamento_resolvido: '24',
   raio_validacao_presencial_metros: '200',
   raio_notificacao_proximidade_metros: '600',
+  confirmacoes_para_confirmar: '5',
 };
 
 const TTL_CACHE_MS = 60 * 1000;

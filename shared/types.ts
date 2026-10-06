@@ -54,6 +54,8 @@ export interface Ocorrencia {
   categorias?: { nome: string; icone_url: string | null };
   usuario?: { id: number; nome: string };
   _count?: { interacoes: number };
+  /** Confirmações da comunidade que faltam para virar "confirmada" (vem do detalhe). */
+  confirmacoes_necessarias?: number;
 }
 
 export interface ClusterOcorrencia {

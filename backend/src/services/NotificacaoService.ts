@@ -95,8 +95,8 @@ export class NotificacaoService {
         await NotificacaoService.criarGatilhoNotificacao({
           usuarioId: usr.id,
           ocorrenciaId: ocorrenciaId,
-          titulo: 'Alerta de Perigo Próximo',
-          mensagem: `Novo registro de ${categoriaNome} na sua região. Fique atento!`,
+          titulo: 'Perigo perto de você',
+          mensagem: `Nova ocorrência de ${categoriaNome} perto de você.`,
           tipo: 'proximidade'
         });
       }
@@ -138,8 +138,8 @@ export class NotificacaoService {
           await NotificacaoService.criarGatilhoNotificacao({
             usuarioId: usuarioId,
             ocorrenciaId: oc.id,
-            titulo: 'Validação Presencial',
-            mensagem: `Você está próximo de um problema pendente (${oc.categoria_nome || 'Ocorrência'}). Ele ainda é real? Toque para confirmar ou reportar.`,
+            titulo: 'Confirme esta ocorrência',
+            mensagem: `Você está perto de uma ocorrência pendente (${oc.categoria_nome || 'Ocorrência'}). O problema ainda existe? Toque para confirmar ou denunciar.`,
             tipo: 'validacao_campo'
           });
         }
@@ -158,8 +158,8 @@ export class NotificacaoService {
       await NotificacaoService.criarGatilhoNotificacao({
         usuarioId: autorId,
         ocorrenciaId: ocorrenciaId,
-        titulo: 'Ocorrência Resolvida',
-        mensagem: `Sua ocorrência ${categoriaNome ? '[' + categoriaNome + '] ' : ''}foi marcada como RESOLVIDA. Ela ficará visível no mapa por mais 24 horas antes de ser arquivada.`,
+        titulo: 'Ocorrência resolvida',
+        mensagem: `Sua ocorrência${categoriaNome ? ' de ' + categoriaNome : ''} foi marcada como resolvida. Ela continua no mapa por mais 24 horas e depois é arquivada.`,
         tipo: 'resolucao'
       });
     } catch (error) {

@@ -1,5 +1,6 @@
 import { ConfirmacaoRepository } from '../repositories/ConfirmacaoRepository.js';
-import { OcorrenciaRepository } from '../repositories/OcorrenciaRepository.js'; // Assumindo o nome do seu repositório de ocorrências
+import { OcorrenciaRepository } from '../repositories/OcorrenciaRepository.js';
+import { ParametroService } from './ParametroService.js';
 
 const confirmacaoRepository = new ConfirmacaoRepository();
 const ocorrenciaRepository = new OcorrenciaRepository();
@@ -20,7 +21,8 @@ export class ConfirmacaoService {
       throw new Error('Você já confirmou esta ocorrência.');
     }
 
-    return await confirmacaoRepository.confirmar(usuarioId, ocorrenciaId);
+    const limite = await ParametroService.obterNumero('confirmacoes_para_confirmar');
+    return await confirmacaoRepository.confirmar(usuarioId, ocorrenciaId, limite);
   }
 
   async executarRetirada(usuarioId: number, ocorrenciaId: number) {

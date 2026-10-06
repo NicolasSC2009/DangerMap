@@ -105,10 +105,12 @@ export class OcorrenciaService {
       throw new Error('Ocorrência não encontrada.');
     }
 
+    // Quantas confirmações a comunidade precisa dar para a ocorrência virar "confirmada".
+    const confirmacoesNecessarias = await ParametroService.obterNumero('confirmacoes_para_confirmar');
     if (ocorrencia.anonimo) {
-      return { ...ocorrencia, usuario_id: null, usuario: null };
+      return { ...ocorrencia, usuario_id: null, usuario: null, confirmacoes_necessarias: confirmacoesNecessarias };
     }
-    return ocorrencia;
+    return { ...ocorrencia, confirmacoes_necessarias: confirmacoesNecessarias };
   }
 
   async definirFoto(ocorrenciaId: number, usuarioId: number, usuarioTipo: string | undefined, novoCaminho: string) {

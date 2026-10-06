@@ -24,6 +24,27 @@ interface ClimaAtual {
   condicao_tempo: string;
 }
 
+// Símbolos do MET Norway (ex.: "partlycloudy_day") em português.
+function descreverSimboloMet(simbolo?: string): string {
+  if (!simbolo) return 'Condição desconhecida';
+  const base = simbolo.replace(/_(day|night|polartwilight)$/, '');
+  if (base.includes('thunder')) return 'Trovoadas';
+  if (base.includes('snow')) return 'Neve';
+  if (base.includes('sleet')) return 'Chuva com gelo';
+  if (base === 'heavyrain') return 'Chuva forte';
+  if (base === 'lightrain') return 'Chuva fraca';
+  if (base === 'rain') return 'Chuva';
+  if (base === 'heavyrainshowers') return 'Pancadas de chuva fortes';
+  if (base === 'lightrainshowers') return 'Pancadas de chuva fracas';
+  if (base === 'rainshowers') return 'Pancadas de chuva';
+  if (base === 'fog') return 'Neblina';
+  if (base === 'clearsky') return 'Céu limpo';
+  if (base === 'fair') return 'Predomínio de sol';
+  if (base === 'partlycloudy') return 'Parcialmente nublado';
+  if (base === 'cloudy') return 'Nublado';
+  return 'Condição desconhecida';
+}
+
 function arredondar(valor: number): number {
   return Math.round(valor * 100) / 100;
 }
@@ -77,7 +98,48 @@ export class ClimaService {
     return { regiao, ...dados, data_leitura: agora, origem: 'api' as const };
   }
 
+  // Open-Meteo é a fonte principal; se ela estiver fora do ar, usa o MET Norway (yr.no),
+  // que também é gratuito e não precisa de chave.
   private static async buscarDaApi(latitude: number, longitude: number): Promise<ClimaAtual> {
+    try {
+      return await ClimaService.buscarNoOpenMeteo(latitude, longitude);
+    } catch (erro) {
+      console.warn('[CLIMA] Open-Meteo indisponível, usando MET Norway:', (erro as Error).message);
+      return await ClimaService.buscarNoMetNorway(latitude, longitude);
+    }
+  }
+
+  private static async buscarNoMetNorway(latitude: number, longitude: number): Promise<ClimaAtual> {
+    const url = `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${latitude.toFixed(4)}&lon=${longitude.toFixed(4)}`;
+    const controle = new AbortController();
+    const timeout = setTimeout(function () {
+      controle.abort();
+    }, TIMEOUT_MS);
+
+    try {
+      const resposta = await fetch(url, {
+        signal: controle.signal,
+        headers: { 'User-Agent': 'DangerMap/1.0 (projeto academico; mapa colaborativo de perigos urbanos)' },
+      });
+      if (!resposta.ok) {
+        throw new Error(`API de clima reserva respondeu com status ${resposta.status}`);
+      }
+      const json = (await resposta.json()) as any;
+      const agora = json?.properties?.timeseries?.[0];
+      const detalhes = agora?.data?.instant?.details;
+      const simbolo: string | undefined = agora?.data?.next_1_hours?.summary?.symbol_code ?? agora?.data?.next_6_hours?.summary?.symbol_code;
+
+      return {
+        temperatura: typeof detalhes?.air_temperature === 'number' ? detalhes.air_temperature : null,
+        umidade: typeof detalhes?.relative_humidity === 'number' ? Math.round(detalhes.relative_humidity) : null,
+        condicao_tempo: descreverSimboloMet(simbolo),
+      };
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  private static async buscarNoOpenMeteo(latitude: number, longitude: number): Promise<ClimaAtual> {
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,weather_code&timezone=auto`;
 
     const controle = new AbortController();

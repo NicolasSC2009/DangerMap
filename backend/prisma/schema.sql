@@ -207,4 +207,5 @@ INSERT INTO parametros_sistema (chave, valor, descricao) VALUES
     ('limite_denuncias_usuario', '5', 'Numero de denuncias para um perfil entrar na fila de moderacao'),
     ('horas_arquivamento_resolvido', '24', 'Horas apos a resolucao para a ocorrencia ser arquivada automaticamente'),
     ('raio_validacao_presencial_metros', '200', 'Raio em metros para validacao presencial de ocorrencias pendentes'),
-    ('raio_notificacao_proximidade_metros', '600', 'Raio em metros para notificar usuarios proximos de uma nova ocorrencia');
+    ('raio_notificacao_proximidade_metros', '600', 'Raio em metros para notificar usuarios proximos de uma nova ocorrencia'),
+    ('confirmacoes_para_confirmar', '5', 'Numero de confirmacoes da comunidade para uma ocorrencia pendente virar confirmada');

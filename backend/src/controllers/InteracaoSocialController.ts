@@ -32,8 +32,8 @@ export class InteracaoSocialController {
           NotificacaoService.criarGatilhoNotificacao({
             usuarioId: ocorrencia.usuario_id,
             ocorrenciaId: ocorrenciaId,
-            titulo: 'Nova Curtida',
-            mensagem: 'Sua ocorrência recebeu uma curtida de apoio.',
+            titulo: 'Nova curtida',
+            mensagem: 'Alguém apoiou a sua ocorrência.',
             tipo: 'confirmacao',
           });
         }

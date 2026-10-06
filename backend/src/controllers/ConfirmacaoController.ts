@@ -28,13 +28,25 @@ export class ConfirmacaoController {
           NotificacaoService.criarGatilhoNotificacao({
             usuarioId: autorId,
             ocorrenciaId: ocorrenciaId,
-            titulo: 'Nova Confirmação',
-            mensagem: 'Sua ocorrência recebeu uma nova confirmação de um cidadão.',
+            titulo: 'Nova confirmação',
+            mensagem: 'Alguém confirmou a sua ocorrência.',
             tipo: 'confirmacao'
           }).catch(function(err) {
             console.error('[ERRO NOTIFICAÇÃO CONFIRMAÇÃO]:', err);
           });
         }
+      }
+
+      if ((resultado as any)?.virouConfirmada && (resultado as any).ocorrencia?.usuario_id) {
+        NotificacaoService.criarGatilhoNotificacao({
+          usuarioId: (resultado as any).ocorrencia.usuario_id,
+          ocorrenciaId: ocorrenciaId,
+          titulo: 'Ocorrência confirmada',
+          mensagem: 'Sua ocorrência recebeu confirmações suficientes e agora aparece como confirmada no mapa.',
+          tipo: 'confirmacao'
+        }).catch(function(err) {
+          console.error('[ERRO NOTIFICAÇÃO OCORRÊNCIA CONFIRMADA]:', err);
+        });
       }
 
       return res.status(201).json({

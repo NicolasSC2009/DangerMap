@@ -47,13 +47,13 @@ export class AdminController {
           });
         } else {
           const mensagemNotificacao = acao === 'rejeitar'
-            ? 'Sua ocorrência entrou em análise de moderação e foi removida.'
+            ? 'Sua ocorrência foi analisada pela moderação e removida do mapa.'
             : 'Sua ocorrência foi analisada e mantida ativa no mapa.';
 
           NotificacaoService.criarGatilhoNotificacao({
             usuarioId: autorId,
             ocorrenciaId: ocorrenciaId,
-            titulo: 'Moderação de Ocorrência',
+            titulo: 'Moderação da ocorrência',
             mensagem: mensagemNotificacao,
             tipo: 'moderacao'
           }).catch(function(err) {
@@ -94,8 +94,8 @@ export class AdminController {
 
       NotificacaoService.criarGatilhoNotificacao({
         usuarioId: usuarioId,
-        titulo: 'Conta Inativada',
-        mensagem: 'Sua conta foi temporariamente inativada por violar as diretrizes da comunidade.',
+        titulo: 'Conta desativada',
+        mensagem: 'Sua conta foi desativada por descumprir as regras de convivência.',
         tipo: 'sistema'
       }).catch(function(err) {
         console.error('[ERRO NOTIFICAÇÃO BANIR]:', err);
@@ -104,7 +104,7 @@ export class AdminController {
       LogAtividadeService.registrar({ usuarioId: req.usuarioId, acao: `BANIR_USUARIO:${usuarioId}`, req });
 
       return res.status(200).json({
-        mensagem: 'Usuário inativado/banido com sucesso!',
+        mensagem: 'Usuário desativado com sucesso.',
         usuario: resultado
       });
     } catch (error: unknown) {
@@ -126,8 +126,8 @@ export class AdminController {
 
       NotificacaoService.criarGatilhoNotificacao({
         usuarioId: usuarioId,
-        titulo: 'Conta Reativada',
-        mensagem: 'Sua conta no DangerMap foi reativada com sucesso! Você já pode navegar e colaborar novamente.',
+        titulo: 'Conta reativada',
+        mensagem: 'Sua conta foi reativada. Você já pode usar o DangerMap normalmente.',
         tipo: 'sistema'
       }).catch(function(err) {
         console.error('[ERRO NOTIFICAÇÃO DESBANIR]:', err);
@@ -136,7 +136,7 @@ export class AdminController {
       LogAtividadeService.registrar({ usuarioId: req.usuarioId, acao: `REATIVAR_USUARIO:${usuarioId}`, req });
 
       return res.status(200).json({
-        mensagem: 'Usuário reativado/desbanido com sucesso!',
+        mensagem: 'Usuário reativado com sucesso.',
         usuario: resultado
       });
     } catch (error: unknown) {
