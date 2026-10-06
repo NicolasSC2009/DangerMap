@@ -140,7 +140,7 @@ export function FerramentasMapa(props: Props) {
   function localizar() {
     if (!mapa) return;
     if (!navigator.geolocation) {
-      toast.info('Seu navegador não permite localização.');
+      toast.info('Este aparelho não permite usar a localização.');
       return;
     }
     setLocalizando(true);
@@ -151,7 +151,7 @@ export function FerramentasMapa(props: Props) {
       },
       function () {
         setLocalizando(false);
-        toast.info('Não foi possível obter sua localização. Verifique a permissão do navegador para este site.');
+        toast.info('Não foi possível obter sua localização. Confira se a permissão está liberada.');
       },
       { timeout: 10000, enableHighAccuracy: true }
     );

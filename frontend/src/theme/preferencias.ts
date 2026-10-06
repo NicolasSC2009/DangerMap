@@ -7,6 +7,7 @@ export type EstiloMapa = 'padrao' | 'claro' | 'escuro' | 'auto'; // OSM | Carto 
 export type EstiloMapaResolvido = 'padrao' | 'claro' | 'escuro';
 export type TamanhoMarcadores = 'pequeno' | 'normal' | 'grande';
 export type UnidadeTemperatura = 'c' | 'f';
+export type ClimaOrigem = 'minha' | 'mapa';
 
 export interface Preferencias {
   tema: Tema;
@@ -23,6 +24,8 @@ export interface Preferencias {
   /** Mostra a legenda de gravidade no mapa. */
   mostrarLegenda: boolean;
   unidadeTemperatura: UnidadeTemperatura;
+  /** De onde vem o clima: da posição do usuário (se permitida) ou do centro do mapa. */
+  climaOrigem: ClimaOrigem;
 }
 
 export const PREFERENCIAS_PADRAO: Preferencias = {
@@ -37,6 +40,7 @@ export const PREFERENCIAS_PADRAO: Preferencias = {
   atualizarMapaAutomatico: true,
   mostrarLegenda: false,
   unidadeTemperatura: 'c',
+  climaOrigem: 'minha',
 };
 
 export const CHAVE_PREFERENCIAS = '@DangerMap:preferencias';
@@ -48,6 +52,7 @@ const FONTES: TamanhoFonte[] = ['normal', 'grande'];
 const ESTILOS: EstiloMapa[] = ['padrao', 'claro', 'escuro', 'auto'];
 const TAMANHOS_MARCADOR: TamanhoMarcadores[] = ['pequeno', 'normal', 'grande'];
 const UNIDADES: UnidadeTemperatura[] = ['c', 'f'];
+const ORIGENS_CLIMA: ClimaOrigem[] = ['minha', 'mapa'];
 
 function booleano(valor: unknown, padrao: boolean): boolean {
   return typeof valor === 'boolean' ? valor : padrao;
@@ -72,6 +77,7 @@ function normalizar(bruto: unknown): Preferencias {
     unidadeTemperatura: UNIDADES.includes(p.unidadeTemperatura as UnidadeTemperatura)
       ? (p.unidadeTemperatura as UnidadeTemperatura)
       : d.unidadeTemperatura,
+    climaOrigem: ORIGENS_CLIMA.includes(p.climaOrigem as ClimaOrigem) ? (p.climaOrigem as ClimaOrigem) : d.climaOrigem,
   };
 }
 

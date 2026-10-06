@@ -9,10 +9,6 @@
   background: var(--dm-eggshell);
 }
 
-.dm-ocorrencia-modal .dm-modal-fechar:hover {
-  background: var(--dm-verde-garrafa);
-}
-
 /* ---------- carregando ---------- */
 
 .dm-ocorrencia__carregando {
@@ -312,50 +308,152 @@ a.dm-ocorrencia__imagem:hover img {
   }
 }
 
+/* Detalhe da ocorrência: duas colunas no computador (imagem e texto | dados e ações), para não precisar rolar */
+.dm-ocorrencia__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+.dm-ocorrencia__col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.dm-ocorrencia__col > * {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+@media (min-width: 820px) {
+  .dm-ocorrencia__layout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    gap: 28px;
+    align-items: start;
+  }
+
+  /* a coluna da direita começa abaixo do botão de fechar */
+  .dm-ocorrencia__layout > .dm-ocorrencia__col:nth-child(2) {
+    padding-top: 30px;
+  }
+}
 /* =========================================================================
    FormularioOcorrencia
    ========================================================================= */
 
+/* Local da ocorrência: cartão próprio, com respiro em volta */
 .dm-form-ocorrencia__local {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin: -2px 0 20px;
+  align-items: center;
+  gap: 14px;
+  margin: 2px 0 18px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  border: 1.5px solid var(--dm-linha);
+  background: var(--dm-campo-fundo);
+}
+
+.dm-form-ocorrencia__local-icone {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(255, 100, 0, 0.12);
   color: var(--dm-laranja-escuro);
 }
 
-.dm-form-ocorrencia__local svg {
-  flex-shrink: 0;
-  margin-top: 2px;
+:root[data-tema='escuro'] .dm-form-ocorrencia__local-icone {
+  color: var(--dm-laranja);
 }
 
-.dm-form-ocorrencia__local > div {
+.dm-form-ocorrencia__local-texto {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   min-width: 0;
 }
 
+.dm-form-ocorrencia__local-rotulo {
+  font-family: var(--dm-fonte-mono);
+  font-size: var(--dm-t-xs);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--dm-tinta-fraca);
+}
+
 .dm-form-ocorrencia__local strong {
-  font-size: var(--dm-t-sm);
+  font-size: var(--dm-t-md);
   font-weight: 600;
   line-height: 1.35;
   color: var(--dm-titulo);
   overflow-wrap: anywhere;
 }
 
-.dm-form-ocorrencia__local span {
-  font-size: var(--dm-t-xs);
-  color: var(--dm-tinta-suave);
-  letter-spacing: 0.4px;
+/* Duas colunas no computador (cabe sem rolar a tela); uma coluna no celular */
+.dm-ocorrencia-modal--form {
+  padding-block: 28px;
 }
 
 .dm-form-ocorrencia {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px 28px;
+  align-items: start;
 }
 
+.dm-form-ocorrencia__coluna {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.dm-form-ocorrencia__descricao textarea {
+  min-height: 84px;
+  resize: vertical;
+}
+
+/* faixa de baixo: gravidade, anonimato e botão lado a lado */
+.dm-form-ocorrencia__rodape {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
+.dm-form-ocorrencia__enviar {
+  width: 100%;
+}
+
+@media (min-width: 860px) {
+  .dm-form-ocorrencia {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  }
+
+  .dm-form-ocorrencia__rodape {
+    grid-column: 1 / -1;
+    grid-template-columns: 210px minmax(0, 1fr) 230px;
+    gap: 14px;
+  }
+
+  .dm-form-ocorrencia__rodape .dm-form-ocorrencia__gravidade-auto {
+    flex-wrap: nowrap;
+  }
+
+  .dm-form-ocorrencia__rodape .dm-form-ocorrencia__gravidade-auto small {
+    display: none;
+  }
+
+  .dm-form-ocorrencia__enviar {
+    width: auto;
+    min-width: 230px;
+  }
+}
 .dm-form-ocorrencia__fieldset {
   margin: 0;
   padding: 0;
@@ -371,12 +469,12 @@ a.dm-ocorrencia__imagem:hover img {
 
 .dm-form-ocorrencia__foto {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  min-height: 104px;
-  padding: 14px;
+  gap: 14px;
+  min-height: 72px;
+  padding: 12px 16px;
   border-radius: 12px;
   border: 1.5px dashed var(--dm-linha-forte);
   background: rgba(255, 255, 255, 0.35);
@@ -401,6 +499,13 @@ a.dm-ocorrencia__imagem:hover img {
 }
 
 .dm-form-ocorrencia__foto span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+
+.dm-form-ocorrencia__foto strong {
   font-size: var(--dm-t-sm);
   font-weight: 600;
 }
@@ -422,7 +527,7 @@ a.dm-ocorrencia__imagem:hover img {
 .dm-form-ocorrencia__previa img {
   display: block;
   width: 100%;
-  height: clamp(130px, 34vw, 170px);
+  height: clamp(84px, 14vw, 110px);
   object-fit: cover;
 }
 
@@ -457,8 +562,8 @@ a.dm-ocorrencia__imagem:hover img {
 
 .dm-form-ocorrencia__categorias {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(66px, 1fr));
+  gap: 6px;
 }
 
 .dm-form-ocorrencia__categoria {
@@ -467,7 +572,7 @@ a.dm-ocorrencia__imagem:hover img {
   align-items: center;
   gap: 4px;
   min-width: 0;
-  padding: 8px 4px;
+  padding: 6px 3px;
   border-radius: 10px;
   border: 1.5px solid var(--dm-linha);
   background: var(--dm-campo-fundo);
@@ -477,20 +582,15 @@ a.dm-ocorrencia__imagem:hover img {
     transform 0.12s ease;
 }
 
-.dm-form-ocorrencia__categoria:hover {
-  border-color: var(--dm-linha-forte);
-  transform: translateY(-1px);
-}
-
 .dm-form-ocorrencia__categoria img {
-  width: 40px;
-  height: 40px;
+  width: 30px;
+  height: 30px;
   object-fit: contain;
 }
 
 .dm-form-ocorrencia__categoria span {
-  font-size: calc(10px * var(--dm-escala));
-  line-height: 1.2;
+  font-size: calc(9.5px * var(--dm-escala));
+  line-height: 1.15;
   text-align: center;
   font-weight: 500;
   overflow-wrap: anywhere;

@@ -250,23 +250,23 @@ body.dm-tela-mapa #root {
     transform var(--dm-transicao), box-shadow var(--dm-transicao);
 }
 
-/* Seta animada: basta envolver o texto do botão em <span>. */
-.dm-btn > span {
-  position: relative;
-  display: inline-block;
-}
-
+/* Seta ao passar o mouse: basta envolver o texto do botão em <span>. A seta entra
+   ao lado do texto (sem ocupar espaço antes) e o conjunto continua centralizado. */
 .dm-btn > span::after {
   content: '\2192';
-  position: absolute;
-  left: 100%;
+  display: inline-block;
+  width: 0;
   margin-left: 0;
+  overflow: hidden;
+  vertical-align: bottom;
   opacity: 0;
-  transition: margin-left var(--dm-transicao), opacity var(--dm-transicao);
+  transition: width var(--dm-transicao), margin-left var(--dm-transicao), opacity var(--dm-transicao);
 }
 
-.dm-btn:hover:not(:disabled) > span::after {
-  margin-left: 10px;
+.dm-btn:hover:not(:disabled) > span::after,
+.dm-btn:focus-visible:not(:disabled) > span::after {
+  width: 1em;
+  margin-left: 8px;
   opacity: 1;
 }
 
@@ -288,36 +288,16 @@ body.dm-tela-mapa #root {
   color: #fefcfc;
 }
 
-.dm-btn--primario:hover:not(:disabled) {
-  background: var(--dm-laranja);
-  border-color: var(--dm-laranja);
-  transform: translateY(-2px);
-  box-shadow: var(--dm-sombra-hover-laranja);
-}
-
 .dm-btn--ghost {
   background: transparent;
   color: var(--dm-titulo);
   border-color: var(--dm-linha-forte);
 }
 
-.dm-btn--ghost:hover:not(:disabled) {
-  border-color: var(--dm-titulo);
-  transform: translateY(-2px);
-}
-
 .dm-btn--perigo {
   background: transparent;
   color: var(--dm-vermelho);
   border-color: rgba(160, 38, 23, 0.4);
-}
-
-.dm-btn--perigo:hover:not(:disabled) {
-  background: var(--dm-vermelho);
-  border-color: var(--dm-vermelho);
-  color: #fff;
-  transform: translateY(-2px);
-  box-shadow: 0 16px 30px rgba(160, 38, 23, 0.28);
 }
 
 :root[data-tema="escuro"] .dm-btn--perigo {
@@ -330,23 +310,10 @@ body.dm-tela-mapa #root {
   color: #fff;
 }
 
-.dm-btn--perigo-solido:hover:not(:disabled) {
-  background: var(--dm-vermelho-hover);
-  border-color: var(--dm-vermelho-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 16px 30px rgba(160, 38, 23, 0.34);
-}
-
 .dm-btn--sobre-escuro {
   background: transparent;
   color: rgba(245, 235, 225, 0.9);
   border-color: rgba(245, 235, 225, 0.3);
-}
-
-.dm-btn--sobre-escuro:hover:not(:disabled) {
-  border-color: rgba(245, 235, 225, 0.7);
-  color: #fff;
-  transform: translateY(-2px);
 }
 
 .dm-btn--pequeno {
@@ -518,10 +485,6 @@ textarea.dm-campo {
   transition: background var(--dm-transicao), border-color var(--dm-transicao), color var(--dm-transicao);
 }
 
-.dm-chip:hover {
-  border-color: rgba(245, 235, 225, 0.4);
-}
-
 .dm-chip--ativo,
 .dm-chip[aria-pressed='true'] {
   background: var(--dm-laranja-escuro);
@@ -540,10 +503,6 @@ textarea.dm-campo {
   font-weight: 600;
   letter-spacing: 0;
   text-transform: none;
-}
-
-.dm-chip--claro:hover {
-  border-color: var(--dm-linha-forte);
 }
 
 .dm-chip--claro.dm-chip--ativo,
@@ -763,12 +722,6 @@ textarea.dm-campo {
   justify-content: center;
   cursor: pointer;
   transition: background var(--dm-transicao), color var(--dm-transicao), border-color var(--dm-transicao);
-}
-
-.dm-modal-fechar:hover {
-  background: var(--dm-verde-garrafa);
-  border-color: var(--dm-verde-garrafa);
-  color: #fff;
 }
 
 .dm-modal-titulo {

@@ -31,7 +31,7 @@ export function ModalExcluirConta(props: { aoFechar: () => void }) {
     setExcluindo(true);
     try {
       await api.delete('/auth/usuarios/excluir');
-      toast.success('Conta desativada. Sentiremos sua falta no mapa!');
+      toast.success('Conta desativada. Você pode voltar quando quiser.');
       sair();
       navegar('/');
     } catch (erro: any) {

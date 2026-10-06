@@ -113,12 +113,12 @@ export function FormularioOcorrencia(props: FormularioOcorrenciaProps) {
     [previaFoto]
   );
 
-  function aplicarSugestao(dados: { categoriaId: number | null; categoriaNome: string | null; confianca: number }) {
+  function aplicarSugestao(dados: { categoriaId: number | null; categoriaNome: string | null; confianca: number }, origem: 'foto' | 'texto') {
     if (dados.categoriaId) {
       if (!categoriaEscolhidaManualmente.current) {
         setValue('categoriaId', String(dados.categoriaId));
       }
-      setSugestao(`Categoria sugerida: ${dados.categoriaNome} (${Math.round(dados.confianca * 100)}% de confiança)`);
+      setSugestao(origem === 'foto' ? 'Categoria sugerida por IA' : 'Categoria sugerida pela descrição');
     } else {
       setSugestao(null);
     }
@@ -135,7 +135,7 @@ export function FormularioOcorrencia(props: FormularioOcorrenciaProps) {
       if (textoDigitado) formData.append('descricao', textoDigitado);
       api
         .post('/ocorrencias/sugerir-categoria-imagem', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
-        .then((resposta) => { if (!cancelado) aplicarSugestao(resposta.data); })
+        .then((resposta) => { if (!cancelado) aplicarSugestao(resposta.data, 'foto'); })
         .catch(() => {})
         .finally(() => { if (!cancelado) setSugerindo(false); });
       return function () { cancelado = true; };
@@ -156,7 +156,7 @@ export function FormularioOcorrencia(props: FormularioOcorrenciaProps) {
         setSugerindo(true);
         api
           .post('/ocorrencias/sugerir-categoria', { descricao: texto })
-          .then((resposta) => aplicarSugestao(resposta.data))
+          .then((resposta) => aplicarSugestao(resposta.data, 'texto'))
           .catch(() => {})
           .finally(() => setSugerindo(false));
       }, 700);
@@ -205,140 +205,147 @@ export function FormularioOcorrencia(props: FormularioOcorrenciaProps) {
   return (
     <Modal
       aoFechar={props.aoFechar}
-      largura={480}
+      largura={880}
       eyebrow="Novo reporte"
       titulo="O que está acontecendo aqui?"
       bloquearFechamento={enviando}
-      className="dm-ocorrencia-modal"
+      className="dm-ocorrencia-modal dm-ocorrencia-modal--form"
     >
       <div className="dm-form-ocorrencia__local">
-        <FiMapPin size={15} aria-hidden="true" />
-        <div>
-          <strong>
-            {endereco?.texto || (buscandoEndereco ? 'Buscando endereço…' : 'Endereço não encontrado')}
-          </strong>
-          <span>Ponto escolhido no mapa</span>
+        <span className="dm-form-ocorrencia__local-icone" aria-hidden="true">
+          <FiMapPin size={18} />
+        </span>
+        <div className="dm-form-ocorrencia__local-texto">
+          <span className="dm-form-ocorrencia__local-rotulo">Local da ocorrência</span>
+          <strong>{endereco?.texto || (buscandoEndereco ? 'Buscando endereço…' : 'Endereço não encontrado')}</strong>
         </div>
       </div>
 
       <form className="dm-form-ocorrencia" onSubmit={handleSubmit(enviar)} noValidate>
-        <div className="dm-campo-grupo">
-          <span className="dm-rotulo">Foto (opcional)</span>
-          {previaFoto ? (
-            <div className="dm-form-ocorrencia__previa">
-              <img src={previaFoto} alt="Prévia da foto anexada" />
-              <button
-                type="button"
-                className="dm-form-ocorrencia__remover-foto"
-                onClick={removerFoto}
-                aria-label="Remover foto"
-                title="Remover foto"
-              >
-                <FiX size={15} aria-hidden="true" />
-              </button>
-            </div>
-          ) : (
-            <label className="dm-form-ocorrencia__foto">
-              <FiCamera size={20} aria-hidden="true" />
-              <span>Anexar uma foto do local</span>
-              <small>JPG, PNG ou WEBP · sugere a categoria automaticamente</small>
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={selecionarFoto}
-                className="dm-visually-hidden"
-              />
-            </label>
-          )}
-        </div>
-
-        <div className="dm-campo-grupo">
-          <span className="dm-rotulo-linha">
-            <label className="dm-rotulo" htmlFor="dm-form-ocorrencia-descricao">
-              Descrição (opcional)
-            </label>
-            <span>{(descricaoAtual || '').length}/1000</span>
-          </span>
-          <textarea
-            id="dm-form-ocorrencia-descricao"
-            className="dm-campo"
-            {...register('descricao', { maxLength: { value: 1000, message: 'Máximo de 1000 caracteres.' } })}
-            rows={3}
-            placeholder="Descreva o que você está vendo…"
-            aria-invalid={errors.descricao ? true : undefined}
-          />
-          {errors.descricao && <span className="dm-erro">{errors.descricao.message}</span>}
-        </div>
-
-        <div className="dm-campo-grupo">
-          <span className="dm-rotulo-linha">
-            <span className="dm-rotulo" id="dm-form-ocorrencia-categoria">
-              Categoria
-            </span>
-            {sugerindo && (
-              <span className="dm-form-ocorrencia__sugerindo">
-                <FiZap size={11} aria-hidden="true" /> sugerindo…
+        <div className="dm-form-ocorrencia__coluna">
+          <div className="dm-campo-grupo">
+            <span className="dm-rotulo-linha">
+              <span className="dm-rotulo" id="dm-form-ocorrencia-categoria">
+                Categoria
               </span>
-            )}
-          </span>
-          <input type="hidden" {...register('categoriaId', { required: 'Escolha uma categoria.' })} />
-          <div className="dm-form-ocorrencia__categorias" role="group" aria-labelledby="dm-form-ocorrencia-categoria">
-            {categorias.map((c) => {
-              const selecionada = String(categoriaSelecionada) === String(c.id);
-              return (
-                <button
-                  key={c.id}
-                  type="button"
-                  aria-pressed={selecionada}
-                  className={`dm-form-ocorrencia__categoria${selecionada ? ' dm-form-ocorrencia__categoria--ativa' : ''}`}
-                  onClick={() => {
-                    categoriaEscolhidaManualmente.current = true;
-                    setValue('categoriaId', String(c.id), { shouldValidate: true });
-                  }}
-                  title={c.descricao || c.nome}
-                >
-                  <img src={obterIconeCategoria(c.nome)} alt="" />
-                  <span>{c.nome}</span>
-                </button>
-              );
-            })}
-          </div>
-          {errors.categoriaId && <span className="dm-erro">{errors.categoriaId.message}</span>}
-          {sugestao && (
-            <p className="dm-form-ocorrencia__sugestao" aria-live="polite">
-              <FiZap size={12} aria-hidden="true" /> {sugestao}
-            </p>
-          )}
-        </div>
-
-        <div className="dm-form-ocorrencia__gravidade-auto" aria-live="polite">
-          <span className="dm-rotulo">Gravidade</span>
-          {gravidadeEstimada ? (
-            <span className={`dm-severidade dm-severidade--${gravidadeEstimada}`}>
-              <span className="dm-severidade__ponto" aria-hidden="true" />
-              {ROTULO_GRAVIDADE[gravidadeEstimada]}
+              {sugerindo && (
+                <span className="dm-form-ocorrencia__sugerindo">
+                  <FiZap size={11} aria-hidden="true" /> sugerindo…
+                </span>
+              )}
             </span>
-          ) : (
-            <span className="dm-form-ocorrencia__gravidade-vazia">escolha a categoria</span>
-          )}
-          <small>Definida automaticamente pela categoria e pela descrição.</small>
+            <input type="hidden" {...register('categoriaId', { required: 'Escolha uma categoria.' })} />
+            <div className="dm-form-ocorrencia__categorias" role="group" aria-labelledby="dm-form-ocorrencia-categoria">
+              {categorias.map((c) => {
+                const selecionada = String(categoriaSelecionada) === String(c.id);
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    aria-pressed={selecionada}
+                    className={`dm-form-ocorrencia__categoria${selecionada ? ' dm-form-ocorrencia__categoria--ativa' : ''}`}
+                    onClick={() => {
+                      categoriaEscolhidaManualmente.current = true;
+                      setValue('categoriaId', String(c.id), { shouldValidate: true });
+                    }}
+                    title={c.descricao || c.nome}
+                  >
+                    <img src={obterIconeCategoria(c.nome)} alt="" />
+                    <span>{c.nome}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {errors.categoriaId && <span className="dm-erro">{errors.categoriaId.message}</span>}
+            {sugestao && (
+              <p className="dm-form-ocorrencia__sugestao" aria-live="polite">
+                <FiZap size={12} aria-hidden="true" /> {sugestao}
+              </p>
+            )}
+          </div>
         </div>
 
-        <label className="dm-form-ocorrencia__anonimo">
-          <span className="dm-form-ocorrencia__anonimo-texto">
-            <strong>Registrar de forma anônima</strong>
-            <span>Sua identidade não aparece pra outros usuários.</span>
-          </span>
-          <span className="dm-interruptor">
-            <input type="checkbox" {...register('anonimo')} />
-            <span className="dm-interruptor__trilho" aria-hidden="true" />
-          </span>
-        </label>
+        <div className="dm-form-ocorrencia__coluna">
+          <div className="dm-campo-grupo">
+            <span className="dm-rotulo">Foto (opcional)</span>
+            {previaFoto ? (
+              <div className="dm-form-ocorrencia__previa">
+                <img src={previaFoto} alt="Prévia da foto anexada" />
+                <button
+                  type="button"
+                  className="dm-form-ocorrencia__remover-foto"
+                  onClick={removerFoto}
+                  aria-label="Remover foto"
+                  title="Remover foto"
+                >
+                  <FiX size={15} aria-hidden="true" />
+                </button>
+              </div>
+            ) : (
+              <label className="dm-form-ocorrencia__foto">
+                <FiCamera size={22} aria-hidden="true" />
+                <span>
+                  <strong>Anexar uma foto do local</strong>
+                  <small>JPG, PNG ou WEBP · ajuda a sugerir a categoria</small>
+                </span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={selecionarFoto}
+                  className="dm-visually-hidden"
+                />
+              </label>
+            )}
+          </div>
 
-        <button type="submit" disabled={enviando} className="dm-btn dm-btn--primario dm-btn--bloco">
-          <span>{enviando ? 'Enviando…' : 'Registrar ocorrência'}</span>
-        </button>
-      </form>
-    </Modal>
+          <div className="dm-campo-grupo dm-form-ocorrencia__descricao">
+            <span className="dm-rotulo-linha">
+              <label className="dm-rotulo" htmlFor="dm-form-ocorrencia-descricao">
+                Descrição (opcional)
+              </label>
+              <span>{(descricaoAtual || '').length}/1000</span>
+            </span>
+            <textarea
+              id="dm-form-ocorrencia-descricao"
+              className="dm-campo"
+              {...register('descricao', { maxLength: { value: 1000, message: 'Máximo de 1000 caracteres.' } })}
+              rows={3}
+              placeholder="Descreva o que você está vendo…"
+              aria-invalid={errors.descricao ? true : undefined}
+            />
+            {errors.descricao && <span className="dm-erro">{errors.descricao.message}</span>}
+          </div>
+        </div>
+
+        <div className="dm-form-ocorrencia__rodape">
+          <div className="dm-form-ocorrencia__gravidade-auto" aria-live="polite">
+            <span className="dm-rotulo">Gravidade</span>
+            {gravidadeEstimada ? (
+              <span className={`dm-severidade dm-severidade--${gravidadeEstimada}`}>
+                <span className="dm-severidade__ponto" aria-hidden="true" />
+                {ROTULO_GRAVIDADE[gravidadeEstimada]}
+              </span>
+            ) : (
+              <span className="dm-form-ocorrencia__gravidade-vazia">escolha a categoria</span>
+            )}
+            <small>Definida automaticamente.</small>
+          </div>
+
+          <label className="dm-form-ocorrencia__anonimo">
+            <span className="dm-form-ocorrencia__anonimo-texto">
+              <strong>Registrar de forma anônima</strong>
+              <span>Seu nome não aparece para outros usuários.</span>
+            </span>
+            <span className="dm-interruptor">
+              <input type="checkbox" {...register('anonimo')} />
+              <span className="dm-interruptor__trilho" aria-hidden="true" />
+            </span>
+          </label>
+
+          <button type="submit" disabled={enviando} className="dm-btn dm-btn--primario dm-form-ocorrencia__enviar">
+            <span>{enviando ? 'Enviando…' : 'Registrar ocorrência'}</span>
+          </button>
+        </div>
+      </form>    </Modal>
   );
 }

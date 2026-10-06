@@ -1,9 +1,8 @@
-// Conteúdo da Central de ajuda (/ajuda) como dados, para facilitar a edição
-// sem mexer no layout (PaginaAjuda.tsx). Textos refletem o comportamento real
-// do backend — não prometer recursos que não existem.
+// Conteúdo da Central de ajuda (/ajuda), separado do layout para facilitar a edição.
+// Os textos descrevem só o que o sistema faz de fato.
 import type { Gravidade, StatusOcorrencia } from '@shared/types';
 
-export const ULTIMA_ATUALIZACAO = 'setembro de 2026';
+export const ULTIMA_ATUALIZACAO = 'outubro de 2026';
 
 export const URL_REPOSITORIO = 'https://github.com/NicolasSC2009/DangerMap';
 export const URL_ISSUES = `${URL_REPOSITORIO}/issues`;
@@ -65,14 +64,13 @@ export const LEGENDA_GRAVIDADE: Array<{ gravidade: Gravidade; texto: string }> =
 ];
 
 export const LEGENDA_STATUS: Array<{ status: StatusOcorrencia; texto: string }> = [
-  { status: 'pendente', texto: 'Recém-registrada, aguardando confirmações de outras pessoas.' },
-  { status: 'confirmado', texto: 'Validada pela comunidade: outras pessoas confirmaram que o problema existe.' },
+  { status: 'pendente', texto: 'Recém-registrada, aguardando confirmação de outras pessoas.' },
+  { status: 'confirmado', texto: 'Validada: recebeu 5 confirmações de outras pessoas ou foi mantida pela moderação.' },
   { status: 'resolvido', texto: 'O problema foi sanado. Depois de um tempo ela sai do mapa automaticamente.' },
   { status: 'arquivado', texto: 'Removida pela moderação por ser falsa, duplicada ou inadequada.' },
 ];
 
-// Nomes das categorias padrão (derivados dos ícones em assets/categorias).
-// Usados quando o visitante não está logado — GET /categorias exige login.
+// Lista usada só se as categorias não puderem ser carregadas do servidor.
 export const CATEGORIAS_PADRAO: string[] = [
   'Acidente de trânsito',
   'Alagamento',
@@ -117,6 +115,13 @@ export const FAQ: PerguntaFaq[] = [
     ],
   },
   {
+    id: 'confirmada',
+    pergunta: 'Como uma ocorrência vira “Confirmada”?',
+    resposta: [
+      'Quando recebe 5 confirmações de pessoas diferentes, ela passa de “Pendente” para “Confirmada” e quem a registrou é avisado. A moderação também pode confirmar uma ocorrência denunciada.',
+    ],
+  },
+  {
     id: 'anonimo',
     pergunta: 'O que é registro anônimo?',
     resposta: [
@@ -129,7 +134,7 @@ export const FAQ: PerguntaFaq[] = [
     pergunta: 'Como funciona a sugestão automática de categoria?',
     resposta: [
       'Enquanto você escreve a descrição, o DangerMap compara as palavras com os nomes e descrições das categorias e sugere a mais provável.',
-      'Se você anexar uma foto, ela também pode ser analisada por um modelo de visão computacional para sugerir a categoria. É só uma sugestão: a escolha final é sempre sua.',
+      'Se você anexar uma foto, ela também é analisada por inteligência artificial para sugerir a categoria. É só uma sugestão: a escolha final é sempre sua.',
     ],
   },
   {
@@ -177,7 +182,7 @@ export const FAQ: PerguntaFaq[] = [
     id: 'localizacao',
     pergunta: 'Meus dados de localização são compartilhados?',
     resposta: [
-      'Sua posição em tempo real é usada só no seu navegador, para centralizar o mapa e sugerir o ponto da ocorrência. Ela não é publicada.',
+      'Sua posição atual é usada só no seu aparelho, para centralizar o mapa e conferir a distância ao registrar. Ela não é publicada.',
       'O que fica público é apenas a coordenada de cada ocorrência que você registra — e, se ela não for anônima, o seu nome.',
     ],
   },
@@ -193,7 +198,7 @@ export const FAQ: PerguntaFaq[] = [
     id: 'app-celular',
     pergunta: 'O app para celular já existe?',
     resposta: [
-      'Os aplicativos nativos para Android e desktop ainda estão em desenvolvimento. Enquanto isso, você pode instalar o site na tela inicial do celular e usá-lo como um app.',
+      'O aplicativo para Windows já está disponível. O de Android ainda está em desenvolvimento; enquanto isso, você pode instalar o site na tela inicial do celular e usá-lo como um app.',
     ],
     link: { rotulo: 'Ver como instalar', para: '/baixar-app' },
   },

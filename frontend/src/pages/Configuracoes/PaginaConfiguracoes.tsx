@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import type { IconType } from 'react-icons';
-import { FiAlertTriangle, FiBell, FiEye, FiMap, FiShield, FiUser } from 'react-icons/fi';
+import { FiAlertTriangle, FiBell, FiCloud, FiEye, FiMap, FiMapPin, FiShield, FiUser } from 'react-icons/fi';
 import { LayoutPadrao } from '../../components/comum/LayoutPadrao';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePerfil } from '../../hooks/usePerfil';
 import { SecaoAparencia } from './secoes/SecaoAparencia';
 import { SecaoMapa } from './secoes/SecaoMapa';
+import { SecaoOcorrenciasNoMapa } from './secoes/SecaoOcorrenciasNoMapa';
+import { SecaoClima } from './secoes/SecaoClima';
 import { SecaoNotificacoes } from './secoes/SecaoNotificacoes';
 import { SecaoConta } from './secoes/SecaoConta';
 import { SecaoPrivacidade } from './secoes/SecaoPrivacidade';
@@ -24,6 +26,8 @@ interface ItemIndice {
 const INDICE: ItemIndice[] = [
   { id: 'aparencia', rotulo: 'Aparência', icone: FiEye },
   { id: 'mapa', rotulo: 'Mapa', icone: FiMap },
+  { id: 'ocorrencias', rotulo: 'Ocorrências', icone: FiMapPin },
+  { id: 'clima', rotulo: 'Clima', icone: FiCloud },
   { id: 'notificacoes', rotulo: 'Notificações', icone: FiBell },
   { id: 'conta', rotulo: 'Conta', icone: FiUser },
   { id: 'privacidade', rotulo: 'Privacidade', icone: FiShield },
@@ -172,6 +176,8 @@ export function PaginaConfiguracoes() {
         <div className="dm-config-conteudo">
           <SecaoAparencia />
           <SecaoMapa />
+          <SecaoOcorrenciasNoMapa />
+          <SecaoClima />
           <SecaoNotificacoes />
           <SecaoConta conta={conta} aoAtualizar={recarregar} />
           {usuario && <SecaoPrivacidade usuarioId={usuario.id} />}

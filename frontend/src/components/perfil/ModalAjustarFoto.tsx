@@ -193,7 +193,7 @@ export function ModalAjustarFoto(props: ModalAjustarFotoProps) {
     canvas.height = TAMANHO_SAIDA;
     const ctx = canvas.getContext('2d');
     if (!ctx) {
-      toast.error('Seu navegador não conseguiu processar a imagem.');
+      toast.error('Não foi possível processar a imagem.');
       return;
     }
     ctx.fillStyle = '#ffffff'; // PNG com transparência não vira fundo preto no JPEG
@@ -214,7 +214,7 @@ export function ModalAjustarFoto(props: ModalAjustarFotoProps) {
       toast.success('Foto de perfil atualizada.');
       props.aoFechar();
     } else {
-      toast.error('Não havia espaço no navegador para salvar a foto. Tente uma imagem menor.');
+      toast.error('Não há espaço para salvar a foto neste aparelho. Tente uma imagem menor.');
     }
   }
 

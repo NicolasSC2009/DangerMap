@@ -76,16 +76,6 @@
   color: rgba(245, 235, 225, 0.9);
 }
 
-.dm-navbar-botao:hover {
-  border-color: var(--dm-laranja);
-  color: var(--dm-laranja-escuro);
-}
-
-.dm-pagina-escura .dm-navbar--embutida .dm-navbar-botao:not(.dm-navbar-botao--avatar):hover {
-  border-color: var(--dm-laranja);
-  color: var(--dm-laranja);
-}
-
 .dm-navbar-botao:active {
   transform: scale(0.94);
 }
@@ -103,11 +93,6 @@
   border: 2px solid var(--dm-laranja);
   background: var(--dm-verde-garrafa);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
-}
-
-.dm-navbar-botao--avatar:hover {
-  border-color: var(--dm-laranja);
-  box-shadow: 0 0 0 3px rgba(255, 100, 0, 0.25);
 }
 
 /* avatar (foto local ou iniciais) */

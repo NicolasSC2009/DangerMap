@@ -11,12 +11,55 @@
       href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
       rel="stylesheet"
     />
+    <script>
+      // Aplica o tema salvo antes do primeiro desenho, para a tela de carregamento já nascer na cor certa.
+      try {
+        var p = JSON.parse(localStorage.getItem('@DangerMap:preferencias') || '{}');
+        var t = p.tema || 'sistema';
+        var escuro = t === 'escuro' || (t === 'sistema' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.dataset.tema = escuro ? 'escuro' : 'claro';
+      } catch (e) {}
+    </script>
     <style>
       html, body, #root { height: 100%; margin: 0; }
+
+      /* Esqueleto mostrado enquanto o aplicativo carrega (some quando o React assume o #root). */
+      .boot { min-height: 100%; box-sizing: border-box; padding: 20px 24px; background: #f6f2ea; display: flex; flex-direction: column; gap: 28px; }
+      :root[data-tema="escuro"] .boot { background: #0f1512; }
+      .boot__topo { display: flex; align-items: center; justify-content: space-between; }
+      .boot__botoes { display: flex; gap: 10px; }
+      .boot__bloco { background: rgba(0, 50, 35, 0.1); border-radius: 12px; animation: boot-pulso 1.4s ease-in-out infinite; }
+      :root[data-tema="escuro"] .boot__bloco { background: rgba(245, 235, 225, 0.09); }
+      .boot__conteudo { width: 100%; max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+      .boot__grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 12px; }
+      @keyframes boot-pulso { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+      @media (prefers-reduced-motion: reduce) { .boot__bloco { animation: none; } }
     </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="boot" role="status" aria-label="Carregando o DangerMap">
+        <div class="boot__topo">
+          <div class="boot__bloco" style="width: 150px; height: 36px"></div>
+          <div class="boot__botoes">
+            <div class="boot__bloco" style="width: 44px; height: 44px; border-radius: 50%"></div>
+            <div class="boot__bloco" style="width: 44px; height: 44px; border-radius: 50%"></div>
+            <div class="boot__bloco" style="width: 44px; height: 44px; border-radius: 50%"></div>
+          </div>
+        </div>
+        <div class="boot__conteudo" aria-hidden="true">
+          <div class="boot__bloco" style="width: 90px; height: 12px"></div>
+          <div class="boot__bloco" style="width: min(420px, 70%); height: 38px"></div>
+          <div class="boot__bloco" style="width: min(560px, 90%); height: 14px"></div>
+          <div class="boot__bloco" style="width: min(480px, 80%); height: 14px"></div>
+          <div class="boot__grade">
+            <div class="boot__bloco" style="height: 150px"></div>
+            <div class="boot__bloco" style="height: 150px"></div>
+            <div class="boot__bloco" style="height: 150px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

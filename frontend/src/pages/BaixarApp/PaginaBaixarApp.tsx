@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { FiSmartphone, FiMonitor, FiChrome, FiCompass, FiDownload, FiCheck, FiArrowRight } from 'react-icons/fi';
+import { FiSmartphone, FiMonitor, FiDownload, FiCheck, FiArrowRight } from 'react-icons/fi';
 import type { IconType } from 'react-icons';
 import { LayoutPadrao } from '../../components/comum/LayoutPadrao';
 import './baixarApp.css';
@@ -25,51 +25,23 @@ const PLATAFORMAS: Plataforma[] = [
   {
     Icone: FiMonitor,
     titulo: 'Windows',
-    descricao: 'Aplicativo de desktop pra acompanhar o mapa fora do navegador, numa janela própria.',
+    descricao: 'Aplicativo para computador, para acompanhar o mapa fora do navegador, numa janela própria.',
     recursos: ['Instalador com atalho automático', 'Precisa estar na mesma rede do servidor do DangerMap'],
     urlDownload: '/downloads/DangerMap-Setup-Windows.exe',
     rotuloDownload: 'Baixar para Windows (.exe)',
   },
 ];
 
-type Navegador = 'chrome' | 'safari';
-
-const PASSOS_PWA: Record<Navegador, { Icone: IconType; rotulo: string; passos: string[] }> = {
-  chrome: {
-    Icone: FiChrome,
-    rotulo: 'Chrome / Edge / Android',
-    passos: [
-      'Abra o DangerMap no navegador.',
-      'Toque no menu ⋮ (ou no ícone de instalar na barra de endereço).',
-      'Escolha “Instalar app” ou “Adicionar à tela inicial”.',
-      'Confirme — o ícone aparece junto dos seus apps.',
-    ],
-  },
-  safari: {
-    Icone: FiCompass,
-    rotulo: 'Safari / iPhone',
-    passos: [
-      'Abra o DangerMap no Safari.',
-      'Toque no botão Compartilhar (quadrado com a seta para cima).',
-      'Role e escolha “Adicionar à Tela de Início”.',
-      'Toque em “Adicionar” no canto superior direito.',
-    ],
-  },
-};
-
-function navegadorProvavel(): Navegador {
-  if (typeof navigator === 'undefined') return 'chrome';
-  const ua = navigator.userAgent;
-  const ehApple = /iPhone|iPad|iPod/.test(ua) || (/Safari/.test(ua) && !/Chrome|Chromium|CriOS|Edg|Android/.test(ua));
-  return ehApple ? 'safari' : 'chrome';
-}
-
+// Instalação como app direto do navegador (Chrome, Edge e Android).
+const PASSOS_INSTALACAO = [
+  'Abra o DangerMap no Chrome ou no Edge.',
+  'Toque no menu ⋮ (ou no ícone de instalar na barra de endereço).',
+  'Escolha “Instalar app” ou “Adicionar à tela inicial”.',
+  'Confirme. O ícone aparece junto dos seus outros apps.',
+];
 export function PaginaBaixarApp() {
-  const [navegador, setNavegador] = useState<Navegador>(navegadorProvavel);
-  const guia = PASSOS_PWA[navegador];
-
   return (
-    <LayoutPadrao variante="clara">
+    <LayoutPadrao variante="clara" mostrarVoltar={false}>
       <div className="dm-baixar">
         <header className="dm-baixar-hero dm-entrada">
           <div className="dm-eyebrow">
@@ -78,7 +50,7 @@ export function PaginaBaixarApp() {
           </div>
           <h1>Leve o DangerMap com você</h1>
           <p>
-            O app de desktop pra Windows já está disponível. O app nativo para Android ainda está em desenvolvimento
+            O aplicativo para Windows já está disponível. O app nativo para Android ainda está em desenvolvimento
             — enquanto isso, você já pode instalar o site no celular ou no computador e usá-lo como um app.
           </p>
         </header>
@@ -112,7 +84,7 @@ export function PaginaBaixarApp() {
                 </a>
               ) : (
                 <button type="button" className="dm-btn dm-btn--ghost dm-btn--bloco" disabled>
-                  <FiDownload size={15} aria-hidden="true" /> Download em breve
+                  <FiDownload size={15} aria-hidden="true" /> Em breve
                 </button>
               )}
             </li>
@@ -126,25 +98,8 @@ export function PaginaBaixarApp() {
             <h2>Instale como app</h2>
             <p className="dm-baixar-pwa__sub">Sem loja e sem download: adicione o site à tela inicial.</p>
 
-            <div className="dm-baixar-pwa__abas" role="group" aria-label="Escolha o navegador">
-              {(Object.keys(PASSOS_PWA) as Navegador[]).map((chave) => {
-                const Icone = PASSOS_PWA[chave].Icone;
-                return (
-                  <button
-                    key={chave}
-                    type="button"
-                    className="dm-baixar-pwa__aba"
-                    aria-pressed={navegador === chave}
-                    onClick={() => setNavegador(chave)}
-                  >
-                    <Icone size={14} aria-hidden="true" /> {PASSOS_PWA[chave].rotulo}
-                  </button>
-                );
-              })}
-            </div>
-
-            <ol className="dm-baixar-pwa__passos" key={navegador}>
-              {guia.passos.map((passo) => (
+            <ol className="dm-baixar-pwa__passos">
+              {PASSOS_INSTALACAO.map((passo) => (
                 <li key={passo}>{passo}</li>
               ))}
             </ol>

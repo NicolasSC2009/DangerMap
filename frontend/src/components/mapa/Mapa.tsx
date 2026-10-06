@@ -3,11 +3,13 @@ import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-lea
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './mapa.css';
+import '../comum/esqueleto.css';
 import iconeMarcadorPadrao from 'leaflet/dist/images/marker-icon.png';
 import iconeMarcadorPadrao2x from 'leaflet/dist/images/marker-icon-2x.png';
 import sombraMarcadorPadrao from 'leaflet/dist/images/marker-shadow.png';
 import { FiMapPin, FiThermometer, FiDroplet } from 'react-icons/fi';
-import { CHAVE_ULTIMA_VISTA_MAPA, TILES, type UnidadeTemperatura } from '../../theme/preferencias';
+import { CHAVE_ULTIMA_VISTA_MAPA, TILES, type ClimaOrigem, type UnidadeTemperatura } from '../../theme/preferencias';
+import { api } from '../../services/api';
 import { usePreferencias } from '../../contexts/PreferenciasContext';
 import { CamadaOcorrencias } from './CamadaOcorrencias';
 import { buscarEndereco } from '../../services/geo';
@@ -136,12 +138,13 @@ function CartaoPermissaoLocalizacao(props: { aoPermitir: () => void; aoRecusar: 
   );
 }
 
-function CapsulaCoordenadaClima(props: {
+function CapsulaClima(props: {
   lat: number;
   lng: number;
   clima: ClimaAtual | null;
   carregando: boolean;
   unidade: UnidadeTemperatura;
+  daMinhaPosicao: boolean;
 }) {
   const ref = useIsolarDoMapa<HTMLDivElement>();
   const [lugar, setLugar] = useState<string | null>(null);
@@ -167,8 +170,10 @@ function CapsulaCoordenadaClima(props: {
     [props.lat, props.lng]
   );
 
+  const dica = lugar ? (props.daMinhaPosicao ? `Clima onde você está (${lugar})` : `Clima em ${lugar}`) : 'Clima do local';
+
   return (
-    <div ref={ref} className="dm-mapa-clima" aria-live="polite" title={lugar ? `Você está em ${lugar}` : 'Sua posição'}>
+    <div ref={ref} className="dm-mapa-clima" aria-live="polite" title={dica}>
       <span className="dm-mapa-clima__item dm-mapa-clima__coord">
         <FiMapPin size={13} aria-hidden="true" />
         {lugar && <span className="dm-mapa-clima__texto-coord">{lugar}</span>}
@@ -176,7 +181,11 @@ function CapsulaCoordenadaClima(props: {
       <span className="dm-mapa-clima__sep" aria-hidden="true" />
 
       {props.carregando ? (
-        <span className="dm-mapa-clima__suave">Carregando clima…</span>
+        <span className="dm-mapa-clima__carregando" role="status">
+          <span className="dm-visually-hidden">Carregando clima…</span>
+          <span className="dm-esqueleto" style={{ width: 54, height: 12, borderRadius: 6 }} aria-hidden="true" />
+          <span className="dm-esqueleto" style={{ width: 40, height: 12, borderRadius: 6 }} aria-hidden="true" />
+        </span>
       ) : props.clima ? (
         <>
           <span className="dm-mapa-clima__item" aria-label={`Temperatura ${temperatura} graus`}>
@@ -198,14 +207,88 @@ function CapsulaCoordenadaClima(props: {
   );
 }
 
+// Clima do lugar: da posição do usuário (quando ele permitiu) ou do centro do mapa.
+// Assim o clima aparece mesmo para quem não compartilha a localização.
+function ClimaNoMapa(props: { unidade: UnidadeTemperatura; origem: ClimaOrigem; posicaoUsuario: [number, number] | null }) {
+  const mapa = useMap();
+  const [centro, setCentro] = useState<[number, number]>(function () {
+    const c = mapa.getCenter();
+    return [c.lat, c.lng];
+  });
+  const [clima, setClima] = useState<ClimaAtual | null>(null);
+  const [carregando, setCarregando] = useState(true);
+
+  useMapEvents({
+    moveend: function () {
+      const c = mapa.getCenter();
+      setCentro([c.lat, c.lng]);
+    },
+  });
+
+  const daMinhaPosicao = props.origem === 'minha' && props.posicaoUsuario !== null;
+  const alvo = daMinhaPosicao ? (props.posicaoUsuario as [number, number]) : centro;
+  // Arredonda a ~5 km: arrastar um pouco o mapa não dispara nova consulta.
+  const lat = Math.round(alvo[0] * 20) / 20;
+  const lng = Math.round(alvo[1] * 20) / 20;
+
+  useEffect(
+    function () {
+      let ativo = true;
+      setCarregando(true);
+      const espera = setTimeout(function () {
+        api
+          .get('/clima', { params: { lat, lng } })
+          .then(function (resposta) {
+            const dados = resposta.data;
+            if (!ativo) return;
+            if (dados && typeof dados.temperatura === 'number') {
+              setClima({
+                temperatura: Math.round(dados.temperatura),
+                umidade: dados.umidade ?? 0,
+                condicao: dados.condicao_tempo ?? null,
+              });
+            } else {
+              setClima(null);
+            }
+          })
+          .catch(function () {
+            if (ativo) setClima(null);
+          })
+          .finally(function () {
+            if (ativo) setCarregando(false);
+          });
+      }, 600);
+      return function () {
+        ativo = false;
+        clearTimeout(espera);
+      };
+    },
+    [lat, lng]
+  );
+
+  return (
+    <CapsulaClima
+      lat={lat}
+      lng={lng}
+      clima={clima}
+      carregando={carregando}
+      unidade={props.unidade}
+      daMinhaPosicao={daMinhaPosicao}
+    />
+  );
+}
+
 const CHAVE_ESCOLHA_LOCALIZACAO = '@DangerMap:escolhaLocalizacao';
 
-function LocalizadorUsuario(props: { mostrarClima: boolean; voarAoIniciar: boolean; unidade: UnidadeTemperatura }) {
+function LocalizadorUsuario(props: {
+  mostrarClima: boolean;
+  voarAoIniciar: boolean;
+  unidade: UnidadeTemperatura;
+  climaOrigem: ClimaOrigem;
+}) {
   const mapa = useMap();
   const [status, setStatus] = useState<StatusPermissaoLocalizacao>('perguntando');
   const [posicaoAtual, setPosicaoAtual] = useState<[number, number] | null>(null);
-  const [clima, setClima] = useState<ClimaAtual | null>(null);
-  const [carregandoClima, setCarregandoClima] = useState(false);
 
   useEffect(function () {
     if (!('geolocation' in navigator)) {
@@ -223,29 +306,6 @@ function LocalizadorUsuario(props: { mostrarClima: boolean; voarAoIniciar: boole
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function buscarClima(lat: number, lng: number) {
-    setCarregandoClima(true);
-    fetch(`/api/clima?lat=${lat}&lng=${lng}`)
-      .then(function (res) {
-        return res.json();
-      })
-      .then(function (dados) {
-        if (dados && typeof dados.temperatura === 'number') {
-          setClima({
-            temperatura: Math.round(dados.temperatura),
-            umidade: dados.umidade ?? 0,
-            condicao: dados.condicao_tempo ?? null,
-          });
-        }
-      })
-      .catch(function (erro) {
-        console.error('[ERRO AO BUSCAR CLIMA]:', erro);
-      })
-      .finally(function () {
-        setCarregandoClima(false);
-      });
-  }
-
   function solicitarLocalizacao(voar: boolean = true) {
     setStatus('solicitando');
     navigator.geolocation.getCurrentPosition(
@@ -256,7 +316,6 @@ function LocalizadorUsuario(props: { mostrarClima: boolean; voarAoIniciar: boole
         setStatus('concedida');
         setPosicaoAtual([lat, lng]);
         if (voar) mapa.flyTo([lat, lng], 14, { animate: true });
-        buscarClima(lat, lng);
       },
       function (erro) {
         console.warn('[GEOLOCALIZAÇÃO]: Permissão negada ou indisponível.', erro);
@@ -283,23 +342,19 @@ function LocalizadorUsuario(props: { mostrarClima: boolean; voarAoIniciar: boole
       )}
 
       {status === 'concedida' && posicaoAtual && (
-        <>
-          <Marker position={posicaoAtual} icon={iconePosicaoUsuario} interactive={false} />
-          {props.mostrarClima && (
-            <CapsulaCoordenadaClima
-              lat={posicaoAtual[0]}
-              lng={posicaoAtual[1]}
-              clima={clima}
-              carregando={carregandoClima}
-              unidade={props.unidade}
-            />
-          )}
-        </>
+        <Marker position={posicaoAtual} icon={iconePosicaoUsuario} interactive={false} />
+      )}
+
+      {props.mostrarClima && (
+        <ClimaNoMapa
+          unidade={props.unidade}
+          origem={props.climaOrigem}
+          posicaoUsuario={status === 'concedida' ? posicaoAtual : null}
+        />
       )}
     </>
   );
 }
-
 function EscutadorDeCliques(props: { aoClicar?: (lat: number, lng: number) => void }) {
   useMapEvents({
     click: function (evento) {
@@ -376,6 +431,7 @@ export function Mapa(props: MapaProps) {
             mostrarClima={preferencias.mostrarClima}
             voarAoIniciar={voarAoIniciar}
             unidade={preferencias.unidadeTemperatura}
+            climaOrigem={preferencias.climaOrigem}
           />}
 
         <TileLayer key={estiloMapaEfetivo} attribution={tiles.attribution} url={tiles.url} noWrap={true} maxZoom={ZOOM_MAXIMO} maxNativeZoom={19} />

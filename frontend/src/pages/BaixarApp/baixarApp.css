@@ -163,40 +163,6 @@
   margin-bottom: 16px;
 }
 
-.dm-baixar-pwa__abas {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 16px;
-}
-
-.dm-baixar-pwa__aba {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 36px;
-  padding: 7px 12px;
-  border-radius: 20px;
-  border: 1.5px solid rgba(245, 235, 225, 0.25);
-  background: transparent;
-  color: rgba(245, 235, 225, 0.8);
-  font-family: var(--dm-fonte-mono);
-  font-size: var(--dm-t-xs);
-  letter-spacing: 0.4px;
-  transition: background var(--dm-transicao), border-color var(--dm-transicao), color var(--dm-transicao);
-}
-
-.dm-baixar-pwa__aba:hover {
-  border-color: rgba(245, 235, 225, 0.55);
-  color: #fff;
-}
-
-.dm-baixar-pwa__aba[aria-pressed='true'] {
-  background: var(--dm-laranja-escuro);
-  border-color: var(--dm-laranja-escuro);
-  color: #fff;
-}
-
 .dm-baixar-pwa__passos {
   counter-reset: pwa;
   list-style: none;

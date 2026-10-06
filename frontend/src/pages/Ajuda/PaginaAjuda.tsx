@@ -182,9 +182,10 @@ export function PaginaAjuda() {
     rolarAte('faq');
   }
 
-  const listaCategorias = autenticado
-    ? categorias.map((c) => ({ chave: String(c.id), nome: c.nome, descricao: c.descricao }))
-    : CATEGORIAS_PADRAO.map((nome) => ({ chave: nome, nome, descricao: null as string | null }));
+  const listaCategorias =
+    categorias.length > 0
+      ? categorias.map((c) => ({ chave: String(c.id), nome: c.nome, descricao: c.descricao }))
+      : CATEGORIAS_PADRAO.map((nome) => ({ chave: nome, nome, descricao: null as string | null }));
 
   return (
     <LayoutPadrao variante="clara" className="dm-ajuda-pagina">
@@ -391,22 +392,9 @@ export function PaginaAjuda() {
               numero="03"
               Icone={FiAlertTriangle}
               titulo="Categorias de perigo"
-              descricao={
-                autenticado
-                  ? 'As categorias ativas que você pode escolher ao registrar uma ocorrência.'
-                  : 'Os tipos de perigo que você pode registrar no mapa.'
-              }
+              descricao="Os tipos de perigo que você pode escolher ao registrar uma ocorrência."
             />
-            {!autenticado && (
-              <p className="dm-ajuda-aviso">
-                <FiShield size={15} aria-hidden="true" />
-                <span>
-                  Esta é a lista padrão. <Link to="/entrar">Entre</Link> para ver as categorias ativas no momento, com
-                  a descrição de cada uma.
-                </span>
-              </p>
-            )}
-            {autenticado && carregandoCategorias ? (
+            {carregandoCategorias ? (
               <ul className="dm-ajuda-categorias" aria-busy="true" aria-label="Carregando categorias">
                 {Array.from({ length: 8 }).map((_, i) => (
                   <li key={i} className="dm-ajuda-categoria dm-ajuda-categoria--esqueleto" />
@@ -425,6 +413,11 @@ export function PaginaAjuda() {
                 ))}
               </ul>
             )}
+            <p className="dm-sobre-acao">
+              <Link to="/categorias" className="dm-ajuda-faq__link">
+                Ver a página de categorias <FiArrowRight size={13} aria-hidden="true" />
+              </Link>
+            </p>
           </section>
 
           {/* ---------- FAQ ---------- */}

@@ -399,27 +399,27 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  animation: dm-auth-drift-contour 11s ease-in-out infinite alternate;
+  animation: dm-auth-drift-contour 7s ease-in-out infinite alternate;
 }
 
 .dm-auth-deco-contour path {
   fill: none;
-  stroke-width: 2;
+  stroke-width: 2.5;
   stroke-dasharray: 16 12;
-  animation: dm-auth-flow-dash 20.5s linear infinite;
+  animation: dm-auth-flow-dash 8.4s linear infinite;
 }
 
 .dm-auth-deco-contour path:nth-child(1) {
-  stroke: rgba(255, 100, 0, 0.38);
+  stroke: rgba(255, 100, 0, 0.6);
 }
 
 .dm-auth-deco-contour path:nth-child(2) {
-  stroke: rgba(140, 200, 80, 0.32);
+  stroke: rgba(140, 200, 80, 0.5);
   animation-direction: reverse;
 }
 
 .dm-auth-deco-contour path:nth-child(3) {
-  stroke: rgba(140, 200, 80, 0.18);
+  stroke: rgba(140, 200, 80, 0.32);
 }
 
 @keyframes dm-auth-flow-dash {
@@ -433,7 +433,7 @@
     transform: translate(0, 0) scale(1);
   }
   to {
-    transform: translate(-14px, 10px) scale(1.03);
+    transform: translate(-26px, 16px) scale(1.06);
   }
 }
 

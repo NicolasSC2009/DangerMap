@@ -214,7 +214,7 @@ export function FerramentaRaio(props: FerramentaRaioProps) {
 
   function usarMinhaLocalizacao() {
     if (!navigator.geolocation) {
-      toast.info('Seu navegador não oferece geolocalização.');
+      toast.info('Este aparelho não permite usar a localização.');
       return;
     }
     setLocalizando(true);

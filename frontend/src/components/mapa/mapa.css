@@ -353,6 +353,12 @@
   background: rgba(236, 230, 220, 0.25);
 }
 
+.dm-mapa-clima__carregando {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .dm-mapa-clima__suave {
   opacity: 0.7;
   overflow: hidden;

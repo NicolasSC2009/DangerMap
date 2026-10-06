@@ -40,11 +40,6 @@
   height: 20px;
 }
 
-.dm-ferramenta:hover:not(:disabled) {
-  border-color: var(--dm-laranja);
-  color: var(--dm-laranja-escuro);
-}
-
 .dm-ferramenta:active:not(:disabled) {
   transform: scale(0.94);
 }
@@ -288,10 +283,6 @@
   width: 18px;
   height: 18px;
   object-fit: contain;
-}
-
-.dm-filtro-chip:hover {
-  border-color: var(--dm-laranja);
 }
 
 .dm-filtro-chip--marcado {

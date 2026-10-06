@@ -50,7 +50,7 @@ function distanciaMetros(lat1: number, lng1: number, lat2: number, lng2: number)
 }
 
 function tratarErroGeolocalizacao() {
-  toast.info('Não foi possível obter sua localização. Verifique a permissão de localização do navegador para este site e tente novamente.');
+  toast.info('Não foi possível obter sua localização. Confira se a permissão está liberada e tente de novo.');
 }
 
 export function PaginaMapa() {
@@ -168,7 +168,7 @@ export function PaginaMapa() {
       return;
     }
     if (!navigator.geolocation) {
-      toast.info('Seu navegador não permite localização. Não é possível registrar ocorrências.');
+      toast.info('Este aparelho não permite usar a localização, por isso não é possível registrar ocorrências.');
       return;
     }
     navigator.geolocation.getCurrentPosition(function (posicao) {
@@ -199,7 +199,7 @@ export function PaginaMapa() {
       toast.info(
         ehAdmin
           ? 'Clique em um ponto do mapa para registrar a ocorrência lá.'
-          : 'Seu navegador não permite localização. Não é possível registrar ocorrências.'
+          : 'Este aparelho não permite usar a localização, por isso não é possível registrar ocorrências.'
       );
       return;
     }

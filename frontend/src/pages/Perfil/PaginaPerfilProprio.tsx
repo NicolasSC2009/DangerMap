@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { FiSettings, FiTrash2 } from 'react-icons/fi';
+import { Link, useNavigate } from 'react-router-dom';
+import { FiLogOut, FiSettings, FiTrash2 } from 'react-icons/fi';
 import { LayoutPadrao } from '../../components/comum/LayoutPadrao';
 import { HeroPerfil, LinhaInfoPerfil, EstatisticasPerfil, EstadoPerfil } from '../../components/perfil/HeroPerfil';
 import { HistoricoContribuicoes } from '../../components/perfil/HistoricoContribuicoes';
@@ -12,7 +12,8 @@ import { usePerfil } from '../../hooks/usePerfil';
 import './perfil.css';
 
 export function PaginaPerfilProprio() {
-  const { usuario } = useAuth();
+  const { usuario, sair } = useAuth();
+  const navegar = useNavigate();
   const { perfil, conta, carregando, erro, recarregar } = usePerfil(usuario?.id, { conta: true });
   const [ocorrenciaAbertaId, setOcorrenciaAbertaId] = useState<number | null>(null);
   const [modal, setModal] = useState<'editar' | 'excluir' | null>(null);
@@ -72,6 +73,18 @@ export function PaginaPerfilProprio() {
             <FiSettings size={14} aria-hidden="true" />
             Configurações
           </Link>
+          <button
+            type="button"
+            className="dm-btn dm-btn--ghost"
+            title="Sair da conta"
+            onClick={() => {
+              sair();
+              navegar('/');
+            }}
+          >
+            <FiLogOut size={14} aria-hidden="true" />
+            Sair
+          </button>
           <button
             type="button"
             className="dm-btn dm-btn--perigo dm-perfil-acoes__icone-perigo"

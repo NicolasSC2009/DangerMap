@@ -80,7 +80,7 @@ export function SecaoPrivacidade(props: { usuarioId: number }) {
 
   function perguntarNovamente() {
     esquecerEscolha();
-    toast.success('Pronto! Na próxima vez que você abrir o mapa, ele vai perguntar sua localização de novo.');
+    toast.success('Pronto. O mapa vai pedir sua localização de novo na próxima visita.');
   }
 
   async function baixarDados() {

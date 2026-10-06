@@ -73,10 +73,6 @@
   transition: background var(--dm-transicao), border-color var(--dm-transicao), color var(--dm-transicao);
 }
 
-.dm-categorias__chip:hover {
-  border-color: var(--dm-laranja);
-}
-
 .dm-categorias__chip--marcado {
   background: var(--dm-laranja-escuro);
   border-color: var(--dm-laranja-escuro);
