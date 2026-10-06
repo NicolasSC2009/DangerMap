@@ -469,30 +469,32 @@
     height: 28px;
   }
 }
-/* ---------- FAB "nova ocorrência" ---------- */
+/* ---------- botão "Registrar ocorrência" ---------- */
 
+/* Mesmo verde escuro da barra e da cápsula de clima, com o "+" em laranja como destaque. */
 .dm-fab {
   position: fixed;
   right: 16px;
   bottom: calc(20px + var(--dm-safe-b));
   z-index: 1050; /* acima do mapa (1000), abaixo da navbar (1100) */
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  border: none;
-  background: linear-gradient(155deg, var(--dm-laranja) 0%, var(--dm-laranja-escuro) 100%);
-  color: #fff;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 12px;
+  padding: 6px;
+  border: 1px solid rgba(245, 235, 225, 0.16);
+  border-radius: 999px;
+  background: linear-gradient(135deg, #004531, #002a1d);
+  color: #f5ebe1;
+  font-family: var(--dm-fonte-corpo);
   cursor: pointer;
-  box-shadow: 0 8px 22px rgba(177, 63, 15, 0.45);
-  transition: transform 0.15s ease, box-shadow var(--dm-transicao);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  transition: transform 0.15s ease, box-shadow var(--dm-transicao), border-color var(--dm-transicao);
 }
 
 .dm-fab:hover {
-  transform: scale(1.06);
-  box-shadow: 0 12px 26px rgba(177, 63, 15, 0.5);
+  transform: translateY(-2px);
+  border-color: rgba(255, 100, 0, 0.7);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.46);
 }
 
 .dm-fab:active {
@@ -504,12 +506,26 @@
   outline-offset: 3px;
 }
 
-.dm-fab__rotulo {
-  display: none;
+.dm-fab__mais {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(155deg, var(--dm-laranja) 0%, var(--dm-laranja-escuro) 100%);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(255, 100, 0, 0.45);
+  transition: transform 0.25s ease;
 }
 
-.dm-fab__icone {
-  flex-shrink: 0;
+.dm-fab:hover .dm-fab__mais {
+  transform: rotate(90deg);
+}
+
+.dm-fab__rotulo {
+  display: none;
 }
 
 @media (min-width: 641px) {
@@ -519,19 +535,11 @@
   }
 }
 
-/* Desktop: botão em pílula com texto, bem mais fácil de achar que um "+" solto. */
+/* Desktop: pílula com texto, bem mais fácil de achar que um "+" solto. */
 @media (min-width: 1025px) {
-  .dm-fab {
-    width: auto;
-    height: 60px;
-    gap: 10px;
-    padding: 0 26px 0 20px;
-    border-radius: 999px;
-  }
-
   .dm-fab__rotulo {
     display: inline;
-    font-family: var(--dm-fonte-corpo);
+    padding-right: 18px;
     font-size: calc(15px * var(--dm-escala));
     font-weight: 700;
     letter-spacing: 0.2px;
@@ -539,6 +547,11 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .dm-fab:hover .dm-fab__mais {
+    transform: none;
+  }
+}
 /* ---------- celular ---------- */
 
 @media (max-width: 640px) {

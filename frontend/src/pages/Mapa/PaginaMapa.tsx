@@ -13,24 +13,8 @@ import { api } from '../../services/api';
 import { pontoDentroDoBrasil } from '../../services/geo';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'react-toastify';
+import { FiPlus } from 'react-icons/fi';
 import type { Ocorrencia } from '@shared/types';
-
-// Pino de mapa com um "+" dentro: deixa claro que o botão marca um ponto novo.
-function IconePinMais() {
-  return (
-    <svg className="dm-fab__icone" width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z"
-        fill="currentColor"
-        fillOpacity="0.18"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-      <path d="M12 6.8v6.4M8.8 10h6.4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
 
 const MENSAGEM_FORA_DO_BRASIL = 'O DangerMap só aceita ocorrências dentro do território brasileiro.';
 
@@ -242,7 +226,9 @@ export function PaginaMapa() {
         title="Registrar nova ocorrência"
         className="dm-fab"
       >
-        <IconePinMais />
+        <span className="dm-fab__mais" aria-hidden="true">
+          <FiPlus size={22} strokeWidth={2.6} />
+        </span>
         <span className="dm-fab__rotulo">Registrar ocorrência</span>
       </button>
 
