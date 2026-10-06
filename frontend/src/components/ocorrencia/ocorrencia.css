@@ -317,7 +317,7 @@ a.dm-ocorrencia__imagem:hover img {
   display: flex;
   align-items: center;
   gap: 14px;
-  margin: 2px 0 18px;
+  margin: 18px 0 18px;
   padding: 10px 16px;
   border-radius: 14px;
   border: 1.5px solid var(--dm-linha);
@@ -667,7 +667,7 @@ a.dm-ocorrencia__imagem:hover img {
   }
 
   .dm-form-ocorrencia__local {
-    margin: 6px 0 30px;
+    margin: 24px 0 30px;
     padding: 16px 20px;
   }
 

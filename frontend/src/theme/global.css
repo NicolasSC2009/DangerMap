@@ -250,26 +250,34 @@ body.dm-tela-mapa #root {
     transform var(--dm-transicao), box-shadow var(--dm-transicao);
 }
 
-/* Seta ao passar o mouse: basta envolver o texto do botão em <span>. A seta entra
-   ao lado do texto (sem ocupar espaço antes) e o conjunto continua centralizado. */
+/* Seta ao passar o mouse: basta envolver o texto do botão em <span>. A seta aparece logo
+   depois do texto, dentro do espaço interno do botão, então o tamanho do botão não muda
+   (nada pula de linha). Botões pequenos não têm seta. */
+.dm-btn > span {
+  position: relative;
+  display: inline-block;
+}
+
 .dm-btn > span::after {
   content: '\2192';
-  display: inline-block;
-  width: 0;
-  margin-left: 0;
-  overflow: hidden;
-  vertical-align: bottom;
+  position: absolute;
+  left: calc(100% + 6px);
+  top: 50%;
   opacity: 0;
-  transition: width var(--dm-transicao), margin-left var(--dm-transicao), opacity var(--dm-transicao);
+  transform: translate(-4px, -50%);
+  transition: opacity var(--dm-transicao), transform var(--dm-transicao);
+  pointer-events: none;
 }
 
 .dm-btn:hover:not(:disabled) > span::after,
 .dm-btn:focus-visible:not(:disabled) > span::after {
-  width: 1em;
-  margin-left: 8px;
   opacity: 1;
+  transform: translate(0, -50%);
 }
 
+.dm-btn--pequeno > span::after {
+  display: none;
+}
 .dm-btn:active:not(:disabled) {
   transform: translateY(0) !important;
 }
