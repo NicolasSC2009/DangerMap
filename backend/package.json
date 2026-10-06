@@ -10,7 +10,9 @@
     "test:watch": "vitest",
     "db:migrate": "dotenv -e ../.env -- prisma migrate dev",
     "db:studio": "dotenv -e ../.env -- prisma studio",
-    "db:pull": "dotenv -e ../.env -- prisma db pull"
+    "db:pull": "dotenv -e ../.env -- prisma db pull",
+    "db:seed-teste": "dotenv -e ../.env -- tsx scripts/seed-teste.ts",
+    "db:limpar-teste": "dotenv -e ../.env -- tsx scripts/seed-teste.ts --limpar"
   },
   "keywords": [],
   "author": "",
