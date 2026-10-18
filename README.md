@@ -3,6 +3,28 @@
 Mapa colaborativo de perigos urbanos (buracos, alagamentos, iluminação etc.).
 Funciona no navegador, como app de Windows (Electron) e como app Android (Capacitor).
 
+Projeto de TCC do Técnico em Informática (CEDUP Abílio Paulo, 2026).
+
+## O que o sistema faz
+- **Registro no mapa:** o cidadão marca um perigo no mapa, com foto, categoria e gravidade. Pode publicar de forma anônima.
+- **Confirmação da comunidade:** outros usuários confirmam ou negam a ocorrência. Ocorrências próximas são agrupadas no mapa.
+- **Sugestão de categoria por IA:** o Google Gemini analisa a foto enviada e sugere a categoria.
+- **Moderação:** quando uma ocorrência recebe muitas denúncias, ela é ocultada automaticamente até ser revisada.
+- **Painel do administrador:** estatísticas, filas de moderação, relatório em PDF e registro de auditoria das ações.
+- **Clima:** dados meteorológicos da região da ocorrência, via Open-Meteo.
+
+## Tecnologias
+| Parte | Stack |
+|---|---|
+| API | Node.js, TypeScript, Express 5, Zod, JWT com refresh token em cookie httpOnly, rate limiting |
+| Banco | PostgreSQL + PostGIS (consultas geográficas), Prisma ORM, Docker |
+| Front-end | React 19, TypeScript, Vite, React Router, Leaflet |
+| Mobile e desktop | Capacitor (Android) e Electron (Windows) |
+| Qualidade | Vitest (testes unitários), Swagger/OpenAPI (documentação da API) |
+
+## Responsabilidades
+- **Nicolas Pacheco Bongiolo:** back-end, banco de dados, documentação e parte do front-end.
+
 ## O que instalar antes
 - [Node.js](https://nodejs.org) 20 ou mais novo
 - [Docker Desktop](https://www.docker.com/products/docker-desktop) (só para o banco de dados)
@@ -48,8 +70,9 @@ Abra o Docker Desktop, rode `docker compose up -d` na pasta do projeto e depois 
 Na pasta do projeto: `powershell -ExecutionPolicy Bypass -File scripts\zipar-dangermap.ps1`
 (cria `DangerMap.zip` na Área de Trabalho, sem `node_modules`, sem builds e sem o `.env`).
 
-## Documentação
+## Documentação e testes
 - Documentação da API (com o servidor ligado): http://localhost:3000/api/docs
+- Testes unitários: `cd backend` e `npm test`
 
 ## Estrutura
 - `backend/` servidor (Node, Express, Prisma, PostGIS)
