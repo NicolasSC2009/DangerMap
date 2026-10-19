@@ -9,6 +9,7 @@ import { TILES } from '../../../theme/preferencias';
 import { usePreferencias } from '../../../contexts/PreferenciasContext';
 import { COR_GRAVIDADE, ROTULO_GRAVIDADE } from '../../../theme/rotulos';
 import type { ResultadoRelatorioRegiao } from '@shared/types';
+import { obterPosicao } from '../../../services/geolocalizacao';
 
 export interface Coordenada {
   lat: number;
@@ -218,7 +219,7 @@ export function FerramentaRaio(props: FerramentaRaioProps) {
       return;
     }
     setLocalizando(true);
-    navigator.geolocation.getCurrentPosition(
+    obterPosicao(
       function (posicao) {
         setLocalizando(false);
         definirCentro({ lat: posicao.coords.latitude, lng: posicao.coords.longitude }, true);

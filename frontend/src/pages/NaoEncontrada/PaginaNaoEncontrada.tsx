@@ -1,13 +1,14 @@
 import { Link, useLocation } from 'react-router-dom';
 import { FiCompass, FiDownload, FiFolder, FiHelpCircle, FiInfo, FiLogIn } from 'react-icons/fi';
 import logo from '../../assets/logo-auth.png';
+import { EH_APP_INSTALADO } from '../../services/plataforma';
 import './naoEncontrada.css';
 
 const ATALHOS = [
   { para: '/categorias', rotulo: 'Categorias de perigo', Icone: FiFolder },
   { para: '/ajuda', rotulo: 'Central de ajuda', Icone: FiHelpCircle },
   { para: '/sobre', rotulo: 'Sobre o DangerMap', Icone: FiInfo },
-  { para: '/baixar-app', rotulo: 'Baixar o app', Icone: FiDownload },
+  ...(EH_APP_INSTALADO ? [] : [{ para: '/baixar-app', rotulo: 'Baixar o app', Icone: FiDownload }]),
   { para: '/entrar', rotulo: 'Entrar', Icone: FiLogIn },
 ];
 

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import logo from '../../assets/logo-dangermap.png';
 import { URL_ISSUES } from '../../pages/Ajuda/conteudoAjuda';
+import { EH_APP_INSTALADO } from '../../services/plataforma';
 import './rodape.css';
 
 // Rodapé das páginas internas (usado pelo LayoutPadrao): marca à esquerda, poucos links à direita.
@@ -18,7 +19,7 @@ export function Rodape() {
           <Link to="/categorias">Categorias</Link>
           <Link to="/ajuda">Ajuda</Link>
           <Link to="/sobre">Sobre</Link>
-          <Link to="/baixar-app">Baixar o app</Link>
+          {!EH_APP_INSTALADO && <Link to="/baixar-app">Baixar o app</Link>}
           <a href={URL_ISSUES} target="_blank" rel="noreferrer">
             Enviar sugestão
           </a>

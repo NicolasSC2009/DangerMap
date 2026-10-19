@@ -17,6 +17,7 @@ import { ZOOM_MAXIMO } from './agrupamento';
 import { IconeClima, ModalClima } from '../clima/ModalClima';
 import { NOME_CLIMA, type PrevisaoClima } from '../clima/clima';
 import type { Ocorrencia } from '@shared/types';
+import { obterPosicao } from '../../services/geolocalizacao';
 
 // Ícone padrão do Leaflet servido pelo próprio bundle (antes vinha do unpkg).
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl;
@@ -321,7 +322,7 @@ function LocalizadorUsuario(props: {
 
   function solicitarLocalizacao(voar: boolean = true) {
     setStatus('solicitando');
-    navigator.geolocation.getCurrentPosition(
+    obterPosicao(
       function (posicao) {
         const lat = posicao.coords.latitude;
         const lng = posicao.coords.longitude;

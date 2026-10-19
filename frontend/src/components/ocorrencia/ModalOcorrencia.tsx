@@ -5,6 +5,7 @@ import './ocorrencia.css';
 import { Modal } from '../comum/Modal';
 import { api, resolverUrlUpload } from '../../services/api';
 import { buscarEndereco, type Endereco } from '../../services/geo';
+import { URL_SITE } from '../../services/plataforma';
 import { Esqueleto } from '../comum/Esqueleto';
 import { ROTULO_GRAVIDADE, ROTULO_STATUS } from '../../theme/rotulos';
 import { obterIconeCategoria } from '../../theme/iconesCategorias';
@@ -167,12 +168,9 @@ export function ModalOcorrencia(props: ModalOcorrenciaProps) {
   }
 
   async function compartilhar() {
-    const url = `${window.location.origin}/?ocorrencia=${props.ocorrenciaId}`;
-    const dadosCompartilhamento = {
-      title: 'DangerMap',
-      text: `Veja essa ocorrência reportada no DangerMap: ${ocorrencia?.categorias?.nome || 'Perigo'}`,
-      url,
-    };
+    const url = URL_SITE ? `${URL_SITE}/?ocorrencia=${props.ocorrenciaId}` : null;
+    const texto = `Veja essa ocorrência reportada no DangerMap: ${ocorrencia?.categorias?.nome || 'Perigo'}`;
+    const dadosCompartilhamento: ShareData = { title: 'DangerMap', text: texto, ...(url ? { url } : {}) };
 
     if (autenticado) {
       api.post(`/ocorrencias/${props.ocorrenciaId}/compartilhar`).catch(function () {});
@@ -183,11 +181,12 @@ export function ModalOcorrencia(props: ModalOcorrenciaProps) {
         await navigator.share(dadosCompartilhamento);
       } catch {}
     } else {
+      const copiavel = url ?? texto;
       try {
-        await navigator.clipboard.writeText(url);
-        toast.info('Link copiado para a área de transferência!');
+        await navigator.clipboard.writeText(copiavel);
+        toast.info(url ? 'Link copiado para a área de transferência!' : 'Texto copiado para a área de transferência!');
       } catch {
-        toast.info(`Copie o link: ${url}`);
+        toast.info(`Copie: ${copiavel}`);
       }
     }
   }

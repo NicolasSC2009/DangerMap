@@ -13,14 +13,19 @@ interface Plataforma {
   /** Quando presente, a plataforma já tem um download real (link direto pro arquivo). */
   urlDownload?: string;
   rotuloDownload?: string;
+  /** Aviso curto mostrado abaixo do botão de download. */
+  nota?: string;
 }
 
 const PLATAFORMAS: Plataforma[] = [
   {
     Icone: FiSmartphone,
     titulo: 'Android',
-    descricao: 'Aplicativo para o seu celular, com avisos de perigo por perto mesmo com o app fechado.',
-    recursos: ['Avisos no celular', 'Câmera direto no registro'],
+    descricao: 'Aplicativo para o seu celular, com o mapa, o clima e o registro de ocorrências na palma da mão.',
+    recursos: ['Câmera direto no registro de ocorrências', 'Mapa centralizado perto de você', 'Instalação direta, sem precisar de loja'],
+    urlDownload: '/downloads/DangerMap-Android.apk',
+    rotuloDownload: 'Baixar para Android (.apk)',
+    nota: 'Ao abrir o arquivo baixado, o Android pode pedir para permitir a instalação de aplicativos de fora da loja. É só aceitar para continuar.',
   },
   {
     Icone: FiMonitor,
@@ -50,8 +55,8 @@ export function PaginaBaixarApp() {
           </div>
           <h1>Leve o DangerMap com você</h1>
           <p>
-            Já existe aplicativo para Windows, e o de Android está a caminho. Enquanto isso, você pode instalar o
-            site no celular ou no computador e usar como se fosse um app.
+            Baixe o aplicativo para Android ou para Windows. Se preferir, também dá para instalar o site no celular ou
+            no computador e usar como se fosse um app.
           </p>
         </header>
 
@@ -87,6 +92,7 @@ export function PaginaBaixarApp() {
                   <FiDownload size={15} aria-hidden="true" /> Em breve
                 </button>
               )}
+              {p.nota && <p className="dm-baixar-card__nota">{p.nota}</p>}
             </li>
           ))}
 

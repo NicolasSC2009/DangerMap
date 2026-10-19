@@ -19,6 +19,7 @@ import {
 import type { IconType } from 'react-icons';
 import { LayoutPadrao } from '../../components/comum/LayoutPadrao';
 import { useAuth } from '../../contexts/AuthContext';
+import { EH_APP_INSTALADO } from '../../services/plataforma';
 import { useCategorias } from '../../hooks/useCategorias';
 import { obterIconeCategoria } from '../../theme/iconesCategorias';
 import { ROTULO_GRAVIDADE, ROTULO_STATUS } from '../../theme/rotulos';
@@ -467,7 +468,7 @@ export function PaginaAjuda() {
                           <Destaque texto={paragrafo} termo={busca} />
                         </p>
                       ))}
-                      {item.link && (
+                      {item.link && !(EH_APP_INSTALADO && item.link.para === '/baixar-app') && (
                         <Link to={item.link.para} className="dm-ajuda-faq__link">
                           {item.link.rotulo} <FiArrowRight size={13} aria-hidden="true" />
                         </Link>

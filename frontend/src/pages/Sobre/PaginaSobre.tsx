@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { EH_APP_INSTALADO } from '../../services/plataforma';
 import {
   FiArrowRight,
   FiCheckCircle,
@@ -48,7 +49,7 @@ const PILARES: Array<{ Icone: IconType; titulo: string; texto: string }> = [
 const PLATAFORMAS: Array<{ Icone: IconType; titulo: string; texto: string }> = [
   { Icone: FiGlobe, titulo: 'Internet', texto: 'Direto no navegador, no computador ou no celular — e dá para instalar como se fosse um aplicativo.' },
   { Icone: FiMonitor, titulo: 'Windows', texto: 'Aplicativo para o computador, com janela própria.' },
-  { Icone: FiSmartphone, titulo: 'Android', texto: 'Aplicativo para o celular (em desenvolvimento).' },
+  { Icone: FiSmartphone, titulo: 'Android', texto: 'Aplicativo para o celular, disponível para baixar.' },
 ];
 
 export function PaginaSobre() {
@@ -150,12 +151,14 @@ export function PaginaSobre() {
               </li>
             ))}
           </ul>
-          <p className="dm-sobre-acao">
-            <Link to="/baixar-app" className="dm-btn dm-btn--ghost dm-btn--pequeno">
-              <FiSmartphone size={14} aria-hidden="true" />
-              <span>Baixar o app</span>
-            </Link>
-          </p>
+          {!EH_APP_INSTALADO && (
+            <p className="dm-sobre-acao">
+              <Link to="/baixar-app" className="dm-btn dm-btn--ghost dm-btn--pequeno">
+                <FiSmartphone size={14} aria-hidden="true" />
+                <span>Baixar o app</span>
+              </Link>
+            </p>
+          )}
         </section>
 
         <section className="dm-ajuda-secao" aria-labelledby="sobre-projeto">

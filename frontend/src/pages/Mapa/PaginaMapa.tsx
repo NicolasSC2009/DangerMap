@@ -15,6 +15,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'react-toastify';
 import { FiPlus } from 'react-icons/fi';
 import type { Ocorrencia } from '@shared/types';
+import { obterPosicao } from '../../services/geolocalizacao';
 
 const MENSAGEM_FORA_DO_BRASIL = 'O DangerMap só aceita ocorrências dentro do território brasileiro.';
 
@@ -155,7 +156,7 @@ export function PaginaMapa() {
       toast.info('Este aparelho não permite usar a localização, por isso não é possível registrar ocorrências.');
       return;
     }
-    navigator.geolocation.getCurrentPosition(function (posicao) {
+    obterPosicao(function (posicao) {
       const distancia = distanciaMetros(posicao.coords.latitude, posicao.coords.longitude, lat, lng);
       if (distancia > RAIO_MAXIMO_CIDADAO_METROS) {
         toast.warn(`Você só pode registrar ocorrências a até ${RAIO_MAXIMO_CIDADAO_METROS / 1000} km da sua localização atual.`);
@@ -187,7 +188,7 @@ export function PaginaMapa() {
       );
       return;
     }
-    navigator.geolocation.getCurrentPosition(
+    obterPosicao(
       (posicao) => {
         void abrirFormularioSeDentroDoBrasil(posicao.coords.latitude, posicao.coords.longitude);
       },

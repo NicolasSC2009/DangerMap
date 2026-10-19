@@ -198,7 +198,7 @@ export const FAQ: PerguntaFaq[] = [
     id: 'app-celular',
     pergunta: 'O app para celular já existe?',
     resposta: [
-      'O aplicativo para Windows já está disponível. O de Android ainda está em desenvolvimento; enquanto isso, você pode instalar o site na tela inicial do celular e usá-lo como um app.',
+      'Sim. Há aplicativo para Android e para Windows, e os dois podem ser baixados na página de aplicativos. Também dá para instalar o site na tela inicial do celular e usá-lo como um app.',
     ],
     link: { rotulo: 'Ver como instalar', para: '/baixar-app' },
   },

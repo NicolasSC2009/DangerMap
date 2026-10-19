@@ -1,9 +1,11 @@
 import { lazy, Suspense } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { EH_APP_INSTALADO } from './services/plataforma';
 import { RotaProtegida, RotaAdmin } from './components/comum/RotasProtegidas';
 import { EsqueletoPagina, EsqueletoMapa } from './components/comum/Esqueleto';
 import { TituloDaRota } from './components/comum/TituloDaRota';
 import { BotaoVoltarAndroid } from './components/comum/BotaoVoltarAndroid';
+import { BarraDeStatusAndroid } from './components/comum/BarraDeStatusAndroid';
 
 // Cada tela vira um pedaço separado do JavaScript e só é baixada quando a
 // pessoa abre aquela rota — o primeiro carregamento fica bem mais leve.
@@ -25,6 +27,7 @@ export function App() {
     <>
     <TituloDaRota />
     <BotaoVoltarAndroid />
+    <BarraDeStatusAndroid />
     <Routes>
       <Route
         path="/"
@@ -116,9 +119,13 @@ export function App() {
       <Route
         path="/baixar-app"
         element={
-          <Suspense fallback={<EsqueletoPagina variante="ajuda" rotulo="Carregando…" />}>
-            <PaginaBaixarApp />
-          </Suspense>
+          EH_APP_INSTALADO ? (
+            <Navigate to="/" replace />
+          ) : (
+            <Suspense fallback={<EsqueletoPagina variante="ajuda" rotulo="Carregando…" />}>
+              <PaginaBaixarApp />
+            </Suspense>
+          )
         }
       />
       <Route

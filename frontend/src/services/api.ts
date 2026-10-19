@@ -1,5 +1,5 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { Capacitor } from '@capacitor/core';
+import { EH_APP_ANDROID, EH_APP_DESKTOP } from './plataforma';
 
 // Caminho relativo: em dev passa pelo proxy do Vite (vite.config.ts) até
 // http://localhost:3000; em produção (web) assume que frontend e backend
@@ -7,15 +7,13 @@ import { Capacitor } from '@capacitor/core';
 // Duas exceções, onde não existe um "mesmo domínio" pra ancorar um caminho
 // relativo, então aponta direto pro backend local:
 // - app desktop (Electron): carrega a página via file://
-// - app Android (Capacitor): 10.0.2.2 é o apelido que o EMULADOR usa pra
-//   enxergar o localhost da máquina que roda ele. Num celular físico (não
-//   emulador) isso não funciona — troque pelo IP da máquina na rede local
-//   (ex.: http://192.168.0.15:3000), já que o celular não tem como saber
-//   qual é "localhost" do seu PC.
-const EH_APP_DESKTOP = window.location.protocol === 'file:';
-const EH_APP_ANDROID = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
+// - app Android (Capacitor): o endereço do servidor é definido na hora de
+//   gerar o aplicativo (variável VITE_URL_BACKEND_APP, ver
+//   scripts/gerar-apk.js). Sem ela, usa 10.0.2.2, o apelido que o EMULADOR
+//   usa pra enxergar o localhost da máquina que roda ele — num celular de
+//   verdade isso não funciona, ele precisa do endereço do servidor.
 const HOST_BACKEND_DESKTOP = 'http://localhost:3000';
-const HOST_BACKEND_ANDROID = 'http://10.0.2.2:3000';
+const HOST_BACKEND_ANDROID = (import.meta.env.VITE_URL_BACKEND_APP as string | undefined)?.replace(/\/+$/, '') || 'http://10.0.2.2:3000';
 
 const API_URL = EH_APP_DESKTOP
   ? `${HOST_BACKEND_DESKTOP}/api`

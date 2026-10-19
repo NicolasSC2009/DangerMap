@@ -8,6 +8,7 @@
     "build": "tsc && vite build",
     "build:desktop": "tsc && vite build --base=./",
     "build:mobile": "tsc && vite build && node scripts/preparar-dist-mobile.js",
+    "gerar:apk": "node scripts/gerar-apk.js",
     "preview": "vite preview"
   },
   "keywords": [],
@@ -38,3 +39,4 @@
     "vite": "^6.1.0"
   }
 }
+

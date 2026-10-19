@@ -19,6 +19,7 @@ import { SininhoNotificacoes } from '../notificacoes/SininhoNotificacoes';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAvatarLocal } from '../../hooks/useAvatarLocal';
 import { iniciais as calcularIniciais } from '../../services/avatarLocal';
+import { EH_APP_INSTALADO } from '../../services/plataforma';
 
 interface NavbarProps {
   aoSelecionarOcorrencia?: (ocorrenciaId: number) => void;
@@ -94,7 +95,7 @@ export function Navbar(props: NavbarProps) {
     [
       { Icone: FiHelpCircle, rotulo: 'Ajuda', aoClicar: () => navegar('/ajuda') },
       { Icone: FiInfo, rotulo: 'Sobre o DangerMap', aoClicar: () => navegar('/sobre') },
-      { Icone: FiSmartphone, rotulo: 'Baixar o app', aoClicar: () => navegar('/baixar-app') },
+      ...(EH_APP_INSTALADO ? [] : [{ Icone: FiSmartphone, rotulo: 'Baixar o app', aoClicar: () => navegar('/baixar-app') }]),
     ],
   ];
   function clicarItemMenu(aoClicar: () => void) {

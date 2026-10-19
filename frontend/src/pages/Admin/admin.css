@@ -14,7 +14,7 @@
   --adm-escuro-texto: #ffffff;
   min-height: 100vh;
   min-height: 100dvh;
-  padding: 14px;
+  padding: calc(14px + var(--dm-safe-t)) 14px 14px;
   background: var(--adm-pagina);
   color: var(--dm-fg);
 }
@@ -2087,11 +2087,11 @@
 /* Celular e tablet: abas descem para uma segunda linha e os atalhos viram uma barra fixa embaixo. */
 @media (max-width: 900px) {
   .dm-admin-shell {
-    padding: 8px;
+    padding: calc(8px + var(--dm-safe-t)) 8px 8px;
   }
 
   .dm-admin-app {
-    min-height: calc(100dvh - 16px);
+    min-height: calc(100dvh - 16px - var(--dm-safe-t));
     padding: 16px 14px calc(96px + var(--dm-safe-b));
     border-radius: 26px;
   }
@@ -2149,11 +2149,11 @@
 
 @media (max-width: 640px) {
   .dm-admin-shell {
-    padding: 0;
+    padding: var(--dm-safe-t) 0 0;
   }
 
   .dm-admin-app {
-    min-height: 100dvh;
+    min-height: calc(100dvh - var(--dm-safe-t));
     border-radius: 0;
   }
 

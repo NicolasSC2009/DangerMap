@@ -15,6 +15,7 @@ import {
   type FiltrosMapa,
 } from '../../services/filtrosMapa';
 import './ferramentasMapa.css';
+import { obterPosicao } from '../../services/geolocalizacao';
 
 interface ResultadoBusca {
   nome: string;
@@ -246,7 +247,7 @@ export function FerramentasMapa(props: Props) {
       return;
     }
     setLocalizando(true);
-    navigator.geolocation.getCurrentPosition(
+    obterPosicao(
       function (posicao) {
         setLocalizando(false);
         mapa.flyTo([posicao.coords.latitude, posicao.coords.longitude], Math.max(mapa.getZoom(), 16), { duration: 0.8 });

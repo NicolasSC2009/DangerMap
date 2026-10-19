@@ -95,6 +95,14 @@
   }
 }
 
+.dm-baixar-card > p.dm-baixar-card__nota {
+  min-height: 0;
+  margin: 10px 0 0;
+  font-size: var(--dm-t-xs);
+  line-height: 1.5;
+  color: var(--dm-tinta-fraca);
+}
+
 .dm-baixar-card__recursos {
   list-style: none;
   margin: 0 0 12px;
