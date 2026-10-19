@@ -26,8 +26,8 @@ export function Rodape() {
       </div>
 
       <div className="dm-container dm-rodape__base">
-        <span>© {ano} DangerMap</span>
-        <span>Feito por quem vive a cidade, para ela ficar mais segura.</span>
+        <span>© {ano} DangerMap. Todos os direitos reservados.</span>
+        <span>Mapa colaborativo de perigos urbanos</span>
       </div>
     </footer>
   );
