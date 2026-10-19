@@ -1,15 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { FiDownload, FiMap, FiRefreshCw } from 'react-icons/fi';
+import { FiAlertTriangle, FiArrowUpRight, FiCheckCircle, FiDownload, FiMap, FiRefreshCw, FiTrendingUp, FiUsers } from 'react-icons/fi';
 import { api } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 import { ROTULO_GRAVIDADE, ROTULO_STATUS, ORDEM_GRAVIDADE, ORDEM_STATUS, COR_GRAVIDADE, COR_STATUS } from '../../theme/rotulos';
 import type { EstatisticasDashboard } from '@shared/types';
 import { CabecalhoAba } from './componentes/CabecalhoAba';
 import { CartaoEstatistica } from './componentes/CartaoEstatistica';
 import { GraficoBarras, type PontoSerie } from './componentes/GraficoBarras';
 import { LegendaCategorias } from './componentes/LegendaCategorias';
-import { CartaoExtracao } from './componentes/CartaoExtracao';
 import { TabelaOcorrenciasRecentes } from './componentes/TabelaOcorrenciasRecentes';
 import { ModalExportarRelatorio } from './componentes/ModalExportarRelatorio';
 import { ModalExtracaoRegional } from './componentes/ModalExtracaoRegional';
@@ -36,7 +36,18 @@ function completarSerie(serie: EstatisticasDashboard['serieTemporal'], dias: num
   return resultado;
 }
 
+function saudacao(): string {
+  const hora = new Date().getHours();
+  if (hora < 5) return 'Boa madrugada';
+  if (hora < 12) return 'Bom dia';
+  if (hora < 18) return 'Boa tarde';
+  return 'Boa noite';
+}
+
+const soma = (lista: PontoSerie[]) => lista.reduce((acc, p) => acc + p.total, 0);
+
 export function AbaVisaoGeral() {
+  const { usuario } = useAuth();
   const [dados, setDados] = useState<EstatisticasDashboard | null>(null);
   const [erro, setErro] = useState(false);
   const [janela, setJanela] = useState<Janela>(14);
@@ -60,23 +71,17 @@ export function AbaVisaoGeral() {
 
   const serie30 = useMemo(() => (dados ? completarSerie(dados.serieTemporal, 30) : []), [dados]);
   const serieVisivel = janela === 30 ? serie30 : serie30.slice(-14);
-  const ultimos7 = serie30.slice(-7).reduce((acc, p) => acc + p.total, 0);
+  const ultimos7 = soma(serie30.slice(-7));
+  const seteAnteriores = soma(serie30.slice(-14, -7));
 
-  const acoes = (
-    <>
-      <button type="button" className="dm-btn dm-btn--ghost dm-btn--pequeno" onClick={() => setModalExtracao(true)}>
-        <FiMap aria-hidden="true" /> Extração regional
-      </button>
-      <button type="button" className="dm-btn dm-btn--primario dm-btn--pequeno" onClick={() => setModalExportar(true)} disabled={!dados}>
-        <FiDownload aria-hidden="true" /> Exportar relatório
-      </button>
-    </>
-  );
+  const primeiroNome = usuario?.nome?.split(' ')[0] ?? '';
+  const titulo = primeiroNome ? `${saudacao()}, ${primeiroNome}` : saudacao();
+  const subtitulo = 'Acompanhe o que acontece no mapa, modere denúncias e exporte relatórios.';
 
   if (!dados) {
     return (
       <>
-        <CabecalhoAba eyebrow="Painel administrativo" titulo="Visão geral" subtitulo="Monitoramento geral e exportação de dados consolidados." acoes={acoes} />
+        <CabecalhoAba titulo={titulo} subtitulo={subtitulo} />
         {erro ? (
           <div className="dm-painel dm-admin-erro">
             <p>Não foi possível carregar as estatísticas.</p>
@@ -86,11 +91,15 @@ export function AbaVisaoGeral() {
           </div>
         ) : (
           <div className="dm-admin-visao" aria-busy="true">
-            <div className="dm-admin-stats">
-              {[0, 1, 2, 3].map((i) => (
-                <div key={i} className="dm-admin-stat dm-admin-esqueleto" />
-              ))}
+            <div className="dm-admin-area-hero dm-admin-esqueleto" />
+            <div className="dm-admin-area-kpis">
+              <div className="dm-admin-kpi-grade">
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i} className="dm-admin-esqueleto" />
+                ))}
+              </div>
             </div>
+            <div className="dm-admin-area-grafico dm-admin-esqueleto" />
           </div>
         )}
         {modalExtracao && <ModalExtracaoRegional aoFechar={() => setModalExtracao(false)} />}
@@ -99,60 +108,151 @@ export function AbaVisaoGeral() {
   }
 
   const t = dados.totais;
-  const geradoEm = new Date(dados.geradoEm);
   const mediaConfirmacoes = t.totalOcorrencias > 0 ? t.totalConfirmacoes / t.totalOcorrencias : 0;
   const porStatus = new Map(dados.ocorrenciasPorStatus.map((i) => [i.status, i.total]));
   const porGravidade = new Map(dados.ocorrenciasPorGravidade.map((i) => [i.gravidade, i.total]));
+  const totalGravidade = ORDEM_GRAVIDADE.reduce((acc, g) => acc + (porGravidade.get(g) ?? 0), 0);
+
+  // Variação da última semana em relação à anterior.
+  let variacao: { texto: string; tom: 'bom' | 'ruim' | 'neutro' };
+  if (seteAnteriores === 0) {
+    variacao = ultimos7 > 0 ? { texto: 'novo', tom: 'neutro' } : { texto: 'sem registros', tom: 'neutro' };
+  } else {
+    const pct = Math.round(((ultimos7 - seteAnteriores) / seteAnteriores) * 100);
+    // Mais perigos registrados não é "bom": aqui a cor só diz subiu (laranja) ou caiu (verde).
+    variacao = { texto: `${pct > 0 ? '+' : ''}${pct}%`, tom: pct > 0 ? 'ruim' : 'bom' };
+  }
 
   return (
     <>
-      <CabecalhoAba
-        eyebrow="Painel administrativo"
-        titulo="Visão geral"
-        subtitulo="Monitoramento geral e exportação de dados consolidados."
-        acoes={acoes}
-      />
+      <CabecalhoAba titulo={titulo} subtitulo={subtitulo} />
 
       <div className="dm-admin-visao">
-        <section className="dm-admin-stats" aria-label="Indicadores">
-          <CartaoEstatistica
-            indice={0}
-            nota={`GERADO ÀS ${geradoEm.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`}
-            rotulo="Ocorrências totais"
-            valor={t.totalOcorrencias}
-            delta={`+${ultimos7.toLocaleString('pt-BR')} nos últimos 7 dias`}
-          />
+        {/* ---------- total + situação ---------- */}
+        <section className="dm-painel dm-admin-area-hero dm-entrada" aria-label="Ocorrências totais">
+          <div className="dm-admin-hero__topo">
+            <span className="dm-admin-hero__rotulo">Ocorrências totais</span>
+            <span className="dm-admin-etiqueta dm-admin-etiqueta--neutro">Todas</span>
+          </div>
+          <div className="dm-admin-hero__valor">{t.totalOcorrencias.toLocaleString('pt-BR')}</div>
+          <div className="dm-admin-hero__delta">
+            <span className="dm-admin-etiqueta dm-admin-etiqueta--bom">
+              <FiArrowUpRight aria-hidden="true" /> {ultimos7.toLocaleString('pt-BR')}
+            </span>
+            <span className="dm-admin-kpi__complemento">nos últimos 7 dias</span>
+          </div>
+
+          <div className="dm-admin-hero__acoes dm-admin-nao-imprimir">
+            <button type="button" className="dm-admin-botao dm-admin-botao--escuro" onClick={() => setModalExportar(true)}>
+              <FiDownload aria-hidden="true" /> Exportar relatório
+            </button>
+            <button type="button" className="dm-admin-botao" onClick={() => setModalExtracao(true)}>
+              <FiMap aria-hidden="true" /> Extração por raio
+            </button>
+          </div>
+
+          <div className="dm-admin-situacao">
+            <div className="dm-admin-situacao__titulo">
+              <span>Situação</span>
+              <span className="dm-mono">{t.totalOcorrencias.toLocaleString('pt-BR')} no total</span>
+            </div>
+            <div className="dm-admin-situacao__grade">
+              {ORDEM_STATUS.map((status) => {
+                const valor = porStatus.get(status) ?? 0;
+                const pct = t.totalOcorrencias > 0 ? Math.round((valor / t.totalOcorrencias) * 100) : 0;
+                return (
+                  <div key={status} className="dm-admin-situacao__item" style={{ '--c': COR_STATUS[status] } as React.CSSProperties}>
+                    <span className="dm-admin-situacao__ponto" aria-hidden="true" />
+                    <strong>{valor.toLocaleString('pt-BR')}</strong>
+                    <span>{ROTULO_STATUS[status]}</span>
+                    <small className="dm-mono">{pct}%</small>
+                  </div>
+                );
+              })}
+            </div>
+
+          </div>
+        </section>
+
+        {/* ---------- quatro indicadores ---------- */}
+        <div className="dm-admin-area-kpis">
+        <section className="dm-admin-kpi-grade" aria-label="Indicadores">
           <CartaoEstatistica
             indice={1}
-            nota="CADASTRADOS"
-            rotulo="Usuários"
-            valor={t.totalUsuarios}
-            delta={`${t.totalUsuariosAtivos.toLocaleString('pt-BR')} ativos`}
+            destaque
+            icone={<FiTrendingUp />}
+            rotulo="Novas em 7 dias"
+            valor={ultimos7}
+            etiqueta={variacao.texto}
+            tomEtiqueta={variacao.tom}
+            complemento="vs. semana anterior"
           />
           <CartaoEstatistica
             indice={2}
-            nota="TOTAL ACUMULADO"
-            rotulo="Denúncias"
-            valor={t.totalDenuncias}
-            risco
-            delta={<Link to="/admin/moderacao">Ver fila de moderação →</Link>}
+            icone={<FiUsers />}
+            rotulo="Usuários"
+            valor={t.totalUsuarios}
+            etiqueta={`${t.totalUsuariosAtivos.toLocaleString('pt-BR')} ativos`}
+            tomEtiqueta="bom"
           />
           <CartaoEstatistica
             indice={3}
-            nota="PELA COMUNIDADE"
+            icone={<FiAlertTriangle />}
+            rotulo="Denúncias"
+            valor={t.totalDenuncias}
+            etiqueta="Ver fila"
+            tomEtiqueta="ruim"
+            complemento={<Link to="/admin/moderacao">moderar →</Link>}
+          />
+          <CartaoEstatistica
+            indice={4}
+            icone={<FiCheckCircle />}
             rotulo="Confirmações"
             valor={t.totalConfirmacoes}
-            delta={`${mediaConfirmacoes.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} por ocorrência`}
+            etiqueta={`${mediaConfirmacoes.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}`}
+            tomEtiqueta="neutro"
+            complemento="por ocorrência"
           />
         </section>
 
-        <section className="dm-painel dm-admin-painel dm-admin-area-barras">
+        <section className="dm-painel dm-admin-gravidade dm-entrada" style={{ '--i': 5 } as React.CSSProperties} aria-label="Por gravidade">
+          <div className="dm-admin-situacao__titulo">
+            <span>Por gravidade</span>
+            <span className="dm-mono">{totalGravidade.toLocaleString('pt-BR')} ocorrências</span>
+          </div>
+          <div
+            className="dm-admin-pilha"
+            role="img"
+            aria-label={ORDEM_GRAVIDADE.map((g) => `${ROTULO_GRAVIDADE[g]}: ${porGravidade.get(g) ?? 0}`).join(', ')}
+          >
+            {ORDEM_GRAVIDADE.map((g) => {
+              const valor = porGravidade.get(g) ?? 0;
+              if (valor === 0 || totalGravidade === 0) return null;
+              return <span key={g} style={{ flexGrow: valor, background: COR_GRAVIDADE[g] }} title={`${ROTULO_GRAVIDADE[g]}: ${valor}`} />;
+            })}
+          </div>
+          <ul className="dm-admin-pilha__legenda">
+            {ORDEM_GRAVIDADE.map((g) => (
+              <li key={g}>
+                <span className="dm-admin-situacao__ponto" style={{ background: COR_GRAVIDADE[g] }} aria-hidden="true" />
+                {ROTULO_GRAVIDADE[g]} <strong className="dm-mono">{(porGravidade.get(g) ?? 0).toLocaleString('pt-BR')}</strong>
+              </li>
+            ))}
+          </ul>
+        </section>
+        </div>
+
+        {/* ---------- registros por dia ---------- */}
+        <section className="dm-painel dm-admin-area-grafico dm-entrada" style={{ '--i': 2 } as React.CSSProperties}>
           <div className="dm-painel-cabecalho">
-            <h3>Registros nos últimos {janela} dias</h3>
+            <div>
+              <h3>Registros por dia</h3>
+              <p className="dm-admin-painel__sub">Últimos {janela} dias · {soma(serieVisivel).toLocaleString('pt-BR')} registros</p>
+            </div>
             <div className="dm-admin-segmentado" role="group" aria-label="Período do gráfico">
               {([14, 30] as Janela[]).map((j) => (
                 <button key={j} type="button" aria-pressed={janela === j} onClick={() => setJanela(j)}>
-                  {j} d
+                  {j} dias
                 </button>
               ))}
             </div>
@@ -160,70 +260,23 @@ export function AbaVisaoGeral() {
           <GraficoBarras serie={serieVisivel} />
         </section>
 
-        <section className="dm-painel dm-admin-painel dm-admin-area-categorias">
+        {/* ---------- categorias ---------- */}
+        <section className="dm-painel dm-admin-area-categorias dm-entrada" style={{ '--i': 3 } as React.CSSProperties}>
           <div className="dm-painel-cabecalho">
-            <h3>Por categoria</h3>
-            <span className="dm-painel-nota">Todas as ocorrências</span>
+            <div>
+              <h3>Por categoria</h3>
+              <p className="dm-admin-painel__sub">Todas as ocorrências</p>
+            </div>
           </div>
           <LegendaCategorias itens={dados.ocorrenciasPorCategoria} />
         </section>
 
-        <div className="dm-admin-linha-3">
-          <CartaoExtracao aoAbrirRapido={() => setModalExtracao(true)} />
-
-          <section className="dm-painel dm-admin-painel">
-            <div className="dm-painel-cabecalho">
-              <h3>Por status</h3>
-            </div>
-            {ORDEM_STATUS.map((status) => (
-              <LinhaBarra
-                key={status}
-                rotulo={ROTULO_STATUS[status]}
-                valor={porStatus.get(status) ?? 0}
-                total={t.totalOcorrencias}
-                cor={COR_STATUS[status]}
-              />
-            ))}
-          </section>
-
-          <section className="dm-painel dm-admin-painel">
-            <div className="dm-painel-cabecalho">
-              <h3>Por gravidade</h3>
-            </div>
-            {ORDEM_GRAVIDADE.map((gravidade) => (
-              <LinhaBarra
-                key={gravidade}
-                rotulo={ROTULO_GRAVIDADE[gravidade]}
-                valor={porGravidade.get(gravidade) ?? 0}
-                total={t.totalOcorrencias}
-                cor={COR_GRAVIDADE[gravidade]}
-              />
-            ))}
-          </section>
-        </div>
-
+        {/* ---------- recentes ---------- */}
         <TabelaOcorrenciasRecentes />
       </div>
 
       {modalExportar && <ModalExportarRelatorio dados={dados} aoFechar={() => setModalExportar(false)} />}
       {modalExtracao && <ModalExtracaoRegional aoFechar={() => setModalExtracao(false)} />}
     </>
-  );
-}
-
-function LinhaBarra(props: { rotulo: string; valor: number; total: number; cor: string }) {
-  const pct = props.total > 0 ? (props.valor / props.total) * 100 : 0;
-  return (
-    <div className="dm-admin-linha-barra" style={{ '--pct': `${pct}%`, '--c': props.cor } as React.CSSProperties}>
-      <div className="dm-admin-linha-barra__topo">
-        <span>{props.rotulo}</span>
-        <span className="dm-mono">
-          {props.valor.toLocaleString('pt-BR')} <small>· {Math.round(pct)}%</small>
-        </span>
-      </div>
-      <div className="dm-admin-linha-barra__trilho" aria-hidden="true">
-        <div className="dm-admin-linha-barra__preenchimento" />
-      </div>
-    </div>
   );
 }

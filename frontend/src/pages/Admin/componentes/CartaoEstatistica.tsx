@@ -1,28 +1,46 @@
 import React from 'react';
 
 interface CartaoEstatisticaProps {
-  /** Linha mono pequena no topo (ex.: "GERADO ÀS 14:32"). */
-  nota?: string;
   rotulo: string;
   valor: number | string;
-  /** Linha de contexto abaixo do valor. */
-  delta?: React.ReactNode;
-  /** Ponto vermelho em vez de verde (indicador de risco). */
-  risco?: boolean;
+  /** Ícone pequeno no canto do cartão. */
+  icone?: React.ReactNode;
+  /** Texto curto de contexto, em forma de etiqueta (ex.: "+12% na semana"). */
+  etiqueta?: React.ReactNode;
+  /** Cor da etiqueta: verde (bom), vermelho (atenção) ou neutra. */
+  tomEtiqueta?: 'bom' | 'ruim' | 'neutro';
+  /** Complemento ao lado da etiqueta (ex.: "últimos 7 dias"). */
+  complemento?: React.ReactNode;
+  /** Cartão de destaque, com fundo laranja. */
+  destaque?: boolean;
   indice?: number;
 }
 
+// Número em destaque com ícone e uma etiqueta de contexto (visão geral do painel).
 export function CartaoEstatistica(props: CartaoEstatisticaProps) {
   const valor = typeof props.valor === 'number' ? props.valor.toLocaleString('pt-BR') : props.valor;
   return (
     <div
-      className={`dm-admin-stat dm-entrada${props.risco ? ' dm-admin-stat--risco' : ''}`}
+      className={`dm-admin-kpi dm-entrada${props.destaque ? ' dm-admin-kpi--destaque' : ''}`}
       style={{ '--i': props.indice ?? 0 } as React.CSSProperties}
     >
-      {props.nota && <div className="dm-admin-stat__nota">{props.nota}</div>}
-      <div className="dm-admin-stat__rotulo">{props.rotulo}</div>
-      <div className="dm-admin-stat__valor">{valor}</div>
-      {props.delta && <div className="dm-admin-stat__delta">{props.delta}</div>}
+      <div className="dm-admin-kpi__topo">
+        <span className="dm-admin-kpi__rotulo">{props.rotulo}</span>
+        {props.icone && (
+          <span className="dm-admin-kpi__icone" aria-hidden="true">
+            {props.icone}
+          </span>
+        )}
+      </div>
+      <div className="dm-admin-kpi__valor">{valor}</div>
+      {(props.etiqueta || props.complemento) && (
+        <div className="dm-admin-kpi__rodape">
+          {props.etiqueta && (
+            <span className={`dm-admin-etiqueta dm-admin-etiqueta--${props.tomEtiqueta ?? 'neutro'}`}>{props.etiqueta}</span>
+          )}
+          {props.complemento && <span className="dm-admin-kpi__complemento">{props.complemento}</span>}
+        </div>
+      )}
     </div>
   );
 }

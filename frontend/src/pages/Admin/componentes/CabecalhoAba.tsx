@@ -1,21 +1,18 @@
 import React from 'react';
 
 interface CabecalhoAbaProps {
-  eyebrow: string;
+  /** Mantido por compatibilidade com as abas; o novo visual não mostra o rótulo acima do título. */
+  eyebrow?: string;
   titulo: string;
   subtitulo?: React.ReactNode;
   acoes?: React.ReactNode;
 }
 
-// Topo de cada aba do painel (eyebrow mono + h1 Playfair + subtítulo + ações).
+// Topo de cada aba do painel: título grande, subtítulo e ações à direita.
 export function CabecalhoAba(props: CabecalhoAbaProps) {
   return (
     <header className="dm-admin-cabecalho">
       <div className="dm-admin-cabecalho__texto">
-        <span className="dm-eyebrow">
-          <span className="dm-eyebrow__marca" aria-hidden="true" />
-          {props.eyebrow}
-        </span>
         <h1>{props.titulo}</h1>
         {props.subtitulo && <p className="dm-admin-cabecalho__sub">{props.subtitulo}</p>}
       </div>
