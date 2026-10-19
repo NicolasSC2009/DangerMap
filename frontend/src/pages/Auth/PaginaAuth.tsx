@@ -307,13 +307,13 @@ export function PaginaAuth() {
                       placeholder="Crie uma senha forte"
                       registro={formCadastro.register('senha', { required: 'Crie uma senha.', validate: validarSenhaForte })}
                     />
-                    <RegrasSenha senha={senhaCadastro} />
+                    <RegrasSenha compacto senha={senhaCadastro} />
                     {errosCadastro.senha && <span className="dm-erro" role="alert">{errosCadastro.senha.message}</span>}
                   </div>
+                  <CaixaRecaptcha ref={caixaRecaptchaRef} aoMudar={setTokenRecaptcha} />
                   <button type="submit" disabled={enviandoCadastro} className="dm-btn dm-btn--primario dm-btn--bloco">
                     <span>{enviandoCadastro ? 'Criando conta…' : 'Cadastrar'}</span>
                   </button>
-                  <CaixaRecaptcha ref={caixaRecaptchaRef} aoMudar={setTokenRecaptcha} />
                 </form>
 
                 <div className="dm-auth-form-footer">

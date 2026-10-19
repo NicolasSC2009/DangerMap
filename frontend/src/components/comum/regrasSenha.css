@@ -45,3 +45,37 @@
   background: #3d6b2e;
   border-color: #3d6b2e;
 }
+
+/* Versão curta: 5 tracinhos + uma frase (cadastro). */
+.dm-regras-compacto {
+  margin-top: 2px;
+}
+
+.dm-regras-compacto__barra {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+}
+
+.dm-regras-compacto__barra span {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--dm-linha-forte);
+  transition: background var(--dm-transicao);
+}
+
+.dm-regras-compacto__barra span[data-ok='true'] {
+  background: var(--dm-verde-salada);
+}
+
+.dm-regras-compacto p {
+  margin: 6px 2px 0;
+  font-size: calc(11.5px * var(--dm-escala));
+  line-height: 1.4;
+  color: var(--dm-tinta-suave);
+}
+
+.dm-regras-compacto p[data-forte='true'] {
+  color: var(--dm-titulo);
+  font-weight: 600;
+}
