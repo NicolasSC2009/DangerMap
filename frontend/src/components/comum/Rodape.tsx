@@ -27,7 +27,7 @@ export function Rodape() {
 
       <div className="dm-container dm-rodape__base">
         <span>© {ano} DangerMap</span>
-        <span>Em caso de emergência, ligue 190 (Polícia), 192 (SAMU) ou 193 (Bombeiros).</span>
+        <span>Feito por quem vive a cidade, para ela ficar mais segura.</span>
       </div>
     </footer>
   );
