@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { FiDownload, FiRefreshCw, FiX } from 'react-icons/fi';
+import { FiDownload, FiRefreshCw, FiSearch, FiX } from 'react-icons/fi';
 import { ModalOcorrencia } from '../../components/ocorrencia/ModalOcorrencia';
 import { ROTULO_GRAVIDADE, ROTULO_STATUS, ORDEM_GRAVIDADE, ORDEM_STATUS, COR_GRAVIDADE } from '../../theme/rotulos';
 import type { Gravidade, ResultadoRelatorioEstado, ResultadoRelatorioRegiao, StatusOcorrencia } from '@shared/types';
@@ -18,6 +18,9 @@ import {
 } from './componentes/FerramentaRaio';
 import { FerramentaEstado, useBuscaEstado } from './componentes/FerramentaEstado';
 import { ModalExportar } from './componentes/ModalExportar';
+import { FiltroSuspenso } from './componentes/FiltroSuspenso';
+import { Paginacao } from './componentes/Paginacao';
+import { useLinhasPorPagina } from '../../hooks/useLinhasPorPagina';
 import { CLASSE_PILL_STATUS, aoTeclarLinha } from './componentes/TabelaOcorrenciasRecentes';
 import { carimboData } from './utils/csv';
 import { relatorioOcorrencias } from './utils/relatorios';
@@ -32,7 +35,6 @@ const PERIODOS: Array<{ dias: number; rotulo: string }> = [
   { dias: 90, rotulo: '90 dias' },
 ];
 
-const POR_PAGINA = 25;
 
 function lerCentroDaUrl(params: URLSearchParams): Coordenada | null {
   const lat = Number(params.get('lat'));
@@ -66,7 +68,10 @@ export function AbaRelatorioRegiao() {
   const [statuses, setStatuses] = useState<Set<StatusOcorrencia>>(() => new Set(ORDEM_STATUS));
   const [categoriasSel, setCategoriasSel] = useState<Set<number>>(() => new Set());
   const [dias, setDias] = useState(0);
-  const [visiveis, setVisiveis] = useState(POR_PAGINA);
+  const [vista, setVista] = useState<'mapa' | 'lista'>('mapa');
+  const [busca, setBusca] = useState('');
+  const [pagina, setPagina] = useState(0);
+  const porPagina = useLinhasPorPagina(470);
   const [abertaId, setAbertaId] = useState<number | null>(null);
   const [exportando, setExportando] = useState(false);
   const { resultados, buscando, recarregar } = useBuscaRegiao(centro, raio);
@@ -130,12 +135,12 @@ export function AbaRelatorioRegiao() {
     [filtradas]
   );
 
-  // Ao mudar de filtro, volta para a primeira página da tabela.
+  // Ao mudar de filtro ou de busca, volta para a primeira página da tabela.
   useEffect(
     function () {
-      setVisiveis(POR_PAGINA);
+      setPagina(0);
     },
-    [filtradas]
+    [filtradas, busca]
   );
 
   function alternar<T>(conjunto: Set<T>, valor: T, definir: (s: Set<T>) => void) {
@@ -153,6 +158,7 @@ export function AbaRelatorioRegiao() {
     setStatuses(new Set(ORDEM_STATUS));
     setCategoriasSel(new Set());
     setDias(0);
+    setBusca('');
   }
 
   const total = todas?.length ?? 0;
@@ -211,25 +217,16 @@ export function AbaRelatorioRegiao() {
   }
 
   const exportacao = exportando ? montarExportacao() : null;
-  const exibidas = filtradas.slice(0, visiveis);
+  const termo = busca.trim().toLowerCase();
+  const encontradas = termo ? filtradas.filter((l) => ` ${l.descricao ?? ''} ${l.categoria ?? ''}`.toLowerCase().includes(termo)) : filtradas;
+  const exibidas = encontradas.slice(pagina * porPagina, (pagina + 1) * porPagina);
 
-  return (
-    <>
-      <CabecalhoAba
-        titulo="Extração regional"
-        subtitulo={
-          modo === 'raio'
-            ? 'Clique no mapa para definir o centro e arraste o ponto ou a alça para ajustar o raio. Os números consideram só as ocorrências dentro do círculo.'
-            : 'Escolha um estado para ver a fronteira no mapa. Os números consideram só as ocorrências dentro do estado.'
-        }
-        acoes={
-          <button type="button" className="dm-admin-botao dm-admin-botao--escuro dm-admin-botao--auto" onClick={() => setExportando(true)} disabled={!podeExportar}>
-            <FiDownload aria-hidden="true" /> Baixar relatório
-          </button>
-        }
-      />
+  const resumoLista = (conjunto: Set<string>, ordem: string[], rotulos: Record<string, string>) =>
+    conjunto.size === ordem.length ? undefined : conjunto.size <= 2 ? ordem.filter((v) => conjunto.has(v)).map((v) => rotulos[v]).join(', ') || 'nenhuma' : `${conjunto.size} de ${ordem.length}`;
 
-      <div className="dm-admin-segmentado dm-admin-nao-imprimir" role="group" aria-label="Modo de extração">
+  const barraFiltros = (
+    <div className="dm-admin-barra-relatorio dm-admin-nao-imprimir">
+      <div className="dm-admin-segmentado" role="group" aria-label="Modo de extração">
         <button type="button" aria-pressed={modo === 'raio'} onClick={() => setModo('raio')}>
           Por raio
         </button>
@@ -238,215 +235,175 @@ export function AbaRelatorioRegiao() {
         </button>
       </div>
 
-      <section className="dm-painel dm-admin-painel dm-admin-painel--ferramenta">
-        {modo === 'raio' ? (
-          <FerramentaRaio centro={centro} raioMetros={raio} aoMudarCentro={setCentro} aoMudarRaio={setRaio} pontos={pontos} aoClicarPonto={setAbertaId}>
-            <div className="dm-admin-previa dm-admin-previa--lateral" aria-live="polite">
-              <div>
-                <div className="dm-admin-previa__num">{!centro ? '—' : carregando ? '…' : filtradas.length.toLocaleString('pt-BR')}</div>
-                <div className="dm-admin-previa__rotulo">{filtrosAtivos ? 'Ocorrências (filtradas)' : 'Ocorrências na área'}</div>
-              </div>
-              <div className="dm-admin-previa__dir">
-                <div className="dm-admin-previa__num">{areaKm2(raio)}</div>
-                <div className="dm-admin-previa__rotulo">km² abrangidos</div>
-              </div>
-            </div>
-          </FerramentaRaio>
-        ) : (
-          <FerramentaEstado uf={uf} aoMudarUf={setUf} poligono={dadosEstado?.poligono ?? null} pontos={pontos} aoClicarPonto={setAbertaId}>
-            <div className="dm-admin-previa dm-admin-previa--lateral" aria-live="polite">
-              <div>
-                <div className="dm-admin-previa__num">{!uf ? '—' : carregando ? '…' : filtradas.length.toLocaleString('pt-BR')}</div>
-                <div className="dm-admin-previa__rotulo">{filtrosAtivos ? 'Ocorrências (filtradas)' : 'Ocorrências no estado'}</div>
-              </div>
-              <div className="dm-admin-previa__dir">
-                <div className="dm-admin-previa__num">{estadoAtual ? formatarAreaEstado(estadoAtual.areaKm2) : '—'}</div>
-                <div className="dm-admin-previa__rotulo">km² abrangidos</div>
-              </div>
-            </div>
-          </FerramentaEstado>
-        )}
-      </section>
+      <div className="dm-admin-segmentado" role="group" aria-label="O que mostrar">
+        <button type="button" aria-pressed={vista === 'mapa'} onClick={() => setVista('mapa')}>
+          Mapa
+        </button>
+        <button type="button" aria-pressed={vista === 'lista'} onClick={() => setVista('lista')}>
+          Resultados{todas ? ` · ${filtradas.length.toLocaleString('pt-BR')}` : ''}
+        </button>
+      </div>
 
-      {/* ---------- filtros ---------- */}
-      <section className="dm-painel dm-admin-painel dm-admin-nao-imprimir">
-        <div className="dm-painel-cabecalho">
-          <div>
-            <h3>Filtros</h3>
-            <p className="dm-admin-painel__sub">Valem para a tabela, para o mapa e para o relatório que você baixar.</p>
-          </div>
-          <button type="button" className="dm-btn dm-btn--ghost dm-btn--pequeno" onClick={limparFiltros} disabled={!filtrosAtivos}>
-            <FiX aria-hidden="true" /> Limpar filtros
-          </button>
-        </div>
-
-        <div className="dm-admin-filtros-grade">
-          <div className="dm-campo-grupo">
-            <span className="dm-rotulo">Gravidade</span>
-            <div className="dm-chips" role="group" aria-label="Filtrar por gravidade">
-              {ORDEM_GRAVIDADE.map((g) => (
-                <button key={g} type="button" className="dm-chip dm-chip--claro" aria-pressed={gravidades.has(g)} onClick={() => alternar(gravidades, g, setGravidades)}>
-                  <span className={`dm-severidade dm-severidade--${g}`}>
-                    <span className="dm-severidade__ponto" aria-hidden="true" />
-                  </span>
-                  {ROTULO_GRAVIDADE[g]}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="dm-campo-grupo">
-            <span className="dm-rotulo">Situação</span>
-            <div className="dm-chips" role="group" aria-label="Filtrar por situação">
-              {ORDEM_STATUS.map((s) => (
-                <button key={s} type="button" className="dm-chip dm-chip--claro" aria-pressed={statuses.has(s)} onClick={() => alternar(statuses, s, setStatuses)}>
-                  {ROTULO_STATUS[s]}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="dm-campo-grupo">
-            <span className="dm-rotulo">Período</span>
-            <div className="dm-chips" role="group" aria-label="Filtrar por período">
-              {PERIODOS.map((p) => (
-                <button key={p.dias} type="button" className="dm-chip dm-chip--claro" aria-pressed={dias === p.dias} onClick={() => setDias(p.dias)}>
-                  {p.rotulo}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
+      <div className="dm-admin-barra-relatorio__filtros">
+        <FiltroSuspenso
+          rotulo="Gravidade"
+          opcoes={ORDEM_GRAVIDADE.map((g) => ({ valor: g, rotulo: ROTULO_GRAVIDADE[g] }))}
+          selecionados={gravidades}
+          aoAlternar={(g) => alternar(gravidades, g, setGravidades)}
+          resumo={resumoLista(gravidades as Set<string>, ORDEM_GRAVIDADE, ROTULO_GRAVIDADE)}
+        />
+        <FiltroSuspenso
+          rotulo="Situação"
+          opcoes={ORDEM_STATUS.map((s) => ({ valor: s, rotulo: ROTULO_STATUS[s] }))}
+          selecionados={statuses}
+          aoAlternar={(s) => alternar(statuses, s, setStatuses)}
+          resumo={resumoLista(statuses as Set<string>, ORDEM_STATUS, ROTULO_STATUS)}
+        />
+        <FiltroSuspenso
+          rotulo="Período"
+          unico
+          opcoes={PERIODOS.map((p) => ({ valor: p.dias, rotulo: p.dias === 0 ? 'Todo o período' : `Últimos ${p.rotulo}` }))}
+          selecionados={new Set([dias])}
+          aoAlternar={(d) => setDias(d)}
+          resumo={dias > 0 ? `${dias} dias` : undefined}
+        />
         {categoriasDisponiveis.length > 0 && (
-          <div className="dm-campo-grupo dm-admin-filtro-categorias">
-            <span className="dm-rotulo">Categoria {categoriasSel.size === 0 && <em className="dm-admin-apagado">(todas)</em>}</span>
-            <div className="dm-chips" role="group" aria-label="Filtrar por categoria">
-              {categoriasDisponiveis.map((c) => (
-                <button key={c.id} type="button" className="dm-chip dm-chip--claro" aria-pressed={categoriasSel.has(c.id)} onClick={() => alternar(categoriasSel, c.id, setCategoriasSel)}>
-                  {c.nome} <span className="dm-admin-chip-total">{c.total}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+          <FiltroSuspenso
+            rotulo="Categoria"
+            opcoes={categoriasDisponiveis.map((c) => ({ valor: c.id, rotulo: c.nome, extra: c.total }))}
+            selecionados={categoriasSel}
+            aoAlternar={(id) => alternar(categoriasSel, id, setCategoriasSel)}
+            resumo={categoriasSel.size > 0 ? String(categoriasSel.size) : undefined}
+          />
         )}
-      </section>
+        {filtrosAtivos && (
+          <button type="button" className="dm-admin-filtro__limpar" onClick={limparFiltros}>
+            <FiX aria-hidden="true" /> Limpar
+          </button>
+        )}
+      </div>
+    </div>
+  );
 
-      {/* ---------- resumo ---------- */}
-      {todas && (
-        <section className="dm-admin-resumo" aria-label="Resumo do resultado">
-          <div className="dm-admin-resumo__item">
-            <strong>{filtradas.length.toLocaleString('pt-BR')}</strong>
-            <span>{filtrosAtivos ? `de ${total.toLocaleString('pt-BR')} ocorrências` : 'ocorrências'}</span>
-          </div>
-          <div className="dm-admin-resumo__item">
-            <strong>{altas.toLocaleString('pt-BR')}</strong>
-            <span>de gravidade alta</span>
-          </div>
-          <div className="dm-admin-resumo__item">
-            <strong>{confirmadas.toLocaleString('pt-BR')}</strong>
-            <span>confirmadas</span>
-          </div>
-          <div className="dm-admin-resumo__item">
-            <strong>{resolvidas.toLocaleString('pt-BR')}</strong>
-            <span>resolvidas</span>
-          </div>
-          <div className="dm-admin-resumo__pilha" role="img" aria-label="Distribuição por gravidade">
-            {[...ORDEM_GRAVIDADE].reverse().map((g) => {
-              const n = filtradas.filter((l) => l.gravidade === g).length;
-              return n === 0 ? null : <span key={g} style={{ flexGrow: n, background: COR_GRAVIDADE[g] }} title={`${ROTULO_GRAVIDADE[g]}: ${n}`} />;
-            })}
-          </div>
+  return (
+    <>
+      <CabecalhoAba
+        compacto
+        titulo="Extração regional"
+        subtitulo={
+          modo === 'raio'
+            ? 'Escolha um ponto e um raio no mapa para ver e baixar as ocorrências da área.'
+            : 'Escolha um estado para ver e baixar as ocorrências dele.'
+        }
+        acoes={
+          <button type="button" className="dm-admin-botao dm-admin-botao--escuro dm-admin-botao--auto" onClick={() => setExportando(true)} disabled={!podeExportar}>
+            <FiDownload aria-hidden="true" /> Baixar relatório
+          </button>
+        }
+      />
+
+      {barraFiltros}
+
+      {vista === 'mapa' ? (
+        <section className="dm-painel dm-admin-painel dm-admin-painel--ferramenta">
+          {modo === 'raio' ? (
+            <FerramentaRaio centro={centro} raioMetros={raio} aoMudarCentro={setCentro} aoMudarRaio={setRaio} pontos={pontos} aoClicarPonto={setAbertaId}>
+              <p className="dm-admin-previa-linha" aria-live="polite">
+                <strong>{!centro ? '—' : carregando ? '…' : filtradas.length.toLocaleString('pt-BR')}</strong> ocorrências em {areaKm2(raio)} km²
+              </p>
+            </FerramentaRaio>
+          ) : (
+            <FerramentaEstado uf={uf} aoMudarUf={setUf} poligono={dadosEstado?.poligono ?? null} pontos={pontos} aoClicarPonto={setAbertaId}>
+              <p className="dm-admin-previa-linha" aria-live="polite">
+                <strong>{!uf ? '—' : carregando ? '…' : filtradas.length.toLocaleString('pt-BR')}</strong> ocorrências
+                {estadoAtual ? ` em ${formatarAreaEstado(estadoAtual.areaKm2)} km²` : ''}
+              </p>
+            </FerramentaEstado>
+          )}
+        </section>
+      ) : (
+        <section className="dm-painel dm-admin-painel">
+          {!todas ? (
+            <p className="dm-admin-vazio">
+              {modo === 'raio' ? 'Escolha um ponto no mapa para ver as ocorrências da área.' : 'Escolha um estado para ver as ocorrências dele.'}{' '}
+              <button type="button" className="dm-categorias__limpar" onClick={() => setVista('mapa')}>
+                Voltar ao mapa
+              </button>
+            </p>
+          ) : (
+            <>
+              <div className="dm-admin-resultados__topo dm-admin-nao-imprimir">
+                <label className="dm-admin-busca">
+                  <FiSearch aria-hidden="true" />
+                  <input type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar por descrição, categoria ou número" aria-label="Buscar nos resultados" />
+                  {busca && (
+                    <button type="button" onClick={() => setBusca('')} aria-label="Limpar busca">
+                      <FiX aria-hidden="true" />
+                    </button>
+                  )}
+                </label>
+                <p className="dm-admin-resultados__resumo">
+                  <strong>{filtradas.length.toLocaleString('pt-BR')}</strong> ocorrências · <strong>{altas.toLocaleString('pt-BR')}</strong> de gravidade alta ·{' '}
+                  <strong>{confirmadas.toLocaleString('pt-BR')}</strong> confirmadas
+                </p>
+                <button type="button" className="dm-admin-link-botao" onClick={modo === 'raio' ? recarregar : recarregarEstado} aria-label="Buscar novamente" title="Buscar novamente">
+                  <FiRefreshCw aria-hidden="true" />
+                </button>
+              </div>
+
+              {carregando ? (
+                <div className="dm-admin-esqueleto" aria-hidden="true" />
+              ) : encontradas.length === 0 ? (
+                <p className="dm-admin-vazio">{total === 0 ? 'Nenhuma ocorrência nessa área.' : 'Nada encontrado com esses filtros ou essa busca.'}</p>
+              ) : (
+                <>
+                  <div className="dm-tabela-wrap">
+                    <table className="dm-tabela dm-tabela--empilhada">
+                      <thead>
+                        <tr>
+                          <th scope="col">Ocorrência</th>
+                          <th scope="col">Gravidade</th>
+                          <th scope="col">Situação</th>
+                          {modo === 'raio' && <th scope="col">Distância</th>}
+                          <th scope="col">Data</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {exibidas.map((r) => (
+                          <tr key={r.id} className="dm-tabela__clicavel" tabIndex={0} onClick={() => setAbertaId(r.id)} onKeyDown={aoTeclarLinha(() => setAbertaId(r.id))} aria-label={`Abrir ocorrência #${r.id}`}>
+                            <td data-rotulo="Ocorrência" className="dm-admin-celula-texto">
+                              <strong className="dm-admin-celula-titulo">{r.categoria ?? 'Sem categoria'}</strong>
+                              <span className="dm-admin-celula-sub">{r.descricao || 'sem descrição'}</span>
+                            </td>
+                            <td data-rotulo="Gravidade">
+                              <span className={`dm-severidade dm-severidade--${r.gravidade}`}>
+                                <span className="dm-severidade__ponto" aria-hidden="true" />
+                                {ROTULO_GRAVIDADE[r.gravidade] ?? r.gravidade}
+                              </span>
+                            </td>
+                            <td data-rotulo="Situação">
+                              <span className={CLASSE_PILL_STATUS[r.status] ?? 'dm-pill'}>{ROTULO_STATUS[r.status] ?? r.status}</span>
+                            </td>
+                            {modo === 'raio' && (
+                              <td data-rotulo="Distância" className="dm-mono">
+                                {formatarDistancia(Number((r as ResultadoRelatorioRegiao).distancia_metros))}
+                              </td>
+                            )}
+                            <td data-rotulo="Data" className="dm-mono">
+                              {new Date(r.data_registro).toLocaleDateString('pt-BR')}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <Paginacao total={encontradas.length} pagina={pagina} porPagina={porPagina} aoMudar={setPagina} />
+                </>
+              )}
+            </>
+          )}
         </section>
       )}
-
-      {/* ---------- tabela ---------- */}
-      <section className="dm-painel dm-admin-painel">
-        <div className="dm-painel-cabecalho">
-          <div>
-            <h3>{modo === 'raio' ? 'Ocorrências na área' : 'Ocorrências no estado'}</h3>
-            <p className="dm-admin-painel__sub">
-              {modo === 'raio' && !centro
-                ? 'Escolha um ponto no mapa'
-                : modo === 'estado' && !uf
-                  ? 'Escolha um estado'
-                  : carregando
-                    ? 'Buscando…'
-                    : todas
-                      ? `${filtradas.length} de ${total}`
-                      : ''}
-            </p>
-          </div>
-          {todas && !carregando && (
-            <button type="button" className="dm-admin-link-botao dm-admin-nao-imprimir" onClick={modo === 'raio' ? recarregar : recarregarEstado} aria-label="Buscar novamente" title="Buscar novamente">
-              <FiRefreshCw aria-hidden="true" />
-            </button>
-          )}
-        </div>
-
-        {modo === 'raio' && !centro ? (
-          <p className="dm-admin-vazio">Clique em qualquer ponto do mapa (ou use "Minha localização") para escolher o centro da busca.</p>
-        ) : modo === 'estado' && !uf ? (
-          <p className="dm-admin-vazio">Selecione um estado no painel ao lado do mapa.</p>
-        ) : !todas ? (
-          <div className="dm-admin-esqueleto" aria-hidden="true" />
-        ) : filtradas.length === 0 ? (
-          <p className="dm-admin-vazio">{total === 0 ? 'Nenhuma ocorrência nessa área.' : 'Nenhuma ocorrência com os filtros selecionados.'}</p>
-        ) : (
-          <>
-            <div className="dm-tabela-wrap">
-              <table className="dm-tabela dm-tabela--empilhada">
-                <thead>
-                  <tr>
-                    <th scope="col">Descrição</th>
-                    <th scope="col">Categoria</th>
-                    <th scope="col">Gravidade</th>
-                    <th scope="col">Situação</th>
-                    {modo === 'raio' && <th scope="col">Distância</th>}
-                    <th scope="col">Data</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {exibidas.map((r) => (
-                    <tr key={r.id} className="dm-tabela__clicavel" tabIndex={0} onClick={() => setAbertaId(r.id)} onKeyDown={aoTeclarLinha(() => setAbertaId(r.id))} aria-label={`Abrir ocorrência #${r.id}`}>
-                      <td data-rotulo="Descrição" className="dm-admin-celula-texto">
-                        {r.descricao || <em className="dm-admin-apagado">sem descrição</em>}
-                      </td>
-                      <td data-rotulo="Categoria">{r.categoria ?? <em className="dm-admin-apagado">—</em>}</td>
-                      <td data-rotulo="Gravidade">
-                        <span className={`dm-severidade dm-severidade--${r.gravidade}`}>
-                          <span className="dm-severidade__ponto" aria-hidden="true" />
-                          {ROTULO_GRAVIDADE[r.gravidade] ?? r.gravidade}
-                        </span>
-                      </td>
-                      <td data-rotulo="Situação">
-                        <span className={CLASSE_PILL_STATUS[r.status] ?? 'dm-pill'}>{ROTULO_STATUS[r.status] ?? r.status}</span>
-                      </td>
-                      {modo === 'raio' && (
-                        <td data-rotulo="Distância" className="dm-mono">
-                          {formatarDistancia(Number((r as ResultadoRelatorioRegiao).distancia_metros))}
-                        </td>
-                      )}
-                      <td data-rotulo="Data" className="dm-mono">
-                        {new Date(r.data_registro).toLocaleDateString('pt-BR')}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {filtradas.length > exibidas.length && (
-              <div className="dm-admin-mais dm-admin-nao-imprimir">
-                <button type="button" className="dm-btn dm-btn--ghost dm-btn--pequeno" onClick={() => setVisiveis((v) => v + POR_PAGINA)}>
-                  Mostrar mais {Math.min(POR_PAGINA, filtradas.length - exibidas.length)}
-                </button>
-                <button type="button" className="dm-btn dm-btn--ghost dm-btn--pequeno" onClick={() => setVisiveis(filtradas.length)}>
-                  Mostrar todas ({filtradas.length.toLocaleString('pt-BR')})
-                </button>
-              </div>
-            )}
-          </>
-        )}
-      </section>
 
       {abertaId !== null && <ModalOcorrencia ocorrenciaId={abertaId} aoFechar={() => setAbertaId(null)} aoMudar={modo === 'raio' ? recarregar : recarregarEstado} />}
 

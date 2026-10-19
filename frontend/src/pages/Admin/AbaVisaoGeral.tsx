@@ -76,12 +76,11 @@ export function AbaVisaoGeral() {
 
   const primeiroNome = usuario?.nome?.split(' ')[0] ?? '';
   const titulo = primeiroNome ? `${saudacao()}, ${primeiroNome}` : saudacao();
-  const subtitulo = 'Acompanhe o que acontece no mapa, modere denúncias e exporte relatórios.';
 
   if (!dados) {
     return (
       <>
-        <CabecalhoAba titulo={titulo} subtitulo={subtitulo} />
+        <CabecalhoAba compacto titulo={titulo} />
         {erro ? (
           <div className="dm-painel dm-admin-erro">
             <p>Não foi possível carregar as estatísticas.</p>
@@ -125,14 +124,13 @@ export function AbaVisaoGeral() {
 
   return (
     <>
-      <CabecalhoAba titulo={titulo} subtitulo={subtitulo} />
+      <CabecalhoAba compacto titulo={titulo} />
 
       <div className="dm-admin-visao">
         {/* ---------- total + situação ---------- */}
         <section className="dm-painel dm-admin-area-hero dm-entrada" aria-label="Ocorrências totais">
           <div className="dm-admin-hero__topo">
             <span className="dm-admin-hero__rotulo">Ocorrências totais</span>
-            <span className="dm-admin-etiqueta dm-admin-etiqueta--neutro">Todas</span>
           </div>
           <div className="dm-admin-hero__valor">{t.totalOcorrencias.toLocaleString('pt-BR')}</div>
           <div className="dm-admin-hero__delta">
@@ -152,16 +150,12 @@ export function AbaVisaoGeral() {
           </div>
 
           <div className="dm-admin-situacao">
-            <div className="dm-admin-situacao__titulo">
-              <span>Situação</span>
-              <span className="dm-mono">{t.totalOcorrencias.toLocaleString('pt-BR')} no total</span>
-            </div>
             <div className="dm-admin-situacao__grade">
               {ORDEM_STATUS.map((status) => {
                 const valor = porStatus.get(status) ?? 0;
                 const pct = t.totalOcorrencias > 0 ? Math.round((valor / t.totalOcorrencias) * 100) : 0;
                 return (
-                  <div key={status} className="dm-admin-situacao__item" style={{ '--c': COR_STATUS[status] } as React.CSSProperties}>
+                  <div key={status} className="dm-admin-situacao__item" style={{ '--c': COR_STATUS[status] } as React.CSSProperties} title={`% das ocorrências`}>
                     <span className="dm-admin-situacao__ponto" aria-hidden="true" />
                     <strong>{valor.toLocaleString('pt-BR')}</strong>
                     <span>{ROTULO_STATUS[status]}</span>

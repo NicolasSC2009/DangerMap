@@ -7,6 +7,8 @@ import { iniciais } from '../../services/avatarLocal';
 import type { FilaUsuariosDenunciados } from '@shared/types';
 import { CabecalhoAba } from './componentes/CabecalhoAba';
 import { BarraFerramentas } from './componentes/BarraFerramentas';
+import { Paginacao } from './componentes/Paginacao';
+import { useLinhasPorPagina } from '../../hooks/useLinhasPorPagina';
 import { carimboData } from './utils/csv';
 import { relatorioLista } from './utils/relatorios';
 import { ModalConfirmacao } from './componentes/ModalConfirmacao';
@@ -19,6 +21,8 @@ export function AbaUsuarios() {
   const [processandoId, setProcessandoId] = useState<number | null>(null);
   const [confirmarBanimento, setConfirmarBanimento] = useState<UsuarioFila | null>(null);
   const [busca, setBusca] = useState('');
+  const [pagina, setPagina] = useState(0);
+  const porPagina = useLinhasPorPagina(400, 60);
 
   function carregar() {
     api
@@ -34,6 +38,7 @@ export function AbaUsuarios() {
   }
 
   useEffect(carregar, []);
+  useEffect(() => setPagina(0), [busca]);
 
   function alterarStatus(id: number, reativar: boolean) {
     setProcessandoId(id);
@@ -85,13 +90,6 @@ export function AbaUsuarios() {
       />
 
       <section className="dm-painel dm-admin-painel">
-        <div className="dm-painel-cabecalho">
-          <h3>Fila de perfis</h3>
-          <span className="dm-painel-nota">
-            {dados ? `${usuarios.length} na fila · ${banidos} banido${banidos === 1 ? '' : 's'}` : 'Carregando…'}
-          </span>
-        </div>
-
         {usuarios.length > 0 && (
           <BarraFerramentas busca={busca} aoBuscar={setBusca} placeholder="Buscar por nome ou e-mail" gerarRelatorio={gerarRelatorio} semDados={visiveis.length === 0} />
         )}
@@ -115,7 +113,7 @@ export function AbaUsuarios() {
                 </tr>
               </thead>
               <tbody>
-                {visiveis.map((u) => (
+                {visiveis.slice(pagina * porPagina, (pagina + 1) * porPagina).map((u) => (
                   <tr key={u.id}>
                     <td data-rotulo="Nome">
                       <Link to={`/usuarios/${u.id}`} className="dm-admin-usuario">
@@ -161,6 +159,7 @@ export function AbaUsuarios() {
             </table>
           </div>
         )}
+        <Paginacao total={visiveis.length} pagina={pagina} porPagina={porPagina} aoMudar={setPagina} />
       </section>
 
       {confirmarBanimento && (

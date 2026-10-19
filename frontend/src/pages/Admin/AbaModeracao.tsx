@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import { FiRefreshCw } from 'react-icons/fi';
+import { FiCheck, FiCheckCircle, FiRefreshCw, FiX } from 'react-icons/fi';
 import { api } from '../../services/api';
 import { ModalOcorrencia } from '../../components/ocorrencia/ModalOcorrencia';
 import { ROTULO_GRAVIDADE, ROTULO_STATUS, ORDEM_STATUS } from '../../theme/rotulos';
 import type { FilaModeracaoOcorrencias, Ocorrencia, StatusOcorrencia } from '@shared/types';
 import { CabecalhoAba } from './componentes/CabecalhoAba';
 import { BarraFerramentas } from './componentes/BarraFerramentas';
+import { Paginacao } from './componentes/Paginacao';
+import { useLinhasPorPagina } from '../../hooks/useLinhasPorPagina';
 import { carimboData } from './utils/csv';
 import { relatorioLista } from './utils/relatorios';
 import { ModalConfirmacao } from './componentes/ModalConfirmacao';
@@ -26,6 +28,8 @@ export function AbaModeracao() {
   const [processandoId, setProcessandoId] = useState<number | null>(null);
   const [filtro, setFiltro] = useState<StatusOcorrencia | 'todas'>('todas');
   const [busca, setBusca] = useState('');
+  const [pagina, setPagina] = useState(0);
+  const porPagina = useLinhasPorPagina(430, 60);
   const [abertaId, setAbertaId] = useState<number | null>(null);
   const [confirmarRejeicao, setConfirmarRejeicao] = useState<Ocorrencia | null>(null);
 
@@ -43,6 +47,7 @@ export function AbaModeracao() {
   }
 
   useEffect(carregar, []);
+  useEffect(() => setPagina(0), [busca, filtro]);
 
   function moderar(id: number, acao: Acao) {
     setProcessandoId(id);
@@ -72,6 +77,8 @@ export function AbaModeracao() {
       (filtro === 'todas' || oc.status === filtro) &&
       (termo === '' || `${oc.id} ${oc.categorias?.nome ?? ''} ${oc.descricao ?? ''}`.toLowerCase().includes(termo))
   );
+
+  const pagina_visiveis = visiveis.slice(pagina * porPagina, (pagina + 1) * porPagina);
 
   function gerarRelatorio() {
     return relatorioLista({
@@ -106,11 +113,6 @@ export function AbaModeracao() {
       />
 
       <section className="dm-painel dm-admin-painel">
-        <div className="dm-painel-cabecalho">
-          <h3>Fila de moderação</h3>
-          <span className="dm-painel-nota">{dados ? `${ocorrencias.length} na fila` : 'Carregando…'}</span>
-        </div>
-
         {ocorrencias.length > 0 && (
           <BarraFerramentas busca={busca} aoBuscar={setBusca} placeholder="Buscar por categoria, descrição ou número" gerarRelatorio={gerarRelatorio} semDados={visiveis.length === 0}>
             <div className="dm-chips" role="group" aria-label="Filtrar por situação">
@@ -132,75 +134,75 @@ export function AbaModeracao() {
         ) : visiveis.length === 0 ? (
           <p className="dm-admin-vazio">{ocorrencias.length === 0 ? 'Nenhuma ocorrência na fila de moderação no momento.' : 'Nada encontrado com essa busca ou filtro.'}</p>
         ) : (
-          <div className="dm-tabela-wrap">
-            <table className="dm-tabela dm-tabela--empilhada">
-              <thead>
-                <tr>
-                  <th scope="col">Categoria</th>
-                  <th scope="col">Descrição</th>
-                  <th scope="col">Gravidade</th>
-                  <th scope="col">Denúncias</th>
-                  <th scope="col">Data</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visiveis.map((oc) => {
-                  const ocupado = processandoId === oc.id;
-                  return (
-                    <tr
-                      key={oc.id}
-                      className="dm-tabela__clicavel"
-                      tabIndex={0}
-                      onClick={() => setAbertaId(oc.id)}
-                      onKeyDown={aoTeclarLinha(() => setAbertaId(oc.id))}
-                      aria-label={`Abrir ocorrência #${oc.id}`}
-                    >
-                      <td data-rotulo="Categoria">{oc.categorias?.nome || 'Sem categoria'}</td>
-                      <td data-rotulo="Descrição" className="dm-admin-celula-texto">
-                        {oc.descricao || <em className="dm-admin-apagado">sem descrição</em>}
-                      </td>
-                      <td data-rotulo="Gravidade">
-                        <span className={`dm-severidade dm-severidade--${oc.gravidade}`}>
-                          <span className="dm-severidade__ponto" aria-hidden="true" />
-                          {ROTULO_GRAVIDADE[oc.gravidade]}
-                        </span>
-                      </td>
-                      <td data-rotulo="Denúncias">
-                        <strong className="dm-admin-contagem-risco dm-mono">{oc.qtd_denuncias}</strong>
-                      </td>
-                      <td data-rotulo="Data" className="dm-mono">
-                        {formatarDataCurta(oc.data_registro)}
-                      </td>
-                      <td data-rotulo="Status">
-                        <span className={CLASSE_PILL_STATUS[oc.status]}>{ROTULO_STATUS[oc.status]}</span>
-                      </td>
-                      <td data-rotulo="Ações" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
-                        <div className="dm-admin-acoes-linha">
-                          <button type="button" className="dm-btn dm-btn--ghost dm-btn--pequeno" title={DICA_ACAO.manter} disabled={ocupado} onClick={() => moderar(oc.id, 'manter')}>
-                            Manter
-                          </button>
-                          <button type="button" className="dm-btn dm-btn--ghost dm-btn--pequeno" title={DICA_ACAO.resolver} disabled={ocupado} onClick={() => moderar(oc.id, 'resolver')}>
-                            Resolver
-                          </button>
-                          <button type="button" className="dm-btn dm-btn--perigo dm-btn--pequeno" title={DICA_ACAO.rejeitar} disabled={ocupado} onClick={() => setConfirmarRejeicao(oc)}>
-                            Rejeitar
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+          <>
+            <div className="dm-tabela-wrap">
+              <table className="dm-tabela dm-tabela--empilhada">
+                <thead>
+                  <tr>
+                    <th scope="col">Ocorrência</th>
+                    <th scope="col">Gravidade</th>
+                    <th scope="col">Denúncias</th>
+                    <th scope="col">Situação</th>
+                    <th scope="col">
+                      <span className="dm-visually-hidden">Ações</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pagina_visiveis.map((oc) => {
+                    const ocupado = processandoId === oc.id;
+                    return (
+                      <tr
+                        key={oc.id}
+                        className="dm-tabela__clicavel"
+                        tabIndex={0}
+                        onClick={() => setAbertaId(oc.id)}
+                        onKeyDown={aoTeclarLinha(() => setAbertaId(oc.id))}
+                        aria-label={`Abrir ocorrência #${oc.id}`}
+                      >
+                        <td data-rotulo="Ocorrência" className="dm-admin-celula-texto">
+                          <strong className="dm-admin-celula-titulo">{oc.categorias?.nome || 'Sem categoria'}</strong>
+                          <span className="dm-admin-celula-sub">
+                            {oc.descricao || 'sem descrição'} · {formatarDataCurta(oc.data_registro)}
+                          </span>
+                        </td>
+                        <td data-rotulo="Gravidade">
+                          <span className={`dm-severidade dm-severidade--${oc.gravidade}`}>
+                            <span className="dm-severidade__ponto" aria-hidden="true" />
+                            {ROTULO_GRAVIDADE[oc.gravidade]}
+                          </span>
+                        </td>
+                        <td data-rotulo="Denúncias">
+                          <strong className="dm-admin-contagem-risco dm-mono">{oc.qtd_denuncias}</strong>
+                        </td>
+                        <td data-rotulo="Situação">
+                          <span className={CLASSE_PILL_STATUS[oc.status]}>{ROTULO_STATUS[oc.status]}</span>
+                        </td>
+                        <td data-rotulo="Ações" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+                          <div className="dm-admin-acoes-icones">
+                            <button type="button" className="dm-admin-icone-acao" title={DICA_ACAO.manter} aria-label="Manter no mapa" disabled={ocupado} onClick={() => moderar(oc.id, 'manter')}>
+                              <FiCheck aria-hidden="true" />
+                              <span>Manter</span>
+                            </button>
+                            <button type="button" className="dm-admin-icone-acao" title={DICA_ACAO.resolver} aria-label="Marcar como resolvida" disabled={ocupado} onClick={() => moderar(oc.id, 'resolver')}>
+                              <FiCheckCircle aria-hidden="true" />
+                              <span>Resolver</span>
+                            </button>
+                            <button type="button" className="dm-admin-icone-acao dm-admin-icone-acao--perigo" title={DICA_ACAO.rejeitar} aria-label="Rejeitar e arquivar" disabled={ocupado} onClick={() => setConfirmarRejeicao(oc)}>
+                              <FiX aria-hidden="true" />
+                              <span>Rejeitar</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <Paginacao total={visiveis.length} pagina={pagina} porPagina={porPagina} aoMudar={setPagina} />
+          </>        )}
       </section>
-
-      <p className="dm-admin-legenda-acoes">
-        <strong>Manter</strong> publica como confirmada · <strong>Resolver</strong> marca como resolvida · <strong>Rejeitar</strong> arquiva e remove do mapa.
-      </p>
 
       {abertaId !== null && <ModalOcorrencia ocorrenciaId={abertaId} aoFechar={() => setAbertaId(null)} aoMudar={carregar} />}
 

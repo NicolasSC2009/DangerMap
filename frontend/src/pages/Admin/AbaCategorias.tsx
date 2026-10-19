@@ -8,6 +8,8 @@ import { Modal } from '../../components/comum/Modal';
 import type { Categoria } from '@shared/types';
 import { CabecalhoAba } from './componentes/CabecalhoAba';
 import { BarraFerramentas } from './componentes/BarraFerramentas';
+import { Paginacao } from './componentes/Paginacao';
+import { useLinhasPorPagina } from '../../hooks/useLinhasPorPagina';
 import { carimboData } from './utils/csv';
 import { relatorioLista } from './utils/relatorios';
 
@@ -27,6 +29,8 @@ export function AbaCategorias() {
   const [processandoId, setProcessandoId] = useState<number | null>(null);
   const [filtro, setFiltro] = useState<Filtro>('todas');
   const [busca, setBusca] = useState('');
+  const [pagina, setPagina] = useState(0);
+  const porPagina = useLinhasPorPagina(400, 64);
   const {
     register,
     handleSubmit,
@@ -48,6 +52,7 @@ export function AbaCategorias() {
   }
 
   useEffect(carregar, []);
+  useEffect(() => setPagina(0), [busca, filtro]);
 
   function abrirCriacao() {
     reset({ nome: '', descricao: '', icone_url: '' });
@@ -124,11 +129,6 @@ export function AbaCategorias() {
       />
 
       <section className="dm-painel dm-admin-painel">
-        <div className="dm-painel-cabecalho">
-          <h3>Categorias</h3>
-          <span className="dm-painel-nota">{categorias ? `${ativas} de ${lista.length} ativas` : 'Carregando…'}</span>
-        </div>
-
         {lista.length > 0 && (
           <BarraFerramentas busca={busca} aoBuscar={setBusca} placeholder="Buscar por nome ou descrição" gerarRelatorio={gerarRelatorio} semDados={visiveis.length === 0}>
             <div className="dm-chips" role="group" aria-label="Filtrar categorias">
@@ -167,7 +167,7 @@ export function AbaCategorias() {
                 </tr>
               </thead>
               <tbody>
-                {visiveis.map((cat) => (
+                {visiveis.slice(pagina * porPagina, (pagina + 1) * porPagina).map((cat) => (
                   <tr key={cat.id} className={cat.ativo ? undefined : 'dm-admin-linha-inativa'}>
                     <td data-rotulo="Ícone" className="dm-admin-celula-icone">
                       <img src={obterIconeCategoria(cat.nome)} alt="" width={38} height={38} />
@@ -202,6 +202,7 @@ export function AbaCategorias() {
             </table>
           </div>
         )}
+        <Paginacao total={visiveis.length} pagina={pagina} porPagina={porPagina} aoMudar={setPagina} />
       </section>
 
       {mostrarForm && (

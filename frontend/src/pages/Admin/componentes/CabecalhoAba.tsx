@@ -6,12 +6,14 @@ interface CabecalhoAbaProps {
   titulo: string;
   subtitulo?: React.ReactNode;
   acoes?: React.ReactNode;
+  /** Título menor e menos espaço embaixo, para telas que precisam caber sem rolagem. */
+  compacto?: boolean;
 }
 
 // Topo de cada aba do painel: título grande, subtítulo e ações à direita.
 export function CabecalhoAba(props: CabecalhoAbaProps) {
   return (
-    <header className="dm-admin-cabecalho">
+    <header className={`dm-admin-cabecalho${props.compacto ? ' dm-admin-cabecalho--compacto' : ''}`}>
       <div className="dm-admin-cabecalho__texto">
         <h1>{props.titulo}</h1>
         {props.subtitulo && <p className="dm-admin-cabecalho__sub">{props.subtitulo}</p>}

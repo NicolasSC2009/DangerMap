@@ -339,11 +339,13 @@ export function FerramentaRaio(props: FerramentaRaioProps) {
 
       <div className="dm-admin-raio__lado">
         <div className="dm-admin-raio__campo">
-          <span className="dm-rotulo" id="dm-admin-raio-rotulo">
-            Raio selecionado
-          </span>
-          <div className="dm-admin-raio__valor">
-            <span>{formatarRaio(props.raioMetros)}</span> km
+          <div className="dm-admin-raio__linha">
+            <span className="dm-rotulo" id="dm-admin-raio-rotulo">
+              Raio
+            </span>
+            <div className="dm-admin-raio__valor">
+              <span>{formatarRaio(props.raioMetros)}</span> km
+            </div>
           </div>
           <input
             type="range"
@@ -358,65 +360,42 @@ export function FerramentaRaio(props: FerramentaRaioProps) {
             aria-labelledby="dm-admin-raio-rotulo"
             aria-valuetext={`${formatarRaio(props.raioMetros)} quilômetros`}
           />
-          <div className="dm-admin-raio__escala dm-admin-nao-imprimir" aria-hidden="true">
-            <span>0,5 km</span>
-            <span>20 km</span>
-          </div>
-        </div>
-
-        <div className="dm-campo-grupo dm-admin-nao-imprimir">
-          <label className="dm-rotulo" htmlFor="dm-admin-raio-metros">
-            Raio em metros
-          </label>
-          <input
-            id="dm-admin-raio-metros"
-            className="dm-campo"
-            type="number"
-            inputMode="numeric"
-            min={RAIO_MINIMO_M}
-            max={RAIO_MAXIMO_M}
-            step={50}
-            value={textoRaio}
-            onChange={(e) => setTextoRaio(e.target.value)}
-            onBlur={() => definirRaio(Number(textoRaio), true)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') definirRaio(Number(textoRaio), true);
-            }}
-          />
         </div>
 
         <div className="dm-campo-grupo dm-admin-nao-imprimir">
           <label className="dm-rotulo" htmlFor="dm-admin-raio-coord">
-            Coordenada central
+            Centro (latitude, longitude)
           </label>
-          <input
-            id="dm-admin-raio-coord"
-            className="dm-campo dm-mono"
-            type="text"
-            inputMode="decimal"
-            placeholder="-27.59540, -48.54800"
-            value={textoCoordenada}
-            aria-invalid={erroCoordenada ? 'true' : undefined}
-            onChange={(e) => setTextoCoordenada(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') aplicarCoordenadaDigitada();
-            }}
-            onBlur={() => {
-              if (textoCoordenada.trim()) aplicarCoordenadaDigitada();
-            }}
-          />
-          {erroCoordenada ? <span className="dm-erro">{erroCoordenada}</span> : <span className="dm-dica">Ou clique no mapa. Enter para aplicar.</span>}
+          <div className="dm-admin-raio__coordenada">
+            <input
+              id="dm-admin-raio-coord"
+              className="dm-campo dm-mono"
+              type="text"
+              inputMode="decimal"
+              placeholder="-27.59540, -48.54800"
+              value={textoCoordenada}
+              aria-invalid={erroCoordenada ? 'true' : undefined}
+              onChange={(e) => setTextoCoordenada(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') aplicarCoordenadaDigitada();
+              }}
+              onBlur={() => {
+                if (textoCoordenada.trim()) aplicarCoordenadaDigitada();
+              }}
+            />
+            <button
+              type="button"
+              className="dm-admin-raio__localizar"
+              onClick={usarMinhaLocalizacao}
+              disabled={localizando}
+              aria-label="Usar minha localização"
+              title="Usar minha localização"
+            >
+              <FiNavigation aria-hidden="true" />
+            </button>
+          </div>
+          {erroCoordenada && <span className="dm-erro">{erroCoordenada}</span>}
         </div>
-
-        <button
-          type="button"
-          className="dm-btn dm-btn--ghost dm-btn--pequeno dm-admin-nao-imprimir"
-          onClick={usarMinhaLocalizacao}
-          disabled={localizando}
-        >
-          <FiNavigation aria-hidden="true" /> {localizando ? 'Localizando…' : 'Minha localização'}
-        </button>
-
         {props.children}
       </div>
     </div>

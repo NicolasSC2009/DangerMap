@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { api } from '../../../services/api';
+import { useLinhasPorPagina } from '../../../hooks/useLinhasPorPagina';
 import { ModalOcorrencia } from '../../../components/ocorrencia/ModalOcorrencia';
 import { ROTULO_GRAVIDADE, ROTULO_STATUS } from '../../../theme/rotulos';
 import type { Ocorrencia, StatusOcorrencia } from '@shared/types';
 
-const QUANTIDADE = 8;
 
 export const CLASSE_PILL_STATUS: Record<StatusOcorrencia, string> = {
   pendente: 'dm-pill dm-pill--aviso',
@@ -35,6 +35,8 @@ export function TabelaOcorrenciasRecentes() {
   const [erro, setErro] = useState(false);
   const [abertaId, setAbertaId] = useState<number | null>(null);
   const [atualizadoEm, setAtualizadoEm] = useState<Date | null>(null);
+  // Mostra só as que cabem na tela, para a visão geral não precisar de rolagem.
+  const quantidade = useLinhasPorPagina(700, 52, 3, 8);
 
   const carregar = useCallback(function () {
     api
@@ -42,7 +44,7 @@ export function TabelaOcorrenciasRecentes() {
       .then(function (r) {
         const lista = Array.isArray(r.data) ? [...r.data] : [];
         lista.sort((a, b) => new Date(b.data_registro).getTime() - new Date(a.data_registro).getTime());
-        setOcorrencias(lista.slice(0, QUANTIDADE));
+        setOcorrencias(lista.slice(0, 8));
         setAtualizadoEm(new Date());
         setErro(false);
       })
@@ -79,7 +81,7 @@ export function TabelaOcorrenciasRecentes() {
               </tr>
             </thead>
             <tbody>
-              {ocorrencias.map((oc) => (
+              {ocorrencias.slice(0, quantidade).map((oc) => (
                 <tr
                   key={oc.id}
                   className="dm-tabela__clicavel"
