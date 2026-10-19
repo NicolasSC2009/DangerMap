@@ -505,25 +505,6 @@
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
 }
 
-/* legenda fixa (preferência "Mostrar legenda") — só em telas grandes */
-.dm-legenda-fixa {
-  display: none;
-}
-
-@media (min-width: 1025px) {
-  .dm-legenda-fixa {
-    position: fixed;
-    left: 24px;
-    bottom: calc(66px + var(--dm-safe-b));
-    display: block;
-    padding: 12px 14px;
-    border: 1px solid var(--dm-linha);
-    border-radius: var(--dm-raio-md);
-    background: var(--dm-card);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
-  }
-}
-
 /* telas baixas (notebook pequeno, celular deitado): botões menores para a barra caber */
 @media (max-height: 620px) {
   .dm-barra__botao {
@@ -534,10 +515,6 @@
   .dm-barra__botao svg {
     width: 18px;
     height: 18px;
-  }
-
-  .dm-legenda-fixa {
-    display: none;
   }
 }
 
@@ -555,4 +532,106 @@
   .dm-ferramentas__painel {
     padding: 14px;
   }
+}
+/* "Como ler o mapa" começa fechado, para o painel de filtros ficar curto */
+.dm-filtros__legenda {
+  margin-top: 14px;
+  padding-top: 4px;
+  border-top: 1px solid var(--dm-linha);
+}
+
+.dm-filtros__legenda summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 40px;
+  font-family: var(--dm-fonte-mono);
+  font-size: var(--dm-t-xs);
+  font-weight: 500;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--dm-laranja-escuro);
+  cursor: pointer;
+  list-style: none;
+}
+
+:root[data-tema='escuro'] .dm-filtros__legenda summary {
+  color: var(--dm-laranja);
+}
+
+.dm-filtros__legenda summary::-webkit-details-marker {
+  display: none;
+}
+
+.dm-filtros__legenda summary::after {
+  content: '';
+  width: 7px;
+  height: 7px;
+  margin-right: 4px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform var(--dm-transicao);
+}
+
+.dm-filtros__legenda[open] summary::after {
+  transform: rotate(-135deg);
+}
+
+.dm-filtros__legenda .dm-legenda {
+  padding: 4px 0 6px;
+}
+
+@media (max-width: 480px) {
+  .dm-ferramentas__painel .dm-filtros__chips {
+    gap: 6px;
+  }
+
+  .dm-ferramentas__painel .dm-filtro-chip {
+    min-height: 32px;
+    padding: 4px 10px;
+    gap: 6px;
+    font-size: var(--dm-t-xs);
+  }
+
+  .dm-ferramentas__painel .dm-filtro-chip img {
+    width: 14px;
+    height: 20px;
+  }
+
+  .dm-filtros__titulo {
+    margin: 12px 0 6px;
+  }
+}
+/* Categorias do filtro em 2 colunas (mais curto, sem rolagem na maioria das telas) */
+.dm-filtros__chips--grade {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.dm-filtros__chips--grade .dm-filtro-chip {
+  min-width: 0;
+  min-height: 34px;
+  padding: 4px 10px;
+  gap: 7px;
+  justify-content: flex-start;
+  font-size: var(--dm-t-xs);
+}
+
+.dm-filtros__chips--grade .dm-filtro-chip img {
+  width: 14px;
+  height: 21px;
+  flex-shrink: 0;
+}
+
+.dm-filtros__chips--grade .dm-filtro-chip span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dm-ferramentas__painel .dm-filtros__titulo {
+  margin: 12px 0 6px;
 }

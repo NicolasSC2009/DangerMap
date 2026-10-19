@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { FiFlag } from 'react-icons/fi';
 import { LayoutPadrao } from '../../components/comum/LayoutPadrao';
+import { useTituloPagina } from '../../hooks/useTituloPagina';
 import { Modal } from '../../components/comum/Modal';
 import { HeroPerfil, LinhaInfoPerfil, EstatisticasPerfil, EstadoPerfil } from '../../components/perfil/HeroPerfil';
 import { HistoricoContribuicoes } from '../../components/perfil/HistoricoContribuicoes';
@@ -25,6 +26,7 @@ export function PaginaPerfilPublico() {
   const [modalDenunciaAberto, setModalDenunciaAberto] = useState(false);
   const [motivoDenuncia, setMotivoDenuncia] = useState('');
   const [enviando, setEnviando] = useState(false);
+  useTituloPagina(perfil ? `Perfil de ${perfil.nome} · DangerMap` : null);
   const idMotivo = useId();
 
   useEffect(

@@ -11,6 +11,8 @@ router.patch('/admin/ocorrencias/:ocorrenciaId/moderar', autenticarToken, autori
 router.patch('/admin/usuarios/:usuarioId/banir', autenticarToken, autorizarAdmin, adminController.banirUsuario);
 router.get('/admin/relatorio-regiao', autenticarToken, autorizarAdmin, adminController.relatorioAreaGeografica);
 router.get('/admin/relatorio-estado', autenticarToken, autorizarAdmin, adminController.relatorioPorEstado);
+router.get('/admin/relatorio-regiao/relatorio.pdf', autenticarToken, autorizarAdmin, adminController.relatorioAreaGeograficaPdf);
+router.get('/admin/relatorio-estado/relatorio.pdf', autenticarToken, autorizarAdmin, adminController.relatorioPorEstadoPdf);
 
 router.get('/admin/dashboard/estatisticas', autenticarToken, autorizarAdmin, adminController.obterEstatisticas);
 router.get('/admin/dashboard/relatorio.pdf', autenticarToken, autorizarAdmin, adminController.exportarRelatorioPdf);

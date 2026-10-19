@@ -32,7 +32,6 @@ interface Props {
   aoMudarFiltros: (filtros: FiltrosMapa) => void;
   totalGeral: number;
   totalVisivel: number;
-  mostrarLegenda: boolean;
 }
 
 type Painel = 'busca' | 'filtros' | null;
@@ -460,7 +459,7 @@ export function FerramentasMapa(props: Props) {
           {props.categorias.length > 0 && (
             <>
               <h3 className="dm-filtros__titulo">Categoria</h3>
-              <div className="dm-filtros__chips">
+              <div className="dm-filtros__chips dm-filtros__chips--grade">
                 {props.categorias.map((c) => {
                   const marcado = props.filtros.categorias.includes(c.id);
                   return (
@@ -474,7 +473,7 @@ export function FerramentasMapa(props: Props) {
                       }
                     >
                       <img src={obterIconeCategoria(c.nome)} alt="" />
-                      {c.nome}
+                      <span title={c.nome}>{c.nome}</span>
                     </button>
                   );
                 })}
@@ -493,16 +492,13 @@ export function FerramentasMapa(props: Props) {
             </button>
           </div>
 
-          <h3 className="dm-filtros__titulo">Como ler o mapa</h3>
-          <Legenda />
+          <details className="dm-filtros__legenda">
+            <summary>Como ler o mapa</summary>
+            <Legenda />
+          </details>
         </div>
       )}
 
-      {props.mostrarLegenda && painel !== 'filtros' && (
-        <div className="dm-legenda-fixa">
-          <Legenda />
-        </div>
-      )}
     </div>
   );
 }

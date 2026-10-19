@@ -6,6 +6,9 @@ import { api } from '../../services/api';
 import { iniciais } from '../../services/avatarLocal';
 import type { FilaUsuariosDenunciados } from '@shared/types';
 import { CabecalhoAba } from './componentes/CabecalhoAba';
+import { BarraFerramentas } from './componentes/BarraFerramentas';
+import { carimboData } from './utils/csv';
+import { relatorioLista } from './utils/relatorios';
 import { ModalConfirmacao } from './componentes/ModalConfirmacao';
 
 type UsuarioFila = FilaUsuariosDenunciados['usuarios'][number];
@@ -15,6 +18,7 @@ export function AbaUsuarios() {
   const [erro, setErro] = useState(false);
   const [processandoId, setProcessandoId] = useState<number | null>(null);
   const [confirmarBanimento, setConfirmarBanimento] = useState<UsuarioFila | null>(null);
+  const [busca, setBusca] = useState('');
 
   function carregar() {
     api
@@ -53,6 +57,19 @@ export function AbaUsuarios() {
 
   const usuarios = dados?.usuarios ?? [];
   const banidos = usuarios.filter((u) => !u.ativo).length;
+  const termo = busca.trim().toLowerCase();
+  const visiveis = usuarios.filter((u) => termo === '' || `${u.nome} ${u.email}`.toLowerCase().includes(termo));
+
+  function gerarRelatorio() {
+    return relatorioLista({
+      titulo: 'DangerMap — Perfis denunciados',
+      nomeArquivo: `perfis-denunciados-${carimboData()}`,
+      nomeAba: 'Perfis',
+      cabecalho: ['Nome', 'E-mail', 'Denúncias', 'Situação'],
+      linhas: visiveis.map((u) => [u.nome, u.email, u.qtd_denuncias_recebidas, u.ativo ? 'Ativo' : 'Banido']),
+      larguras: [28, 36, 12, 12],
+    });
+  }
 
   return (
     <>
@@ -75,12 +92,16 @@ export function AbaUsuarios() {
           </span>
         </div>
 
+        {usuarios.length > 0 && (
+          <BarraFerramentas busca={busca} aoBuscar={setBusca} placeholder="Buscar por nome ou e-mail" gerarRelatorio={gerarRelatorio} semDados={visiveis.length === 0} />
+        )}
+
         {erro && !dados ? (
           <p className="dm-admin-vazio">Não foi possível carregar a fila. Tente atualizar.</p>
         ) : !dados ? (
           <div className="dm-admin-esqueleto" aria-hidden="true" />
-        ) : usuarios.length === 0 ? (
-          <p className="dm-admin-vazio">Nenhum perfil na fila de denúncias no momento.</p>
+        ) : visiveis.length === 0 ? (
+          <p className="dm-admin-vazio">{usuarios.length === 0 ? 'Nenhum perfil na fila de denúncias no momento.' : 'Nenhum perfil encontrado com essa busca.'}</p>
         ) : (
           <div className="dm-tabela-wrap">
             <table className="dm-tabela dm-tabela--empilhada">
@@ -94,7 +115,7 @@ export function AbaUsuarios() {
                 </tr>
               </thead>
               <tbody>
-                {usuarios.map((u) => (
+                {visiveis.map((u) => (
                   <tr key={u.id}>
                     <td data-rotulo="Nome">
                       <Link to={`/usuarios/${u.id}`} className="dm-admin-usuario">

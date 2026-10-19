@@ -1,6 +1,7 @@
 import iconeAcidenteTransito from '../assets/categorias/acidente-transito.png';
 import iconeAlagamento from '../assets/categorias/alagamento.png';
 import iconeAlertaGenerico from '../assets/categorias/alerta-generico.png';
+import iconeArvoreCaida from '../assets/categorias/arvore-caida.png';
 import iconeAnimalMorto from '../assets/categorias/animal-morto.png';
 import iconeAnimalNaPista from '../assets/categorias/animal-na-pista.png';
 import iconeAssaltoRoubo from '../assets/categorias/assalto-roubo.png';
@@ -27,6 +28,7 @@ const ICONES_POR_PALAVRA_CHAVE: Array<{ palavras: string[]; icone: string }> = [
   { palavras: ['gas'], icone: iconeVazamentoGas },
   { palavras: ['morto', 'carcaca'], icone: iconeAnimalMorto },
   { palavras: ['animal'], icone: iconeAnimalNaPista },
+  { palavras: ['arvore', 'galho'], icone: iconeArvoreCaida },
   { palavras: ['assalto', 'roubo', 'furto'], icone: iconeAssaltoRoubo },
   { palavras: ['queda', 'calcada'], icone: iconeRiscoDeQueda },
 ];

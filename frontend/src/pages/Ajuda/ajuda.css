@@ -1132,20 +1132,10 @@
   }
 
   /* índice vira faixa horizontal de chips, grudada no topo */
+  /* Atalhos das seções: quebram em linhas (sem rolagem lateral). */
   .dm-ajuda-indice {
-    top: 0;
-    z-index: 5;
-    margin: 0 calc(var(--dm-gutter) * -1);
-    padding: calc(10px + var(--dm-safe-t)) var(--dm-gutter) 10px;
-    background: var(--dm-bg);
-    border-bottom: 1px solid var(--dm-linha);
-    overflow-x: auto;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .dm-ajuda-indice::-webkit-scrollbar {
-    display: none;
+    position: static;
+    padding: 4px 0 8px;
   }
 
   .dm-ajuda-indice__titulo {
@@ -1154,9 +1144,9 @@
 
   .dm-ajuda-indice ol {
     flex-direction: row;
+    flex-wrap: wrap;
     gap: 8px;
     border-left: none;
-    width: max-content;
   }
 
   .dm-ajuda-indice a {

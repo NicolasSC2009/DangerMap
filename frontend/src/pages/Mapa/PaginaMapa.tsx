@@ -216,7 +216,6 @@ export function PaginaMapa() {
         aoMudarFiltros={mudarFiltros}
         totalGeral={ocorrencias.length}
         totalVisivel={ocorrenciasFiltradas.length}
-        mostrarLegenda={preferencias.mostrarLegenda}
       />
 
       <button

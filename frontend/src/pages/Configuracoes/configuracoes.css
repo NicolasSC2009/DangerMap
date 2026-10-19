@@ -743,26 +743,15 @@
     display: none;
   }
 
+  /* Atalhos das seções: quebram em linhas (sem rolagem lateral). */
   .dm-config-indice-mobile {
-    position: sticky;
-    top: 0;
-    z-index: 5;
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
-    overflow-x: auto;
-    margin: 0 calc(var(--dm-gutter) * -1);
-    padding: calc(10px + var(--dm-safe-t)) var(--dm-gutter) 10px;
-    background: var(--dm-bg);
-    border-bottom: 1px solid var(--dm-linha);
-    scrollbar-width: none;
-  }
-
-  .dm-config-indice-mobile::-webkit-scrollbar {
-    display: none;
+    padding: 4px 0 8px;
   }
 
   .dm-config-indice-mobile .dm-chip {
-    flex-shrink: 0;
     text-decoration: none;
   }
 

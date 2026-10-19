@@ -7,6 +7,9 @@ import { obterIconeCategoria } from '../../theme/iconesCategorias';
 import { Modal } from '../../components/comum/Modal';
 import type { Categoria } from '@shared/types';
 import { CabecalhoAba } from './componentes/CabecalhoAba';
+import { BarraFerramentas } from './componentes/BarraFerramentas';
+import { carimboData } from './utils/csv';
+import { relatorioLista } from './utils/relatorios';
 
 interface CamposCategoria {
   nome: string;
@@ -23,6 +26,7 @@ export function AbaCategorias() {
   const [editandoId, setEditandoId] = useState<number | null>(null);
   const [processandoId, setProcessandoId] = useState<number | null>(null);
   const [filtro, setFiltro] = useState<Filtro>('todas');
+  const [busca, setBusca] = useState('');
   const {
     register,
     handleSubmit,
@@ -87,7 +91,23 @@ export function AbaCategorias() {
 
   const lista = categorias ?? [];
   const ativas = lista.filter((c) => c.ativo).length;
-  const visiveis = lista.filter((c) => (filtro === 'ativas' ? c.ativo : filtro === 'inativas' ? !c.ativo : true));
+  const termo = busca.trim().toLowerCase();
+  const visiveis = lista.filter(
+    (c) =>
+      (filtro === 'ativas' ? c.ativo : filtro === 'inativas' ? !c.ativo : true) &&
+      (termo === '' || `${c.nome} ${c.descricao ?? ''}`.toLowerCase().includes(termo))
+  );
+
+  function gerarRelatorio() {
+    return relatorioLista({
+      titulo: 'DangerMap — Categorias de perigo',
+      nomeArquivo: `categorias-${carimboData()}`,
+      nomeAba: 'Categorias',
+      cabecalho: ['Nome', 'Descrição', 'Situação'],
+      linhas: visiveis.map((c) => [c.nome, c.descricao ?? '', c.ativo ? 'Ativa' : 'Inativa']),
+      larguras: [28, 70, 12],
+    });
+  }
   const nomeEditando = editandoId ? lista.find((c) => c.id === editandoId)?.nome : null;
 
   return (
@@ -110,27 +130,28 @@ export function AbaCategorias() {
         </div>
 
         {lista.length > 0 && (
-          <div className="dm-chips dm-admin-filtros" role="group" aria-label="Filtrar categorias">
-            {(
-              [
-                ['todas', `Todas · ${lista.length}`],
-                ['ativas', `Ativas · ${ativas}`],
-                ['inativas', `Inativas · ${lista.length - ativas}`],
-              ] as Array<[Filtro, string]>
-            ).map(([chave, rotulo]) => (
-              <button key={chave} type="button" className="dm-chip dm-chip--claro" aria-pressed={filtro === chave} onClick={() => setFiltro(chave)}>
-                {rotulo}
-              </button>
-            ))}
-          </div>
+          <BarraFerramentas busca={busca} aoBuscar={setBusca} placeholder="Buscar por nome ou descrição" gerarRelatorio={gerarRelatorio} semDados={visiveis.length === 0}>
+            <div className="dm-chips" role="group" aria-label="Filtrar categorias">
+              {(
+                [
+                  ['todas', `Todas · ${lista.length}`],
+                  ['ativas', `Ativas · ${ativas}`],
+                  ['inativas', `Inativas · ${lista.length - ativas}`],
+                ] as Array<[Filtro, string]>
+              ).map(([chave, rotulo]) => (
+                <button key={chave} type="button" className="dm-chip dm-chip--claro" aria-pressed={filtro === chave} onClick={() => setFiltro(chave)}>
+                  {rotulo}
+                </button>
+              ))}
+            </div>
+          </BarraFerramentas>
         )}
-
         {erro && !categorias ? (
           <p className="dm-admin-vazio">Não foi possível carregar as categorias.</p>
         ) : !categorias ? (
           <div className="dm-admin-esqueleto" aria-hidden="true" />
         ) : visiveis.length === 0 ? (
-          <p className="dm-admin-vazio">Nenhuma categoria neste filtro.</p>
+          <p className="dm-admin-vazio">Nenhuma categoria encontrada.</p>
         ) : (
           <div className="dm-tabela-wrap">
             <table className="dm-tabela dm-tabela--empilhada">

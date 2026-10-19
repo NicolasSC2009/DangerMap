@@ -604,18 +604,7 @@
     flex: 1 1 0;
   }
   .dm-historico__chips {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    margin: 0 calc(var(--dm-gutter) * -1);
-    padding: 2px var(--dm-gutter) 6px;
-    scrollbar-width: none;
-    width: calc(100% + var(--dm-gutter) * 2);
-  }
-  .dm-historico__chips::-webkit-scrollbar {
-    display: none;
-  }
-  .dm-historico__chips .dm-chip {
-    flex-shrink: 0;
+    gap: 6px;
   }
 }
 

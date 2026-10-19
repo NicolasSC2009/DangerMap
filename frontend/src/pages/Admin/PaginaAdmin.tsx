@@ -64,7 +64,7 @@ export function PaginaAdmin() {
     function () {
       if (!itemAtivo) return;
       const anterior = document.title;
-      document.title = `${itemAtivo.rotulo} · Admin · DangerMap`;
+      document.title = `${itemAtivo.rotulo} · Painel administrativo · DangerMap`;
       return function () {
         document.title = anterior;
       };

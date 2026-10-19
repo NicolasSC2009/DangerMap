@@ -5,7 +5,7 @@ import { Modal } from '../../../components/comum/Modal';
 import { FerramentaRaio, RAIO_PADRAO_M, areaKm2, useBuscaRegiao, type Coordenada } from './FerramentaRaio';
 
 // Prévia rápida da extração regional (aberta pela visão geral). O resultado
-// completo (tabela, filtros, CSV, impressão) fica na aba /admin/relatorio,
+// completo (tabela, filtros e download em PDF, Excel ou CSV) fica na aba /admin/relatorio,
 // para onde o botão principal leva com o centro/raio na URL.
 export function ModalExtracaoRegional(props: { aoFechar: () => void }) {
   const navegar = useNavigate();

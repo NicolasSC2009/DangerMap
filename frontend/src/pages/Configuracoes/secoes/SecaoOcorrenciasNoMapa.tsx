@@ -50,18 +50,6 @@ export function SecaoOcorrenciasNoMapa() {
           />
         }
       />
-
-      <LinhaConfig
-        titulo="Mostrar legenda"
-        descricao="Deixa a legenda de cores sempre visível em telas grandes. Ela também fica dentro dos filtros."
-        controle={
-          <Interruptor
-            rotulo="Mostrar legenda no mapa"
-            marcado={preferencias.mostrarLegenda}
-            aoMudar={(mostrarLegenda) => atualizar({ mostrarLegenda })}
-          />
-        }
-      />
     </SecaoConfig>
   );
 }

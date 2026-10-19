@@ -1,5 +1,4 @@
 import { Response } from 'express';
-import PDFDocument from 'pdfkit';
 import { PrismaClient } from '@prisma/client';
 import { RequisicaoAutenticada } from '../middlewares/authMiddleware.js';
 import { AdminService } from '../services/AdminService.js';
@@ -9,13 +8,29 @@ import { ParametroService } from '../services/ParametroService.js';
 import { DashboardService } from '../services/DashboardService.js';
 import { OcorrenciaRepository } from '../repositories/OcorrenciaRepository.js';
 import { UsuarioRepository } from '../repositories/UsuarioRepository.js';
-import { obterMalhaEstado } from '../services/MalhaGeograficaService.js';
+import { aplicarFiltros, buscarPorEstado, buscarPorRaio, lerFiltros, type FiltrosRelatorio } from '../services/RelatorioGeograficoService.js';
+import { gerarPdfEstatisticas, gerarPdfOcorrencias } from '../services/RelatorioPdfService.js';
 
 const adminService = new AdminService();
 const ocorrenciaRepository = new OcorrenciaRepository();
 const usuarioRepository = new UsuarioRepository();
 const prisma = new PrismaClient();
 
+const ROTULO_GRAVIDADE_FILTRO: Record<string, string> = { baixo: 'Baixa', medio: 'Média', alto: 'Alta' };
+const ROTULO_STATUS_FILTRO: Record<string, string> = { pendente: 'Pendente', confirmado: 'Confirmada', resolvido: 'Resolvida', arquivado: 'Arquivada' };
+
+// Texto curto dos filtros aplicados, para aparecer no topo do PDF.
+async function descreverFiltros(filtros: FiltrosRelatorio): Promise<string[]> {
+  const linhas: string[] = [];
+  if (filtros.gravidades) linhas.push(`Gravidade: ${filtros.gravidades.map((g) => ROTULO_GRAVIDADE_FILTRO[g]).join(', ')}`);
+  if (filtros.status) linhas.push(`Situação: ${filtros.status.map((s) => ROTULO_STATUS_FILTRO[s]).join(', ')}`);
+  if (filtros.dias) linhas.push(`Período: últimos ${filtros.dias} dias`);
+  if (filtros.categorias && filtros.categorias.length > 0) {
+    const categorias = await prisma.categorias.findMany({ where: { id: { in: filtros.categorias } }, select: { nome: true } });
+    linhas.push(`Categorias: ${categorias.map((c) => c.nome).join(', ')}`);
+  }
+  return linhas;
+}
 export class AdminController {
   async moderarOcorrencia(req: RequisicaoAutenticada, res: Response) {
     try {
@@ -155,31 +170,7 @@ export class AdminController {
         return res.status(400).json({ error: 'Latitude e longitude válidas são obrigatórias.' });
       }
 
-      const ocorrencias = await prisma.$queryRaw`
-        SELECT
-          o.id,
-          o.descricao,
-          o.latitude,
-          o.longitude,
-          o.gravidade,
-          o.status,
-          o.data_registro,
-          ROUND(
-            ST_Distance(
-              ST_SetSRID(ST_MakePoint(o.longitude, o.latitude), 4326)::geography,
-              ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography
-            )::numeric, 2
-          ) AS distancia_metros
-        FROM ocorrencias o
-        WHERE ST_DWithin(
-          ST_SetSRID(ST_MakePoint(o.longitude, o.latitude), 4326)::geography,
-          ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography,
-          ${raioMetros}
-        )
-        ORDER BY distancia_metros ASC;
-      `;
-
-      return res.status(200).json(ocorrencias);
+      return res.status(200).json(await buscarPorRaio(latitude, longitude, raioMetros));
     } catch (error: unknown) {
       console.error('[ERRO POSTGIS RELATORIO]:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro ao gerar relatório geográfico.';
@@ -187,34 +178,75 @@ export class AdminController {
     }
   }
 
+  async relatorioAreaGeograficaPdf(req: RequisicaoAutenticada, res: Response) {
+    try {
+      const latitude = Number(req.query.lat);
+      const longitude = Number(req.query.lng);
+      const raioMetros = Number(req.query.raio) || 5000;
+
+      if (isNaN(latitude) || isNaN(longitude)) {
+        return res.status(400).json({ error: 'Latitude e longitude válidas são obrigatórias.' });
+      }
+
+      const filtros = lerFiltros(req.query);
+      const ocorrencias = aplicarFiltros(await buscarPorRaio(latitude, longitude, raioMetros), filtros);
+      const raioKm = (raioMetros / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+
+      gerarPdfOcorrencias(res, {
+        titulo: 'Extração regional',
+        subtitulo: `Centro ${latitude.toFixed(5)}, ${longitude.toFixed(5)}  ·  raio de ${raioKm} km  ·  gerado em ${new Date().toLocaleString('pt-BR')}`,
+        filtros: await descreverFiltros(filtros),
+        ocorrencias,
+        nomeArquivo: 'extracao-regional.pdf',
+        comDistancia: true,
+      });
+    } catch (error: unknown) {
+      console.error('[ERRO RELATORIO REGIONAL PDF]:', error);
+      if (!res.headersSent) return res.status(500).json({ error: 'Erro ao gerar o PDF da extração regional.' });
+      return res.end();
+    }
+  }
+
   async relatorioPorEstado(req: RequisicaoAutenticada, res: Response) {
     try {
-      const uf = String(req.query.uf || '').toUpperCase();
-      if (!/^[A-Z]{2}$/.test(uf)) {
-        return res.status(400).json({ error: 'Informe uma UF válida (ex.: SC).' });
+      const resultado = await buscarPorEstado(String(req.query.uf || ''));
+      if ('erro' in resultado) {
+        return resultado.erro === 'uf-invalida'
+          ? res.status(400).json({ error: 'Informe uma UF válida (ex.: SC).' })
+          : res.status(502).json({ error: 'Não foi possível obter a fronteira desse estado agora.' });
       }
-
-      const poligono = await obterMalhaEstado(uf);
-      if (!poligono) {
-        return res.status(502).json({ error: 'Não foi possível obter a fronteira desse estado agora.' });
-      }
-
-      const geometriaJson = JSON.stringify(poligono);
-      const ocorrencias = await prisma.$queryRaw`
-        SELECT o.id, o.descricao, o.latitude, o.longitude, o.gravidade, o.status, o.data_registro
-        FROM ocorrencias o
-        WHERE ST_Contains(
-          ST_SetSRID(ST_GeomFromGeoJSON(${geometriaJson}), 4326),
-          ST_SetSRID(ST_MakePoint(o.longitude, o.latitude), 4326)
-        )
-        ORDER BY o.data_registro DESC;
-      `;
-
-      return res.status(200).json({ uf, poligono, ocorrencias });
+      return res.status(200).json(resultado);
     } catch (error: unknown) {
       console.error('[ERRO POSTGIS RELATORIO POR ESTADO]:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro ao gerar relatório por estado.';
       return res.status(500).json({ error: errorMessage });
+    }
+  }
+
+  async relatorioPorEstadoPdf(req: RequisicaoAutenticada, res: Response) {
+    try {
+      const resultado = await buscarPorEstado(String(req.query.uf || ''));
+      if ('erro' in resultado) {
+        return resultado.erro === 'uf-invalida'
+          ? res.status(400).json({ error: 'Informe uma UF válida (ex.: SC).' })
+          : res.status(502).json({ error: 'Não foi possível obter a fronteira desse estado agora.' });
+      }
+
+      const filtros = lerFiltros(req.query);
+      const nome = String(req.query.nome || '').slice(0, 40).replace(/[^\p{L}\p{N} .'-]/gu, '');
+      const rotuloEstado = nome ? `${nome} (${resultado.uf})` : resultado.uf;
+
+      gerarPdfOcorrencias(res, {
+        titulo: `Extração por estado — ${rotuloEstado}`,
+        subtitulo: `Ocorrências dentro da fronteira do estado  ·  gerado em ${new Date().toLocaleString('pt-BR')}`,
+        filtros: await descreverFiltros(filtros),
+        ocorrencias: aplicarFiltros(resultado.ocorrencias, filtros),
+        nomeArquivo: `extracao-${resultado.uf.toLowerCase()}.pdf`,
+      });
+    } catch (error: unknown) {
+      console.error('[ERRO RELATORIO ESTADO PDF]:', error);
+      if (!res.headersSent) return res.status(500).json({ error: 'Erro ao gerar o PDF da extração por estado.' });
+      return res.end();
     }
   }
 
@@ -231,50 +263,7 @@ export class AdminController {
   async exportarRelatorioPdf(req: RequisicaoAutenticada, res: Response) {
     try {
       const estatisticas = await DashboardService.obterEstatisticas();
-
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', 'attachment; filename="relatorio-dangermap.pdf"');
-
-      const documento = new PDFDocument({ margin: 50 });
-      documento.pipe(res);
-
-      documento.fontSize(20).text('DangerMap - Relatório Administrativo', { align: 'center' });
-      documento.moveDown();
-      documento.fontSize(10).fillColor('#555555').text(
-        `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
-        { align: 'center' }
-      );
-      documento.moveDown(2);
-
-      documento.fillColor('#000000').fontSize(14).text('Resumo Geral');
-      documento.fontSize(11);
-      documento.text(`Total de ocorrências: ${estatisticas.totais.totalOcorrencias}`);
-      documento.text(`Total de usuários: ${estatisticas.totais.totalUsuarios} (${estatisticas.totais.totalUsuariosAtivos} ativos)`);
-      documento.text(`Total de denúncias: ${estatisticas.totais.totalDenuncias}`);
-      documento.text(`Total de confirmações: ${estatisticas.totais.totalConfirmacoes}`);
-      documento.moveDown();
-
-      documento.fontSize(14).text('Ocorrências por Status');
-      documento.fontSize(11);
-      for (const item of estatisticas.ocorrenciasPorStatus) {
-        documento.text(`${item.status || 'N/A'}: ${item.total}`);
-      }
-      documento.moveDown();
-
-      documento.fontSize(14).text('Ocorrências por Gravidade');
-      documento.fontSize(11);
-      for (const item of estatisticas.ocorrenciasPorGravidade) {
-        documento.text(`${item.gravidade || 'N/A'}: ${item.total}`);
-      }
-      documento.moveDown();
-
-      documento.fontSize(14).text('Ocorrências por Categoria');
-      documento.fontSize(11);
-      for (const item of estatisticas.ocorrenciasPorCategoria) {
-        documento.text(`${item.categoriaNome}: ${item.total}`);
-      }
-
-      documento.end();
+      gerarPdfEstatisticas(res, estatisticas);
     } catch (error: unknown) {
       console.error('[ERRO RELATORIO PDF]:', error);
       if (!res.headersSent) {
@@ -283,7 +272,6 @@ export class AdminController {
       return res.end();
     }
   }
-
   async filaModeracaoOcorrencias(req: RequisicaoAutenticada, res: Response) {
     try {
       const limite = await ParametroService.obterNumero('limite_denuncias_ocorrencia');

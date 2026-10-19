@@ -219,16 +219,14 @@
 /* por hora */
 
 .dm-clima__horas {
-  display: flex;
-  overflow-x: auto;
-  padding-bottom: 8px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(245, 235, 225, 0.35) transparent;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 14px 4px;
+  padding-bottom: 4px;
 }
 
 .dm-clima__hora {
-  flex: none;
-  min-width: 60px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;

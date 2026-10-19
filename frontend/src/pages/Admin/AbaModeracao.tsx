@@ -6,6 +6,9 @@ import { ModalOcorrencia } from '../../components/ocorrencia/ModalOcorrencia';
 import { ROTULO_GRAVIDADE, ROTULO_STATUS, ORDEM_STATUS } from '../../theme/rotulos';
 import type { FilaModeracaoOcorrencias, Ocorrencia, StatusOcorrencia } from '@shared/types';
 import { CabecalhoAba } from './componentes/CabecalhoAba';
+import { BarraFerramentas } from './componentes/BarraFerramentas';
+import { carimboData } from './utils/csv';
+import { relatorioLista } from './utils/relatorios';
 import { ModalConfirmacao } from './componentes/ModalConfirmacao';
 import { CLASSE_PILL_STATUS, aoTeclarLinha, formatarDataCurta } from './componentes/TabelaOcorrenciasRecentes';
 
@@ -22,6 +25,7 @@ export function AbaModeracao() {
   const [erro, setErro] = useState(false);
   const [processandoId, setProcessandoId] = useState<number | null>(null);
   const [filtro, setFiltro] = useState<StatusOcorrencia | 'todas'>('todas');
+  const [busca, setBusca] = useState('');
   const [abertaId, setAbertaId] = useState<number | null>(null);
   const [confirmarRejeicao, setConfirmarRejeicao] = useState<Ocorrencia | null>(null);
 
@@ -62,7 +66,31 @@ export function AbaModeracao() {
   const ocorrencias = dados?.ocorrencias ?? [];
   const contagem = new Map<StatusOcorrencia, number>();
   for (const oc of ocorrencias) contagem.set(oc.status, (contagem.get(oc.status) ?? 0) + 1);
-  const visiveis = filtro === 'todas' ? ocorrencias : ocorrencias.filter((oc) => oc.status === filtro);
+  const termo = busca.trim().toLowerCase();
+  const visiveis = ocorrencias.filter(
+    (oc) =>
+      (filtro === 'todas' || oc.status === filtro) &&
+      (termo === '' || `${oc.id} ${oc.categorias?.nome ?? ''} ${oc.descricao ?? ''}`.toLowerCase().includes(termo))
+  );
+
+  function gerarRelatorio() {
+    return relatorioLista({
+      titulo: 'DangerMap — Ocorrências denunciadas',
+      nomeArquivo: `ocorrencias-denunciadas-${carimboData()}`,
+      nomeAba: 'Denunciadas',
+      cabecalho: ['Nº', 'Categoria', 'Descrição', 'Gravidade', 'Denúncias', 'Data', 'Situação'],
+      linhas: visiveis.map((oc) => [
+        oc.id,
+        oc.categorias?.nome ?? 'Sem categoria',
+        oc.descricao ?? '',
+        ROTULO_GRAVIDADE[oc.gravidade] ?? oc.gravidade,
+        oc.qtd_denuncias,
+        formatarDataCurta(oc.data_registro),
+        ROTULO_STATUS[oc.status] ?? oc.status,
+      ]),
+      larguras: [8, 24, 60, 12, 12, 12, 14],
+    });
+  }
 
   return (
     <>
@@ -84,24 +112,25 @@ export function AbaModeracao() {
         </div>
 
         {ocorrencias.length > 0 && (
-          <div className="dm-chips dm-admin-filtros" role="group" aria-label="Filtrar por status">
-            <button type="button" className="dm-chip dm-chip--claro" aria-pressed={filtro === 'todas'} onClick={() => setFiltro('todas')}>
-              Todas · {ocorrencias.length}
-            </button>
-            {ORDEM_STATUS.filter((s) => contagem.get(s)).map((s) => (
-              <button key={s} type="button" className="dm-chip dm-chip--claro" aria-pressed={filtro === s} onClick={() => setFiltro(s)}>
-                {ROTULO_STATUS[s]} · {contagem.get(s)}
+          <BarraFerramentas busca={busca} aoBuscar={setBusca} placeholder="Buscar por categoria, descrição ou número" gerarRelatorio={gerarRelatorio} semDados={visiveis.length === 0}>
+            <div className="dm-chips" role="group" aria-label="Filtrar por situação">
+              <button type="button" className="dm-chip dm-chip--claro" aria-pressed={filtro === 'todas'} onClick={() => setFiltro('todas')}>
+                Todas · {ocorrencias.length}
               </button>
-            ))}
-          </div>
+              {ORDEM_STATUS.filter((s) => contagem.get(s)).map((s) => (
+                <button key={s} type="button" className="dm-chip dm-chip--claro" aria-pressed={filtro === s} onClick={() => setFiltro(s)}>
+                  {ROTULO_STATUS[s]} · {contagem.get(s)}
+                </button>
+              ))}
+            </div>
+          </BarraFerramentas>
         )}
-
         {erro && !dados ? (
           <p className="dm-admin-vazio">Não foi possível carregar a fila. Tente atualizar.</p>
         ) : !dados ? (
           <div className="dm-admin-esqueleto" aria-hidden="true" />
         ) : visiveis.length === 0 ? (
-          <p className="dm-admin-vazio">Nenhuma ocorrência na fila de moderação no momento.</p>
+          <p className="dm-admin-vazio">{ocorrencias.length === 0 ? 'Nenhuma ocorrência na fila de moderação no momento.' : 'Nada encontrado com essa busca ou filtro.'}</p>
         ) : (
           <div className="dm-tabela-wrap">
             <table className="dm-tabela dm-tabela--empilhada">

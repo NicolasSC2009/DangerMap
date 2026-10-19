@@ -157,6 +157,8 @@ export interface ResultadoRelatorioRegiao {
   gravidade: Gravidade;
   status: StatusOcorrencia;
   data_registro: string;
+  categoria_id?: number | null;
+  categoria?: string | null;
   distancia_metros: string;
 }
 
@@ -169,6 +171,8 @@ export interface ResultadoRelatorioEstado {
   gravidade: Gravidade;
   status: StatusOcorrencia;
   data_registro: string;
+  categoria_id?: number | null;
+  categoria?: string | null;
 }
 
 export interface GeometriaGeoJSON {

@@ -1,57 +1,118 @@
+/* Página 404: tela cheia, sem barra de rolagem, no mesmo clima verde do login. */
+
 .dm-404 {
+  position: relative;
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: calc(24px + var(--dm-safe-t)) var(--dm-gutter) calc(24px + var(--dm-safe-b));
-  background: var(--dm-fundo-pagina);
-  color: #fff;
-}
-
-.dm-404__card {
-  width: min(520px, 100%);
-  padding: clamp(32px, 6vw, 52px) clamp(22px, 5vw, 44px);
-  border-radius: var(--dm-raio-xl);
   background: var(--dm-grad-acento);
-  box-shadow: var(--dm-sombra-card);
-  text-align: center;
+  color: #fff;
   overflow: hidden;
 }
 
-.dm-404__card::before,
-.dm-404__card::after {
-  border-color: rgba(245, 235, 225, 0.22);
+.dm-404__fundo {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(245, 235, 225, 0.08) 1.5px, transparent 1.5px);
+  background-size: 26px 26px;
 }
 
-.dm-404__logo {
+.dm-404__fundo svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.dm-404__fundo path {
+  fill: none;
+  stroke-width: 2.5;
+  stroke-dasharray: 16 12;
+  animation: dm-404-fluxo 60s linear infinite;
+}
+
+.dm-404__fundo path:nth-child(1) {
+  stroke: rgba(255, 100, 0, 0.45);
+}
+
+.dm-404__fundo path:nth-child(2) {
+  stroke: rgba(140, 200, 80, 0.3);
+  animation-direction: reverse;
+}
+
+.dm-404__fundo path:nth-child(3) {
+  stroke: rgba(245, 235, 225, 0.14);
+}
+
+.dm-404__conteudo {
+  position: relative;
+  z-index: 1;
+  width: min(620px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.dm-404__marca img {
   display: block;
-  width: clamp(130px, 34vw, 180px);
-  margin: 0 auto 26px;
+  width: clamp(170px, 40vw, 250px);
+  height: auto;
 }
 
 .dm-404__codigo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(2px, 1vw, 10px);
+  margin: clamp(14px, 3vh, 28px) 0 clamp(6px, 1.5vh, 12px);
   font-family: var(--dm-fonte-mono);
-  font-size: clamp(56px, 16vw, 96px);
-  font-weight: 600;
+  font-size: clamp(88px, 22vw, 170px);
+  font-weight: 700;
   line-height: 1;
-  letter-spacing: -2px;
+  letter-spacing: -4px;
   color: var(--dm-verde-salada);
-  margin-bottom: 14px;
 }
 
-.dm-404__card h1 {
-  font-size: var(--dm-t-h1);
+.dm-404__pin {
+  width: 0.78em;
+  height: 0.78em;
+  margin: 0 -0.02em;
+  filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.4));
+  animation: dm-404-pin 3.2s ease-in-out infinite;
+  transform-origin: 50% 90%;
+}
+
+.dm-404__conteudo h1 {
+  font-size: clamp(26px, 5vw, 38px);
   font-weight: 800;
+  line-height: 1.15;
   margin-bottom: 10px;
 }
 
-.dm-404__card p {
+.dm-404__conteudo p {
+  max-width: 440px;
+  margin: 0 auto clamp(18px, 3vh, 26px);
   color: var(--dm-texto-sobre-escuro);
   font-size: var(--dm-t-md);
   line-height: 1.6;
-  margin: 0 auto 28px;
-  max-width: 360px;
+}
+
+.dm-404__caminho {
+  display: inline-block;
+  max-width: 100%;
+  padding: 1px 9px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  font-family: var(--dm-fonte-mono);
+  font-size: 0.92em;
+  overflow-wrap: anywhere;
+  vertical-align: baseline;
 }
 
 .dm-404__acoes {
@@ -61,57 +122,49 @@
   gap: 12px;
 }
 
-/* decoração (curvas de nível tracejadas + pin "perdido", como no LOGIN) */
-.dm-404__card > :not(.dm-404__deco) {
-  position: relative;
-  z-index: 1;
+.dm-404__acoes .dm-btn {
+  gap: 10px;
 }
 
-.dm-404__card {
-  position: relative;
-}
-
-.dm-404__card .dm-404__deco {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image: radial-gradient(rgba(245, 235, 225, 0.08) 1.5px, transparent 1.5px);
-  background-size: 24px 24px;
-}
-
-.dm-404__deco svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-
-.dm-404__deco path {
-  fill: none;
-  stroke-width: 2;
-  stroke-dasharray: 16 12;
-  animation: dm-404-fluxo 20s linear infinite;
-}
-
-.dm-404__deco path:nth-child(1) {
-  stroke: rgba(255, 100, 0, 0.3);
-}
-
-.dm-404__deco path:nth-child(2) {
-  stroke: rgba(140, 200, 80, 0.22);
-  animation-direction: reverse;
-}
-
-.dm-404__pin {
-  position: absolute;
-  top: 14%;
-  right: 12%;
+.dm-404__atalhos {
   display: flex;
-  font-size: 26px;
-  color: var(--dm-laranja);
-  opacity: 0.85;
-  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
-  animation: dm-404-pin 3.2s ease-in-out infinite;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: clamp(16px, 3vh, 28px);
+}
+
+.dm-404__atalho {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid rgba(245, 235, 225, 0.22);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.18);
+  color: rgba(245, 235, 225, 0.88);
+  font-size: var(--dm-t-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: background var(--dm-transicao), border-color var(--dm-transicao), color var(--dm-transicao);
+}
+
+.dm-404__atalho svg {
+  width: 15px;
+  height: 15px;
+  color: var(--dm-verde-salada);
+}
+
+.dm-404__atalho:hover {
+  background: rgba(255, 100, 0, 0.22);
+  border-color: rgba(255, 100, 0, 0.6);
+  color: #fff;
+}
+
+.dm-404__atalho:focus-visible {
+  outline: 3px solid var(--dm-verde-salada);
+  outline-offset: 2px;
 }
 
 @keyframes dm-404-fluxo {
@@ -123,15 +176,25 @@
 @keyframes dm-404-pin {
   0%,
   100% {
-    transform: translateY(0) rotate(-8deg);
+    transform: translateY(0) rotate(-6deg);
   }
   50% {
-    transform: translateY(-8px) rotate(8deg);
+    transform: translateY(-10px) rotate(6deg);
+  }
+}
+
+@media (max-height: 640px) {
+  .dm-404__codigo {
+    font-size: clamp(70px, 16vh, 110px);
+  }
+
+  .dm-404__marca img {
+    width: 150px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .dm-404__deco path,
+  .dm-404__fundo path,
   .dm-404__pin {
     animation: none;
   }

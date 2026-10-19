@@ -22,7 +22,6 @@ export interface Preferencias {
   /** Recarrega as ocorrências do mapa sozinho a cada minuto. */
   atualizarMapaAutomatico: boolean;
   /** Mostra a legenda de gravidade no mapa. */
-  mostrarLegenda: boolean;
   unidadeTemperatura: UnidadeTemperatura;
   /** De onde vem o clima: da posição do usuário (se permitida) ou do centro do mapa. */
   climaOrigem: ClimaOrigem;
@@ -38,7 +37,6 @@ export const PREFERENCIAS_PADRAO: Preferencias = {
   agruparOcorrencias: true,
   tamanhoMarcadores: 'normal',
   atualizarMapaAutomatico: true,
-  mostrarLegenda: false,
   unidadeTemperatura: 'c',
   climaOrigem: 'minha',
 };
@@ -73,7 +71,6 @@ function normalizar(bruto: unknown): Preferencias {
       ? (p.tamanhoMarcadores as TamanhoMarcadores)
       : d.tamanhoMarcadores,
     atualizarMapaAutomatico: booleano(p.atualizarMapaAutomatico, d.atualizarMapaAutomatico),
-    mostrarLegenda: booleano(p.mostrarLegenda, d.mostrarLegenda),
     unidadeTemperatura: UNIDADES.includes(p.unidadeTemperatura as UnidadeTemperatura)
       ? (p.unidadeTemperatura as UnidadeTemperatura)
       : d.unidadeTemperatura,
