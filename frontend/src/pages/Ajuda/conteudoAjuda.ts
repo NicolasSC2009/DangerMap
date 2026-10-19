@@ -158,7 +158,7 @@ export const FAQ: PerguntaFaq[] = [
     pergunta: 'O que acontece quando denuncio uma ocorrência?',
     resposta: [
       'A denúncia é registrada com o motivo que você informou e vai para a fila da moderação. Cada pessoa pode denunciar a mesma ocorrência só uma vez.',
-      'Quando uma ocorrência acumula denúncias, ela é ocultada do mapa até que um administrador a revise.',
+      'Quando uma ocorrência acumula denúncias, ela é ocultada do mapa até que a nossa equipe a analise.',
     ],
   },
   {
@@ -208,7 +208,7 @@ export const ACOES_MODERACAO: Array<{ titulo: string; texto: string }> = [
   { titulo: 'Manter', texto: 'A denúncia não procede: a ocorrência é mantida e passa a contar como confirmada.' },
   { titulo: 'Resolver', texto: 'O problema existia, mas já foi sanado: a ocorrência é marcada como resolvida.' },
   { titulo: 'Rejeitar', texto: 'O relato é falso, ofensivo ou duplicado: a ocorrência é arquivada.' },
-  { titulo: 'Banir', texto: 'Perfis denunciados por abuso recorrente podem ser desativados pela administração.' },
+  { titulo: 'Banir', texto: 'Perfis denunciados por abuso recorrente podem ser desativados pela nossa equipe.' },
 ];
 
 export const REGRAS_CONVIVENCIA: string[] = [

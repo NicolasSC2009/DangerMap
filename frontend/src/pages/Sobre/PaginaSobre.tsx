@@ -17,7 +17,7 @@ import '../Ajuda/ajuda.css';
 import './sobre.css';
 
 const TEXTO_SOBRE =
-  'O DangerMap é uma plataforma cidadã de mapeamento colaborativo de perigos urbanos: buracos, alagamentos, iluminação, sinalização danificada e focos de incêndio. Qualquer pessoa pode reportar um problema, confirmar ocorrências de terceiros e acompanhar a resolução pelo mapa.';
+  'O DangerMap é um mapa onde qualquer pessoa pode avisar sobre perigos da cidade, como buracos, alagamentos, falta de iluminação, sinalização danificada e focos de incêndio. Você também pode confirmar o que outras pessoas registraram e acompanhar quando o problema for resolvido.';
 
 const TEXTO_MISSAO =
   'Transformar o que cada pessoa vê na rua em informação útil para todos — e dar visibilidade aos riscos que precisam de solução.';
@@ -30,13 +30,13 @@ const PILARES: Array<{ Icone: IconType; titulo: string; texto: string }> = [
   },
   {
     Icone: FiUsers,
-    titulo: 'Valide em comunidade',
-    texto: 'Outras pessoas confirmam, curtem ou denunciam o relato, e as confirmações mostram o que realmente existe.',
+    titulo: 'Confirme com a comunidade',
+    texto: 'Outras pessoas confirmam, curtem ou denunciam o aviso. Quanto mais confirmações, mais confiável ele fica.',
   },
   {
     Icone: FiShield,
-    titulo: 'Modere',
-    texto: 'A administração revisa denúncias, arquiva o que é falso e mantém o mapa confiável.',
+    titulo: 'Cuidamos do mapa',
+    texto: 'Nossa equipe analisa as denúncias e retira o que for falso ou repetido.',
   },
   {
     Icone: FiCheckCircle,
@@ -47,7 +47,7 @@ const PILARES: Array<{ Icone: IconType; titulo: string; texto: string }> = [
 
 const PLATAFORMAS: Array<{ Icone: IconType; titulo: string; texto: string }> = [
   { Icone: FiGlobe, titulo: 'Internet', texto: 'Direto no navegador, no computador ou no celular — e dá para instalar como se fosse um aplicativo.' },
-  { Icone: FiMonitor, titulo: 'Windows', texto: 'Aplicativo para o computador, numa janela só dele.' },
+  { Icone: FiMonitor, titulo: 'Windows', texto: 'Aplicativo para o computador, com janela própria.' },
   { Icone: FiSmartphone, titulo: 'Android', texto: 'Aplicativo para o celular (em desenvolvimento).' },
 ];
 
@@ -71,8 +71,8 @@ export function PaginaSobre() {
           </div>
           <h1 id="dm-sobre-titulo">Sobre o DangerMap</h1>
           <p className="dm-ajuda-hero__sub">
-            Um mapa colaborativo de riscos urbanos: moradores registram e confirmam ocorrências, e a administração
-            modera e gera relatórios por região.
+            Um mapa feito por quem vive a cidade: moradores avisam sobre perigos e confirmam os avisos uns dos outros,
+            para todo mundo se deslocar com mais segurança.
           </p>
         </div>
       </section>
@@ -113,7 +113,7 @@ export function PaginaSobre() {
             <div>
               <span className="dm-ajuda-secao__numero">02</span>
               <h2 id="sobre-como-funciona">Como funciona</h2>
-              <p>Quatro passos que mantêm o mapa útil e confiável.</p>
+              <p>Quatro passos para manter o mapa útil e confiável.</p>
             </div>
           </header>
           <ul className="dm-sobre-grade">

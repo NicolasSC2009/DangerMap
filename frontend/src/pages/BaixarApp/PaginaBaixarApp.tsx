@@ -19,14 +19,14 @@ const PLATAFORMAS: Plataforma[] = [
   {
     Icone: FiSmartphone,
     titulo: 'Android',
-    descricao: 'Aplicativo nativo para o seu celular, com notificações de perigo por perto mesmo com o app fechado.',
-    recursos: ['Notificações nativas', 'Câmera integrada ao registro'],
+    descricao: 'Aplicativo para o seu celular, com avisos de perigo por perto mesmo com o app fechado.',
+    recursos: ['Avisos no celular', 'Câmera direto no registro'],
   },
   {
     Icone: FiMonitor,
     titulo: 'Windows',
-    descricao: 'Aplicativo para computador, para acompanhar o mapa fora do navegador, numa janela própria.',
-    recursos: ['Instalador com atalho automático', 'Precisa estar na mesma rede do servidor do DangerMap'],
+    descricao: 'Aplicativo para computador, para acompanhar o mapa numa janela própria, fora do navegador.',
+    recursos: ['Instalação simples, com atalho na área de trabalho', 'Precisa de conexão com a internet'],
     urlDownload: '/downloads/DangerMap-Setup-Windows.exe',
     rotuloDownload: 'Baixar para Windows (.exe)',
   },
@@ -46,12 +46,12 @@ export function PaginaBaixarApp() {
         <header className="dm-baixar-hero dm-entrada">
           <div className="dm-eyebrow">
             <span className="dm-eyebrow__marca" aria-hidden="true" />
-            Multiplataforma
+            Aplicativos
           </div>
           <h1>Leve o DangerMap com você</h1>
           <p>
-            O aplicativo para Windows já está disponível. O app nativo para Android ainda está em desenvolvimento
-            — enquanto isso, você já pode instalar o site no celular ou no computador e usá-lo como um app.
+            Já existe aplicativo para Windows, e o de Android está a caminho. Enquanto isso, você pode instalar o
+            site no celular ou no computador e usar como se fosse um app.
           </p>
         </header>
 
@@ -70,7 +70,7 @@ export function PaginaBaixarApp() {
               </div>
               <h2>{p.titulo}</h2>
               <p>{p.descricao}</p>
-              <span className="dm-baixar-card__planejado">{p.urlDownload ? 'Inclui' : 'Planejado'}</span>
+              <span className="dm-baixar-card__planejado">{p.urlDownload ? 'Inclui' : 'O que vem por aí'}</span>
               <ul className="dm-baixar-card__recursos">
                 {p.recursos.map((r) => (
                   <li key={r}>
@@ -107,7 +107,7 @@ export function PaginaBaixarApp() {
         </ul>
 
         <p className="dm-baixar-nota">
-          O app para Windows precisa estar na mesma rede em que o DangerMap está funcionando. Dúvidas?{' '}
+          Precisa de ajuda para instalar?{' '}
           <Link to="/ajuda#faq">
             Veja a central de ajuda <FiArrowRight size={12} aria-hidden="true" />
           </Link>

@@ -175,10 +175,6 @@
   color: var(--dm-laranja);
 }
 
-.dm-categorias__nota {
-  margin-top: 4px;
-}
-
 @media (max-width: 900px) {
   .dm-categorias__grade {
     grid-template-columns: repeat(2, minmax(0, 1fr));

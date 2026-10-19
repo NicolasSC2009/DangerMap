@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FiArrowRight, FiMapPin, FiSearch } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import { FiMapPin, FiSearch } from 'react-icons/fi';
 import { LayoutPadrao } from '../../components/comum/LayoutPadrao';
 import { Esqueleto, EsqueletoTexto } from '../../components/comum/Esqueleto';
 import { useCategorias } from '../../hooks/useCategorias';
@@ -64,12 +64,11 @@ export function PaginaCategorias() {
         <div className="dm-ajuda-hero__conteudo">
           <div className="dm-eyebrow dm-eyebrow--sobre-escuro">
             <span className="dm-eyebrow__marca" aria-hidden="true" />
-            Guia rápido
+            Categorias
           </div>
           <h1 id="dm-categorias-titulo">Categorias de perigo</h1>
           <p className="dm-ajuda-hero__sub">
-            Os tipos de ocorrência que você pode registrar no mapa, com o que cada um significa e o quanto costuma ser
-            grave.
+            Conheça os tipos de perigo que você pode registrar no mapa e o que cada um significa.
           </p>
         </div>
       </section>
@@ -143,11 +142,11 @@ export function PaginaCategorias() {
                     <img src={obterIconeCategoria(c.nome)} alt="" />
                   </span>
                   <h2>{c.nome}</h2>
-                  <p>{c.descricao || 'Categoria disponível para registrar ocorrências no mapa.'}</p>
+                  <p>{c.descricao || 'Use esta categoria para avisar sobre esse tipo de problema.'}</p>
                   {grav && (
                     <span className="dm-categorias__gravidade" title={EXPLICACAO_GRAVIDADE[grav]}>
                       <span className="dm-categorias__ponto" style={{ background: COR_GRAVIDADE[grav] }} aria-hidden="true" />
-                      Costuma ser de gravidade <strong>{ROTULO_GRAVIDADE[grav].toLowerCase()}</strong>
+                      Gravidade geralmente <strong>{ROTULO_GRAVIDADE[grav].toLowerCase()}</strong>
                     </span>
                   )}
                   <button type="button" className="dm-btn dm-btn--ghost dm-btn--pequeno" onClick={() => verNoMapa(c.id)}>
@@ -159,21 +158,6 @@ export function PaginaCategorias() {
             })}
           </ul>
         )}
-
-        <aside className="dm-ajuda-cartao-verde dm-categorias__nota">
-          <div className="dm-eyebrow dm-eyebrow--sobre-escuro">
-            <span className="dm-eyebrow__marca" aria-hidden="true" />
-            Como a gravidade é definida
-          </div>
-          <p className="dm-ajuda-cartao-verde__texto">
-            Você não precisa escolher: a gravidade é calculada na hora, pelo tipo de ocorrência e pelo que você descreve
-            (por exemplo, “buraco enorme” sobe um nível).
-          </p>
-          <Link to="/" className="dm-btn dm-btn--primario dm-btn--pequeno">
-            <span>Registrar uma ocorrência</span>
-            <FiArrowRight size={14} aria-hidden="true" />
-          </Link>
-        </aside>
       </div>
     </LayoutPadrao>
   );
