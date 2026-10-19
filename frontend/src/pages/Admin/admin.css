@@ -31,7 +31,7 @@
   max-width: 1600px;
   min-height: calc(100dvh - 28px);
   margin: 0 auto;
-  padding: 18px clamp(16px, 2.2vw, 30px) 24px;
+  padding: 22px clamp(20px, 2.8vw, 40px) 26px;
   border-radius: 32px;
   background: var(--adm-app);
 }
@@ -177,8 +177,8 @@
 .dm-admin-corpo {
   display: grid;
   grid-template-columns: 54px minmax(0, 1fr);
-  gap: clamp(16px, 2vw, 28px);
-  margin-top: 22px;
+  gap: clamp(24px, 3vw, 44px);
+  margin-top: 30px;
 }
 
 .dm-admin-main {
@@ -1897,6 +1897,154 @@
   .dm-admin-hero__valor {
     margin-top: 6px;
   }
+
+  .dm-admin-corpo {
+    margin-top: 24px;
+  }
+}
+/* menu de abas do celular (some no computador) */
+.dm-admin-menu-abas {
+  display: none;
+}
+
+.dm-admin-atalho--so-desktop {
+  display: flex;
+}
+
+@media (max-width: 900px) {
+  .dm-admin-topo {
+    flex-wrap: nowrap;
+    gap: 10px;
+  }
+
+  .dm-admin-abas {
+    display: none;
+  }
+
+  .dm-admin-menu-abas {
+    display: block;
+    position: relative;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .dm-admin-marca {
+    height: 48px;
+    padding: 0 14px;
+  }
+
+  .dm-admin-marca img {
+    height: 20px;
+  }
+
+  .dm-admin-menu-abas__botao {
+    width: 100%;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 16px;
+    color: var(--dm-titulo);
+    font-family: var(--dm-fonte-corpo);
+    font-size: calc(15px * var(--dm-escala));
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .dm-admin-menu-abas__botao span {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  .dm-admin-menu-abas__lista {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: max(100%, 250px);
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    padding: 6px;
+    border: 1px solid var(--dm-linha);
+    border-radius: 20px;
+    background: var(--dm-card);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+  }
+
+  .dm-admin-menu-abas__item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 46px;
+    padding: 0 14px;
+    border-radius: 14px;
+    color: var(--dm-tinta-suave);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .dm-admin-menu-abas__item--ativo {
+    background: var(--adm-escuro);
+    color: var(--adm-escuro-texto);
+  }
+
+  /* barra de baixo enxuta: um botão de tema só, mapa, configurações e sair */
+  .dm-admin-atalho--so-desktop {
+    display: none;
+  }
+
+  .dm-admin-atalhos__tema .dm-admin-atalho--ativo {
+    display: none;
+  }
+
+  .dm-admin-atalhos__tema {
+    gap: 0;
+  }
+}
+/* celular: visão geral mais enxuta */
+@media (max-width: 640px) {
+  .dm-admin-visao {
+    --gap: 12px;
+  }
+
+  .dm-admin-hero__acoes {
+    flex-direction: column;
+  }
+
+  .dm-admin-hero__acoes .dm-admin-botao {
+    flex: none;
+    width: 100%;
+  }
+
+  .dm-admin-situacao {
+    margin-top: 12px;
+    padding: 8px;
+  }
+
+  .dm-admin-situacao__item {
+    padding: 8px 10px;
+  }
+
+  .dm-admin-area-tabela td[data-rotulo='Local'] {
+    display: none;
+  }
+
+  .dm-admin-area-grafico .dm-admin-barras {
+    flex: none;
+    height: 150px;
+  }
+
+  .dm-admin-area-categorias .dm-admin-legenda__linha:nth-child(n + 5) {
+    display: none;
+  }
+
+  .dm-admin-cabecalho--compacto h1 {
+    font-size: 26px;
+  }
 }
 /* =========================================================================
    Responsivo
@@ -2063,8 +2211,17 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .dm-admin-kpi-grade {
-    grid-template-columns: minmax(0, 1fr);
+  .dm-admin-kpi {
+    padding: 10px 12px;
+  }
+
+  .dm-admin-kpi__valor {
+    font-size: 28px;
+  }
+
+  .dm-admin-kpi__icone {
+    width: 28px;
+    height: 28px;
   }
 
   .dm-admin-previa {

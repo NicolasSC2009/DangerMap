@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import type { IconType } from 'react-icons';
 import {
   FiAlertTriangle,
   FiBarChart2,
+  FiChevronDown,
   FiFolder,
   FiHelpCircle,
   FiLogOut,
@@ -48,15 +49,37 @@ export function PaginaAdmin() {
   const navegar = useNavigate();
   const local = useLocation();
   const avatar = useAvatarLocal(usuario?.id);
+  const [menuAberto, setMenuAberto] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const itemAtivo = ITENS_NAV.find((item) => item.chave === (aba ?? 'visao-geral'));
 
-  // Volta ao topo ao trocar de aba.
+  // Volta ao topo ao trocar de aba e fecha o menu de abas do celular.
   useEffect(
     function () {
       window.scrollTo(0, 0);
+      setMenuAberto(false);
     },
     [local.pathname]
+  );
+
+  useEffect(
+    function () {
+      if (!menuAberto) return;
+      function aoClicarFora(e: MouseEvent) {
+        if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuAberto(false);
+      }
+      function aoTeclar(e: KeyboardEvent) {
+        if (e.key === 'Escape') setMenuAberto(false);
+      }
+      document.addEventListener('mousedown', aoClicarFora);
+      document.addEventListener('keydown', aoTeclar);
+      return function () {
+        document.removeEventListener('mousedown', aoClicarFora);
+        document.removeEventListener('keydown', aoTeclar);
+      };
+    },
+    [menuAberto]
   );
 
   // Título da aba do navegador.
@@ -108,6 +131,36 @@ export function PaginaAdmin() {
             })}
           </nav>
 
+          {/* No celular as abas viram um menu de uma linha só. */}
+          <div className="dm-admin-menu-abas" ref={menuRef}>
+            <button
+              type="button"
+              className="dm-admin-pilula dm-admin-menu-abas__botao"
+              aria-haspopup="menu"
+              aria-expanded={menuAberto}
+              onClick={() => setMenuAberto((a) => !a)}
+            >
+              <itemAtivo.Icone size={16} aria-hidden="true" />
+              <span>{itemAtivo.rotulo}</span>
+              <FiChevronDown size={16} aria-hidden="true" className="dm-admin-menu-abas__seta" />
+            </button>
+            {menuAberto && (
+              <div className="dm-admin-menu-abas__lista" role="menu">
+                {ITENS_NAV.map((item) => (
+                  <Link
+                    key={item.chave}
+                    to={caminhoDaAba(item.chave)}
+                    role="menuitem"
+                    className={item.chave === itemAtivo.chave ? 'dm-admin-menu-abas__item dm-admin-menu-abas__item--ativo' : 'dm-admin-menu-abas__item'}
+                    aria-current={item.chave === itemAtivo.chave ? 'page' : undefined}
+                  >
+                    <item.Icone size={16} aria-hidden="true" />
+                    {item.rotulo}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
           <Link to="/perfil" className="dm-admin-pilula dm-admin-quem" title="Meu perfil">
             <span className="dm-admin-avatar" aria-hidden="true">
               {avatar ? <img src={avatar} alt="" /> : iniciais(usuario?.nome)}
@@ -121,7 +174,7 @@ export function PaginaAdmin() {
 
         <div className="dm-admin-corpo">
           <aside className="dm-admin-atalhos dm-admin-nao-imprimir" aria-label="Atalhos">
-            <div className="dm-admin-pilula dm-admin-atalhos__grupo" role="group" aria-label="Tema do site">
+            <div className="dm-admin-pilula dm-admin-atalhos__grupo dm-admin-atalhos__tema" role="group" aria-label="Tema do site">
               <button
                 type="button"
                 className={`dm-admin-atalho${temaEfetivo === 'claro' ? ' dm-admin-atalho--ativo' : ''}`}
@@ -151,7 +204,7 @@ export function PaginaAdmin() {
               <Link to="/configuracoes" className="dm-admin-atalho" aria-label="Configurações" title="Configurações">
                 <FiSettings aria-hidden="true" />
               </Link>
-              <Link to="/ajuda" className="dm-admin-atalho" aria-label="Ajuda" title="Ajuda">
+              <Link to="/ajuda" className="dm-admin-atalho dm-admin-atalho--so-desktop" aria-label="Ajuda" title="Ajuda">
                 <FiHelpCircle aria-hidden="true" />
               </Link>
             </div>

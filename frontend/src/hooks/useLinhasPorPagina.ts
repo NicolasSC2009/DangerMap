@@ -7,7 +7,9 @@ import { useEffect, useState } from 'react';
 export function useLinhasPorPagina(reservado: number, alturaLinha = 52, minimo = 5, maximo = 14): number {
   const calcular = () => {
     const disponivel = (typeof window === 'undefined' ? 900 : window.innerHeight) - reservado;
-    return Math.max(minimo, Math.min(maximo, Math.floor(disponivel / alturaLinha)));
+    const linhas = Math.max(minimo, Math.min(maximo, Math.floor(disponivel / alturaLinha)));
+    // No celular cada linha vira um cartão alto: poucas por página.
+    return typeof window !== 'undefined' && window.innerWidth <= 640 ? Math.min(linhas, 4) : linhas;
   };
   const [linhas, setLinhas] = useState(calcular);
 
