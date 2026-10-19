@@ -58,6 +58,11 @@ app.get('/api/status', async function (req: Request, res: Response) {
   }
 });
 
+// Endereço de API que não existe: resposta clara em JSON (em vez da página de erro padrão).
+app.use('/api', function (req: Request, res: Response) {
+  res.status(404).json({ error: 'Rota não encontrada.' });
+});
+
 iniciarJobLimpeza();
 
 const PORT = process.env.PORT || 3000;

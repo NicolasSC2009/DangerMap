@@ -562,6 +562,39 @@ export const openApiSpec = {
         responses: { '200': { description: 'Totais, ocorrências por status/gravidade/categoria e série temporal de 30 dias' } },
       },
     },
+    '/admin/relatorio-regiao/relatorio.pdf': {
+      get: {
+        tags: ['Admin'],
+        summary: 'Extração por raio em PDF (resumo + lista), com os mesmos filtros da tela',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'lat', in: 'query', required: true, schema: { type: 'number' } },
+          { name: 'lng', in: 'query', required: true, schema: { type: 'number' } },
+          { name: 'raio', in: 'query', description: 'Raio em metros (padrão 5000)', schema: { type: 'number' } },
+          { name: 'gravidades', in: 'query', description: 'Filtro: baixo,medio,alto (separados por vírgula)', schema: { type: 'string' } },
+          { name: 'status', in: 'query', description: 'Filtro: pendente,confirmado,resolvido,arquivado', schema: { type: 'string' } },
+          { name: 'categorias', in: 'query', description: 'Filtro: ids de categorias separados por vírgula', schema: { type: 'string' } },
+          { name: 'dias', in: 'query', description: 'Filtro: só ocorrências dos últimos N dias', schema: { type: 'integer' } },
+        ],
+        responses: { '200': { description: 'Arquivo PDF', content: { 'application/pdf': { schema: { type: 'string', format: 'binary' } } } } },
+      },
+    },
+    '/admin/relatorio-estado/relatorio.pdf': {
+      get: {
+        tags: ['Admin'],
+        summary: 'Extração por estado em PDF (resumo + lista), com os mesmos filtros da tela',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'uf', in: 'query', required: true, schema: { type: 'string', example: 'SC' } },
+          { name: 'nome', in: 'query', description: 'Nome do estado, só para o título do PDF', schema: { type: 'string' } },
+          { name: 'gravidades', in: 'query', description: 'Filtro: baixo,medio,alto (separados por vírgula)', schema: { type: 'string' } },
+          { name: 'status', in: 'query', description: 'Filtro: pendente,confirmado,resolvido,arquivado', schema: { type: 'string' } },
+          { name: 'categorias', in: 'query', description: 'Filtro: ids de categorias separados por vírgula', schema: { type: 'string' } },
+          { name: 'dias', in: 'query', description: 'Filtro: só ocorrências dos últimos N dias', schema: { type: 'integer' } },
+        ],
+        responses: { '200': { description: 'Arquivo PDF', content: { 'application/pdf': { schema: { type: 'string', format: 'binary' } } } } },
+      },
+    },
     '/admin/dashboard/relatorio.pdf': {
       get: {
         tags: ['Admin'],
